@@ -27,6 +27,7 @@ from .views.shifts import (
     view_shift_change_requests,
     view_shift_change_requests_by_user,
     view_drop_shift_requests,
+    set_to_pending,
 )
 from .views.users import create_user, create_users_in_bulk, edit_profile, list_users, user_event_feed, user_profile
 from .views.schedule import view_schedule
@@ -80,6 +81,7 @@ SCHEDULING_URLS: URLs = [
     path("scheduling/shift_change_requests/<str:kind>/<str:state>", view_shift_change_requests, name="view_shift_change_requests"),
     path("scheduling/drop_shift_requests/<str:kind>/<str:state>", view_drop_shift_requests, name="view_drop_shift_requests"),
     path("scheduling/request_shift", new_shift_request, name="new_shift_request"),
+    path("scheduling/shift_change_requests/<int:request_id>/set_to_pending", set_to_pending, name="set_to_pending"),
     # fmt: on
 ]
 

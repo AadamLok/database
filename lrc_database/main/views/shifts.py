@@ -16,6 +16,7 @@ from ..forms import (
     NewDropRequestForm,
     NewShiftForm,
     NewShiftForTutorForm,
+    SetToPendingForm,
 )
 from ..models import Shift, ShiftChangeRequest
 from ..templatetags.groups import is_privileged
@@ -137,7 +138,7 @@ def deny_request(request: HttpRequest, request_id: int) -> HttpResponse:
     shift_request.save()
     return redirect("view_single_request", request_id)
 
-
+# approve_new_request, works well for drop requests
 @restrict_to_groups("Office staff", "Supervisors")
 @restrict_to_http_methods("GET", "POST")
 def approve_pending_request(request: HttpRequest, request_id: int) -> HttpResponse:
@@ -176,6 +177,41 @@ def approve_pending_request(request: HttpRequest, request_id: int) -> HttpRespon
     else:
         form = ApproveChangeRequestForm(instance=shift, initial=initial)
         return render(request, "scheduling/approvePendingForm.html", {"form": form, "request_id": request_id})
+
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def set_to_pending(request: HttpRequest, request_id: int) -> HttpResponse:
+    request_cur = get_object_or_404(ShiftChangeRequest, id=request_id)
+    shift = request_cur.shift_to_update or Shift()
+
+    initial = {
+        "associated_person": request_cur.new_associated_person or shift.associated_person,
+        "start": request_cur.new_start or shift.start,
+        "duration": request_cur.new_duration or shift.duration,
+        "location": request_cur.new_location or shift.location,
+        "kind": request_cur.new_kind or shift.kind,
+    }
+
+    if request.method == "POST":
+        form = SetToPendingForm(
+            request.POST,
+            instance=shift,
+            initial=initial,
+        )
+
+        if not form.is_valid():
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("view_single_request", request_id)
+
+        form.save()
+        request_cur.state = "Pending"
+        request_cur.save()
+        return redirect("index")
+
+    else:
+        form = SetToPendingForm(instance=shift, initial=initial)
+        return render(request, "scheduling/SetToPendingForm.html", {"form": form, "request_id": request_id})
 
 
 @restrict_to_groups("Office staff", "Supervisors")

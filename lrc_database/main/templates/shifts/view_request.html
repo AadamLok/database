@@ -61,7 +61,7 @@
 </table>
 
 {% if request.user|is_privileged %}
-    {% if shift_request.state == "New" or shift_request.state == "Pending" %}
+    {% if shift_request.state == "New" and shift_request.is_drop_request == True %}
         <a href="{% url 'approve_request' shift_request.id %}">
             <button type="button" class="btn btn-primary">
                 Approve
@@ -73,6 +73,17 @@
             </button>
         </a>
     {% endif %}
-{% endif %}
-
+    {% if shift_request.state == "New" and shift_request.is_drop_request == False %}
+        <a href="{% url 'set_to_pending' shift_request.id %}">
+            <button type="button" class="btn btn-primary">
+                Pending
+            </button>
+        </a>
+        <a href="{% url 'deny_request' shift_request.id %}">
+            <button type="button" class="btn btn-primary">
+                Deny
+            </button>
+        </a>
+        {% endif %}
+    {% endif %}
 {% endblock %}
