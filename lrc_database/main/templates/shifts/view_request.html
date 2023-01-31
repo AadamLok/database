@@ -13,15 +13,15 @@
     </thead>
     <tr>
         <th>Reason</th>
-        <td>{{ shift_request.reason  }}</td>
+        <td>{{ shift_request.reason }}</td>
     </tr>
     <tr>
         <th>State</th>
-        <td>{{ shift_request.state  }}</td>
+        <td>{{ shift_request.state }}</td>
     </tr>
     <tr>
         <th>Is drop request?</th>
-        <td>{{ shift_request.is_drop_request  }}</td>
+        <td>{{ shift_request.is_drop_request }}</td>
     </tr>
 </table>
 
@@ -35,55 +35,67 @@
     </thead>
     <tr>
         <th>Associated person</th>
-        <td>{{ shift_request.shift_to_update.associated_person  }}</td>
+        <td>{{ shift_request.shift_to_update.associated_person }}</td>
         <td>{{ shift_request.new_associated_person }}</td>
     </tr>
     <tr>
         <th>Start</th>
         <td>{{ shift_request.shift_to_update.start }}</td>
-        <td>{{ shift_request.new_start  }}</td>
+        <td>{{ shift_request.new_start }}</td>
     </tr>
     <tr>
         <th>Duration</th>
         <td>{{ shift_request.shift_to_update.duration }}</td>
-        <td>{{ shift_request.new_duration  }}</td>
+        <td>{{ shift_request.new_duration }}</td>
     </tr>
     <tr>
         <th>Location</th>
         <td>{{ shift_request.shift_to_update.location }}</td>
-        <td>{{ shift_request.new_location  }}</td>
+        <td>{{ shift_request.new_location }}</td>
     </tr>
     <tr>
         <th>Kind</th>
         <td>{{ shift_request.shift_to_update.kind }}</td>
-        <td>{{ shift_request.new_kind  }}</td>
+        <td>{{ shift_request.new_kind }}</td>
     </tr>
 </table>
 
 {% if request.user|is_privileged %}
-    {% if shift_request.state == "New" and shift_request.is_drop_request == True %}
-        <a href="{% url 'approve_request' shift_request.id %}">
-            <button type="button" class="btn btn-primary">
-                Approve
-            </button>
-        </a>
-        <a href="{% url 'deny_request' shift_request.id %}">
-            <button type="button" class="btn btn-primary">
-                Deny
-            </button>
-        </a>
-    {% endif %}
-    {% if shift_request.state == "New" and shift_request.is_drop_request == False %}
-        <a href="{% url 'set_to_pending' shift_request.id %}">
-            <button type="button" class="btn btn-primary">
-                Pending
-            </button>
-        </a>
-        <a href="{% url 'deny_request' shift_request.id %}">
-            <button type="button" class="btn btn-primary">
-                Deny
-            </button>
-        </a>
-        {% endif %}
-    {% endif %}
+{% if shift_request.state == "New" and shift_request.is_drop_request == True %}
+<a href="{% url 'approve_request' shift_request.id %}">
+    <button type="button" class="btn btn-primary">
+        Approve
+    </button>
+</a>
+<a href="{% url 'deny_request' shift_request.id %}">
+    <button type="button" class="btn btn-primary">
+        Deny
+    </button>
+</a>
+{% endif %}
+{% if shift_request.state == "New" and shift_request.is_drop_request == False %}
+<a href="{% url 'make_pending' shift_request.id %}">
+    <button type="button" class="btn btn-primary">
+        Pending
+    </button>
+</a>
+<a href="{% url 'deny_request' shift_request.id %}">
+    <button type="button" class="btn btn-primary">
+        Deny
+    </button>
+</a>
+{% endif %}
+{% if shift_request.state == "Pending" %}
+<a href="{% url 'approve_request' shift_request.id %}">
+    <button type="button" class="btn btn-primary">
+        Approve
+    </button>
+</a>
+<a href="{% url 'deny_request' shift_request.id %}">
+    <button type="button" class="btn btn-primary">
+        Deny
+    </button>
+</a>
+{% endif %}
+{% endif %}
 {% endblock %}
