@@ -25,8 +25,9 @@ class Course(models.Model):
         max_length=64,
         help_text='The human-legible name of the course, like "Programming with Data Structures."',
     )
+
     class Meta:
-        ordering = ['department','number']
+        ordering = ["department", "number"]
 
     def short_name(self):
         return f"{self.department} {self.number}"
@@ -80,7 +81,7 @@ class Shift(models.Model):
     )
 
     class Meta:
-        ordering = ['start']
+        ordering = ["start"]
 
     @staticmethod
     def all_on_date(date: datetime.date) -> QuerySet["Shift"]:
@@ -163,7 +164,7 @@ class ShiftChangeRequest(models.Model):
     )
 
     class Meta:
-        ordering = ['new_start']
+        ordering = ["new_start"]
 
 
 class Hardware(models.Model):

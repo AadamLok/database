@@ -33,10 +33,12 @@ class ApproveChangeRequestForm(forms.ModelForm):
         model = Shift
         fields = ("associated_person", "start", "duration", "location", "kind")
 
+
 class SetToPendingForm(forms.ModelForm):
     class Meta:
         model = Shift
         fields = ("associated_person", "start", "duration", "location", "kind")
+
 
 class NewChangeRequestForm(forms.ModelForm):
     class Meta:

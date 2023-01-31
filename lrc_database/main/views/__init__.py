@@ -4,11 +4,10 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
-from django.db.models import Model
+from django.db.models import Model, Q
 from django.forms import ModelForm
 from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import redirect, render
-from django.db.models import Q
 
 from ..models import ShiftChangeRequest
 
