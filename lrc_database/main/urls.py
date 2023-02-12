@@ -14,21 +14,26 @@ from .views.bulk_shift_editing_views import (
 )
 from .views.courses import add_course, course_event_feed, edit_course, list_courses, view_course
 from .views.hardware import add_hardware, add_loans, edit_hardware, edit_loans, show_hardware, show_loans
+from .views.schedule import view_schedule
 from .views.shifts import (
     approve_pending_request,
     deny_request,
+    make_pending,
     new_drop_request,
     new_shift,
     new_shift_change_request,
     new_shift_request,
     new_shift_tutors_only,
+    set_to_pending,
+    view_drop_shift_requests,
     view_shift,
     view_shift_change_request,
     view_shift_change_requests,
     view_shift_change_requests_by_user,
     view_drop_shift_requests,
+    new_shift_recurring
 )
-from .views.users import create_user, create_users_in_bulk, edit_profile, list_users, user_event_feed, user_profile
+from .views.users import create_user, create_users_in_bulk, edit_profile, list_users, user_event_feed, user_profile, view_or_edit_user, delete_user_staff_position
 from .views.schedule import view_schedule
 
 URLs = List[Union[URLPattern, URLResolver]]
@@ -68,6 +73,7 @@ HARDWARE_URLS: URLs = [
 
 SCHEDULING_URLS: URLs = [
     # fmt: off
+    path("scheduling/shift_change_requests/<int:request_id>/set_to_pending", set_to_pending, name="set_to_pending"),
     path("scheduling/bulk/drop_on_date", drop_shifts_on_date, name="drop_shifts_on_date"),
     path("scheduling/bulk/drop_on_date/confirm", drop_shifts_on_date_confirmation, name="drop_shifts_on_date_confirmation"),
     path("scheduling/bulk/swap_shift_dates", swap_shift_dates, name="swap_shift_dates"),
@@ -76,6 +82,7 @@ SCHEDULING_URLS: URLs = [
     path("scheduling/bulk/move_shifts_from_date/confirm", move_shifts_from_date_confirmation, name="move_shifts_from_date_confirmation"),
     path("scheduling/shift_change_requests/<int:request_id>", view_shift_change_request, name="view_single_request"),
     path("scheduling/shift_change_requests/<int:request_id>/deny", deny_request, name="deny_request"),
+    path("scheduling/shift_change_requests/<int:request_id>/make_pending", make_pending, name="make_pending"),
     path("scheduling/shift_change_requests/<int:request_id>/approval_form", approve_pending_request, name="approve_request"),
     path("scheduling/shift_change_requests/<str:kind>/<str:state>", view_shift_change_requests, name="view_shift_change_requests"),
     path("scheduling/drop_shift_requests/<str:kind>/<str:state>", view_drop_shift_requests, name="view_drop_shift_requests"),
@@ -89,6 +96,7 @@ SHIFTS_URLS: URLs = [
     path("shifts/<int:shift_id>/request_change", new_shift_change_request, name="new_shift_change_request"),
     path("shifts/new", new_shift, name="new_shift"),
     path("shifts/new/tutoring", new_shift_tutors_only, name="new_shift_tutors_only"),
+    path("shifts/new/recurring", new_shift_recurring, name="new_shift_recurring"),
 ]
 
 USERS_URLS: URLs = [
@@ -103,12 +111,20 @@ USERS_URLS: URLs = [
     path("users/create", create_user, name="create_user"),
     path("users/create/bulk", create_users_in_bulk, name="create_users_in_bulk"),
     path("users/groups/<str:group>", list_users, name="list_users"),
+    path("users/view_or_edit/<int:user_id>", view_or_edit_user, name="view_or_edit_user"),
+    path("users/delete_staff_position/<int:user_id>/<int:index>", delete_user_staff_position, name="delete_user_staff_position")
 ]
 
-SCHEDULE_URL: URLs = [
-    path("schedule/<str:kind>/<str:offset>", view_schedule, name="view_schedule")
-]
+SCHEDULE_URL: URLs = [path("schedule/<str:kind>/<str:offset>", view_schedule, name="view_schedule")]
 
 urlpatterns: URLs = (
-    MISC_URLS + ACCOUNTS_URLS + API_URLS + COURSES_URLS + HARDWARE_URLS + SCHEDULING_URLS + SHIFTS_URLS + USERS_URLS + SCHEDULE_URL
+    MISC_URLS
+    + ACCOUNTS_URLS
+    + API_URLS
+    + COURSES_URLS
+    + HARDWARE_URLS
+    + SCHEDULING_URLS
+    + SHIFTS_URLS
+    + USERS_URLS
+    + SCHEDULE_URL
 )
