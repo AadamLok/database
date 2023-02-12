@@ -17,8 +17,8 @@ timezone = pytz.timezone("America/New_York")
 @restrict_to_groups("Office staff", "Supervisors")
 def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
     offset = int(offset)
-
-    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone)
+    
+    today = timezone.localize(datetime.combine(datetime.today(), datetime.min.time()))
     start = today + timedelta(days=offset)
     end = start + timedelta(days=7)
 

@@ -35,7 +35,13 @@
                 {% endif %}
                 {% if kind != "SI" and kind != "Tutoring" %}
                     {% if kind != "All" %}
-                        <td>{{ change_request.state }}</td>
+                        <td class="text-center">
+                            {% if change_request.state == "Not Approved" %}<i class="bi bi-calendar-x-fill text-red"></i>
+                            {% elif change_request.state == "Approved" %}<i class="bi bi-calendar2-check-fill text-green"></i>
+                            {% elif change_request.state == "New" %} <i class="bi bi-plus-circle-dotted text-gold"></i>
+                            {% else %} <i class="bi bi-clock-history text-yellow"></i>
+                            {% endif %}
+                        </td>
                     {% else %}
                         <td>{{ change_request.new_kind }}</td>
                     {% endif %}

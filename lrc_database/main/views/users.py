@@ -10,9 +10,10 @@ from django.core.exceptions import BadRequest, PermissionDenied
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_list_or_404, get_object_or_404, redirect, render
 from django.urls import reverse
+from django.db.models import Q
 
-from ..forms import CreateUserForm, CreateUsersInBulkForm, EditProfileForm
-from ..models import LRCDatabaseUser, Shift
+from ..forms import CreateUserForm, CreateUsersInBulkForm, EditProfileForm, StaffUserPositionForm, EditUserForm
+from ..models import LRCDatabaseUser, Semester, Shift, StaffUserPosition
 from . import personal, restrict_to_groups, restrict_to_http_methods
 
 User = get_user_model()
@@ -113,14 +114,12 @@ def create_user(request: HttpRequest) -> HttpResponse:
                 email=form.cleaned_data["email"],
                 first_name=form.cleaned_data["first_name"],
                 last_name=form.cleaned_data["last_name"],
-                password=form.cleaned_data["password"],
-                si_course=form.cleaned_data["si_course"],
+                password=form.cleaned_data["password"]
             )
-            user.courses_tutored.set(form.cleaned_data["courses_tutored"])
-            user.save()
             for group in form.cleaned_data["groups"]:
                 group.user_set.add(user)
-            return redirect("user_profile", user.id)
+            messages.add_message(request, messages.SUCCESS, f"Account for {form.cleaned_data['username']} successfully created.")
+            return redirect("create_user")
         else:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
             return redirect("create_user")
@@ -141,13 +140,14 @@ def create_users_in_bulk(request: HttpRequest) -> HttpResponse:
         user_data = user_data.split("\n")
         user_data = [s.strip() for s in user_data]
         user_data = [s.split(",") for s in user_data]
-        for username, email, first_name, last_name, primary_group, password in user_data:
+        for username, email, first_name, last_name, primary_group in user_data:
             user = LRCDatabaseUser.objects.create_user(
-                username=username, email=email, first_name=first_name, last_name=last_name, password=password
+                username=username, email=email, first_name=first_name, last_name=last_name, password=last_name
             )
             groups = Group.objects.filter(name=primary_group)
             user.groups.add(*groups)
-        return redirect("index")
+        messages.add_message(request, messages.SUCCESS, f"Users successfully created.")
+        return redirect("create_users_in_bulk")
     else:
         form = CreateUsersInBulkForm()
         return render(request, "users/create_users_in_bulk.html", {"form": form})
@@ -157,8 +157,82 @@ def create_users_in_bulk(request: HttpRequest) -> HttpResponse:
 @restrict_to_http_methods("GET")
 def list_users(request: HttpRequest, group: Optional[str] = None) -> HttpResponse:
     if group is not None:
-        users = get_list_or_404(User.objects.order_by("last_name"), groups__name=group)
+        if group == "SI" or group == "Tutor":
+            users = get_list_or_404(User.objects.all(), groups__name="Staff")
+            active_sem = Semester.objects.filter(active=True).first()
+            user_ids = StaffUserPosition.objects.filter(Q(person__in=users) & Q(semester=active_sem) & Q(position=group)).all().values('person')
+            users = User.objects.filter(id__in=user_ids).all()
+        else:
+            users = get_list_or_404(User.objects.all(), groups__name=group)
     else:
         group = "All users"
-        users = get_list_or_404(User.objects.order_by("last_name"))
+        users = get_list_or_404(User.objects.all())
     return render(request, "users/list_users.html", {"users": users, "group": group})
+
+
+@restrict_to_groups("Office staff", "Supervisors")
+def delete_user_staff_position(request: HttpRequest, user_id: int, index: int) -> HttpResponse:
+    user = get_object_or_404(User, pk=user_id)
+    StaffUserPosition.objects.filter(person=user).all()[index].delete()
+    messages.add_message(request, messages.SUCCESS, f"Successfully deleted staff position.")
+    return redirect("view_or_edit_user", user_id)
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def view_or_edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
+    if request.method == "POST":
+        if 'staff_position' in request.POST:
+            form = StaffUserPositionForm(request.POST)
+
+            if not form.is_valid():
+                messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+                return redirect("view_or_edit_user", user_id)
+
+            data = form.cleaned_data
+            user = get_object_or_404(User, pk=user_id)
+
+            if data["position"] == "SI" and data["si_course"] is None:
+                messages.add_message(request, messages.ERROR, f"To add SI position, you should assign a SI course.")
+                return redirect("view_or_edit_user", user_id)
+            elif data["position"] == "Tutor" and len(data["tutor_courses"]) == 0:
+                messages.add_message(request, messages.ERROR, f"To add Tutor position, you should assign atleast one tutor course.")
+                return redirect("view_or_edit_user", user_id)
+            elif data["position"] == "PM" and len(data["peers"]) == 0:
+                messages.add_message(request, messages.ERROR, f"To add PM position, you should assign atleast one peer.")
+                return redirect("view_or_edit_user", user_id)
+
+            new_position = StaffUserPosition.objects.create(
+                person=user,
+                semester=data["semester"],
+                position=data["position"],
+                hourly_rate=data["hourly_rate"]
+            )
+
+            if data["position"] == "SI":
+                new_position.si_course = data["si_course"]
+            elif data["position"] == "Tutor":
+                for course in data["tutor_courses"]:
+                    new_position.assign_tutor_course(course)
+            elif data["position"] == "PM":
+                for peer in data["peers"]:
+                    new_position.assign_peer(peer)
+            
+            messages.add_message(request, messages.SUCCESS, f"Successfully added new staff position to user.")
+        else:
+            messages.add_message(request, messages.ERROR, f"Function not implemented yet.")
+        return redirect("view_or_edit_user", user_id)
+    else:
+        form_for_position = StaffUserPositionForm()
+        user = get_object_or_404(User, pk=user_id)
+        form_for_user = EditUserForm(instance=user)
+        staff_info = None
+        if user.groups.filter(name="Staff").exists():
+            staff_info = StaffUserPosition.objects.filter(person=user).all()
+        info_to_send = {
+            "user_id": user_id, 
+            "staff_info": staff_info,
+            "form_for_postion": form_for_position,
+            "form_for_user": form_for_user,
+            "staff": staff_info is not None
+        }
+        return render(request, "users/view_user.html", info_to_send)

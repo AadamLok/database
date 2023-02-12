@@ -129,3 +129,19 @@ body {
 .equal-col {
   table-layout: fixed;
 }
+
+.text-gold {
+  color: darkgoldenrod;
+}
+
+.text-yellow {
+  color: darkorange;
+}
+
+.text-red {
+  color: darkred;
+}
+
+.text-green {
+  color: darkgreen;
+}

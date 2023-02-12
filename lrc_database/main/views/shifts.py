@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from this import d
 from typing import Optional
 
 from django.contrib import messages
@@ -17,6 +18,7 @@ from ..forms import (
     NewShiftForm,
     NewShiftForTutorForm,
     SetToPendingForm,
+    NewShiftRecurringForm
 )
 from ..models import Shift, ShiftChangeRequest
 from ..templatetags.groups import is_privileged
@@ -246,6 +248,47 @@ def new_shift(request: HttpRequest) -> HttpResponse:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
             return redirect("new_shift")
 
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def new_shift_recurring(request: HttpRequest) -> HttpResponse:
+    if request.method == "GET":
+        form = NewShiftRecurringForm()
+        return render(request, "shifts/new_shift_recurring.html", {"form": form})
+    else:
+        form = NewShiftRecurringForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            rec_start_date = data["recurring_start_date"]
+            rec_end_date = data["recurring_end_date"]
+            rec_day_of_week = int(data["recurring_day_of_week"])
+            diff = (rec_day_of_week - rec_start_date.weekday()) % 7
+            shift_time = data["shift_start_time"]
+            first_shift_date = rec_start_date + timedelta(days=diff)
+            first_shift = datetime.combine(first_shift_date, shift_time)
+
+            shift_data = {
+                'associated_person': data["associated_person"], 
+                'duration': data["duration"], 
+                'location': data["location"], 
+                'kind': data["kind"],
+                'start': None
+            }
+
+            shift_start = first_shift
+
+            while shift_start.date() <= rec_end_date:
+                shift_data["start"] = shift_start
+                final_shift = Shift(**shift_data)
+                final_shift.save()
+                shift_start += timedelta(days=7)
+
+            first_name = data["associated_person"].first_name
+            messages.add_message(request, messages.SUCCESS, f"Succesfully added recuring shift for {first_name}.")
+            return redirect("new_shift_recurring")
+        else:
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("new_shift_recurring")
 
 @restrict_to_groups("Tutors")
 @restrict_to_http_methods("GET", "POST")

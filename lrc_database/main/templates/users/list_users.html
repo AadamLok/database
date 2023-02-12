@@ -8,14 +8,16 @@
                 <th scope="col">First name</th>
                 <th scope="col">Last name</th>
                 <th scope="col">Email</th>
+                <th class="text-center" scope="col">View or Edit</th>
             </tr>
         </thead>
         <tbody>
             {% for user in users %}
                 <tr>
-                    <td><a href="{% url 'user_profile' user.id %}">{{ user.first_name }}</a></td>
-                    <td><a href="{% url 'user_profile' user.id %}">{{ user.last_name }}</a></td>
+                    <td>{{ user.first_name }}</td>
+                    <td>{{ user.last_name }}</td>
                     <td><a href="mailto:{{ user.email }}">{{ user.email }}</a></td>
+                    <td class="text-center"><a href="{% url 'view_or_edit_user' user.id %}"><i class="bi bi-pencil-square"></i></a></td>
                 </tr>
             {% endfor %}
         </tbody>
