@@ -33,8 +33,8 @@
                         <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
                             <li><h6 class="dropdown-header">List users</h6></li>
                             <li><a class="dropdown-item" href="{% url 'list_users' %}">All users</a></li>
-                            <li><a class="dropdown-item" href="{% url 'list_users' 'SIs' %}">SI leaders</a></li>
-                            <li><a class="dropdown-item" href="{% url 'list_users' 'Tutors' %}">Tutors</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' 'SI' %}">SI leaders</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' 'Tutor' %}">Tutors</a></li>
                             <li><a class="dropdown-item" href="{% url 'list_users' 'Office staff' %}">Office staff</a></li>
                             <li><a class="dropdown-item" href="{% url 'list_users' 'Supervisors' %}">Supervisors</a></li>
                             <li><hr class="dropdown-divider" /></li>
@@ -63,6 +63,7 @@
                             <li><a class="dropdown-item" href="{% url 'drop_shifts_on_date' %}">Drop shifts on date</a></li>
                             <li><a class="dropdown-item" href="{% url 'swap_shift_dates' %}">Swap shift dates</a></li>
                             <li><a class="dropdown-item" href="{% url 'move_shifts_from_date' %}">Move shifts from date</a></li>
+                            <li><a class="dropdown-item" href="{% url 'new_shift_recurring' %}">Add Recurring Shifts</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">

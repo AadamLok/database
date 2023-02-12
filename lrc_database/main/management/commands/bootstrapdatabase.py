@@ -2,6 +2,7 @@ import csv
 import random
 from collections import defaultdict
 from typing import DefaultDict
+from datetime import date, datetime, timedelta, time
 
 import pytz
 from django.contrib.auth import get_user_model
@@ -9,7 +10,7 @@ from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from faker import Faker
-from main.models import Course, Hardware, LRCDatabaseUser, Shift, ShiftChangeRequest
+from main.models import Course, Hardware, LRCDatabaseUser, Shift, ShiftChangeRequest, FullCourse, Semester, ClassDetails, StaffUserPosition
 
 User = get_user_model()
 
@@ -25,6 +26,12 @@ def create_special_users():
         username="si",
         password="password",
         first_name="Test SI",
+        last_name="user",
+    )
+    User.objects.create_user(
+        username="si-pm",
+        password="password",
+        first_name="Test SI-PM",
         last_name="user",
     )
     User.objects.create_user(
@@ -148,26 +155,64 @@ def init_shift_change_requests(path: str) -> None:
 
 
 def create_groups():
-    print("Creating groups...")
-    group_names = ("Office staff", "SIs", "Supervisors", "Tutors")
+    print("Creating Semester...")
+    sem, _ = Semester.objects.update_or_create(
+        name="TEST-SEM",
+        start_date=date.today(),
+        end_date=date.today()+timedelta(days=30),
+        active=True
+    )
+    
+    print("Creating Courses...")
     course1, _ = Course.objects.update_or_create(
         department="TEST", number=101, name="Testing is the key I."
     )
+
+    fc1, _ = FullCourse.objects.update_or_create(
+        semester=sem, course=course1, faculty="Test Fac 1"
+    )
+    ClassDetails.objects.update_or_create(
+        full_course=fc1, location="Room 1", class_day=1, class_time=time(10,0,0), class_duration=timedelta(hours=1,minutes=15)
+    )
+    ClassDetails.objects.update_or_create(
+        full_course=fc1, location="Room 1", class_day=4, class_time=time(10,0,0), class_duration=timedelta(hours=1,minutes=15)
+    )
+
+    fc2, _ = FullCourse.objects.update_or_create(
+        semester=sem, course=course1, faculty="Test Fac 2"
+    )
+    ClassDetails.objects.update_or_create(
+        full_course=fc2, location="Room 2", class_day=2, class_time=time(10,0,0), class_duration=timedelta(hours=1,minutes=15)
+    )
+    ClassDetails.objects.update_or_create(
+        full_course=fc2, location="Room 2", class_day=3, class_time=time(10,0,0), class_duration=timedelta(hours=1,minutes=15)
+    )
+
     course2, _ = Course.objects.update_or_create(
         department="TEST", number=102, name="Testing is the key II."
     )
+    fc3, _ = FullCourse.objects.update_or_create(
+        semester=sem, course=course2, faculty="Test Fac 3"
+    )
+    ClassDetails.objects.update_or_create(
+        full_course=fc3, location="Room 3", class_day=5, class_time=time(12,0,0), class_duration=timedelta(hours=2)
+    )
+
+    course3, _ = Course.objects.update_or_create(
+        department="TEST", number=103, name="Testing is the key III."
+    )
+
+    print("Creating groups...")
+    group_names = ("Office staff", "Supervisors", "Staff")
     for group_name in group_names:
         Group.objects.create(name=group_name)
+    
+    print("Updating Users...")
     for user in User.objects.exclude(username="admin"):
-        if user.username == "si":
-            user.si_course = course1
-            user.save()
-            group = Group.objects.filter(name="SIs").first()
+        if user.username[:2] == "si":
+            group = Group.objects.filter(name="Staff").first()
         elif user.username == "tutor":
-            user.courses_tutored.add(course1)
-            user.courses_tutored.add(course2)
-            user.save()
-            group = Group.objects.filter(name="Tutors").first()
+            group = Group.objects.filter(name="Staff").first()
         elif user.username == "office_staff":
             group = Group.objects.filter(name="Office staff").first()
         elif user.username == "supervisor":
@@ -272,7 +317,7 @@ class Command(BaseCommand):
         )
         create_special_users()
         create_groups()
-        init_sis(options["si_init_path"])
-        init_supervisors(options["supervisor_init_path"])
-        init_shifts(options["shift_init_path"])
-        init_shift_change_requests(options["exam_review_init_path"])
+        # init_sis(options["si_init_path"])
+        # init_supervisors(options["supervisor_init_path"])
+        # init_shifts(options["shift_init_path"])
+        # init_shift_change_requests(options["exam_review_init_path"])
