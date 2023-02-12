@@ -2,8 +2,8 @@ run:
 	LRC_DATABASE_SECRET_KEY=abc123 LRC_DATABASE_DEBUG=1 ./lrc_database/manage.py runserver 0.0.0.0:8000
 
 win_run:
-	set LRC_DATABASE_SECRET_KEY=abc123
-	set LRC_DATABASE_DEBUG=1
+	set LRC_DATABASE_SECRET_KEY = "abc123"
+	set LRC_DATABASE_DEBUG = 1
 	python lrc_database\manage.py runserver
 
 run_docker:

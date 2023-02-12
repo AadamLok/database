@@ -27,8 +27,9 @@ from .views.shifts import (
     view_shift_change_requests,
     view_shift_change_requests_by_user,
     view_drop_shift_requests,
+    new_shift_recurring
 )
-from .views.users import create_user, create_users_in_bulk, edit_profile, list_users, user_event_feed, user_profile
+from .views.users import create_user, create_users_in_bulk, edit_profile, list_users, user_event_feed, user_profile, view_or_edit_user, delete_user_staff_position
 from .views.schedule import view_schedule
 
 URLs = List[Union[URLPattern, URLResolver]]
@@ -89,6 +90,7 @@ SHIFTS_URLS: URLs = [
     path("shifts/<int:shift_id>/request_change", new_shift_change_request, name="new_shift_change_request"),
     path("shifts/new", new_shift, name="new_shift"),
     path("shifts/new/tutoring", new_shift_tutors_only, name="new_shift_tutors_only"),
+    path("shifts/new/recurring", new_shift_recurring, name="new_shift_recurring"),
 ]
 
 USERS_URLS: URLs = [
@@ -103,6 +105,8 @@ USERS_URLS: URLs = [
     path("users/create", create_user, name="create_user"),
     path("users/create/bulk", create_users_in_bulk, name="create_users_in_bulk"),
     path("users/groups/<str:group>", list_users, name="list_users"),
+    path("users/view_or_edit/<int:user_id>", view_or_edit_user, name="view_or_edit_user"),
+    path("users/delete_staff_position/<int:user_id>/<int:index>", delete_user_staff_position, name="delete_user_staff_position")
 ]
 
 SCHEDULE_URL: URLs = [

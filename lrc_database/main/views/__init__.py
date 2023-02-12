@@ -81,7 +81,7 @@ def personal(
 
 @login_required
 def index(request):
-    if request.user.groups.filter(name__in=("Tutors", "SIs")).exists():
+    if request.user.groups.filter(name__in=("Staff")).exists():
         return redirect("user_profile", request.user.id)
 
     return redirect("view_shift_change_requests", "All", "New")

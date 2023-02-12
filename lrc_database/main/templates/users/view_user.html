@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+	<h2>View/Edit User</h2>
+	<h4>Basic Information</h4>
+	<form method="post" action="{% url 'view_or_edit_user' user_id %}">
+		{% csrf_token %}
+        {{ form_for_user|crispy }}
+		<button type="submit" class="btn btn-primary">Save Changes</button>
+	</form>
+	<br/>
+	{% if staff %}
+	<h4>Staff Position Information</h4>
+	<table class="table table-striped table-hover">
+		<thead>
+			<tr>
+				<th scope="col">Semester</th>
+				<th scope="col">Position</th>
+				<th scope="col">Hourly Rate</th>
+				<th scope="col">Course/s or Peers</th>
+				<th scope="col" class="text-center">Delete</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for position in staff_info %}
+				<tr>
+					<td>{{position.semester}}</td>
+					<td>{{position.position}}</td>
+					<td>{{position.hourly_rate}}</td>
+					<td>
+						{% if position.position == "SI" %}
+							{{ position.si_course.short_name }}
+						{% elif position.position == "Tutor" %}
+							{{ position.str_tutor_courses_list }}
+						{% elif position.position == "PM" %}
+							{{ position.str_peers_list }}
+						{% endif %}
+					</td>
+					<td class="text-center"><a href="{% url 'delete_user_staff_position' user_id forloop.counter0 %}"><i class="bi bi-trash3 text-red"></i></a></td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	<br/>
+	<h5>Add new position</h5>
+	<form method="post" action="{% url 'view_or_edit_user' user_id %}">
+        {% csrf_token %}
+        {{ form_for_postion|crispy }}
+		<button type="submit" class="btn btn-primary">Add Position</button>
+    </form>
+	{% endif %}
+{% endblock %}
