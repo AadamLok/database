@@ -28,6 +28,8 @@ SECRET_KEY = os.environ.get("LRC_DATABASE_SECRET_KEY", "INSECURE-REPLACE-ME")
 
 ALLOWED_HOSTS: List[str] = os.environ.get("LRC_DATABASE_ALLOWED_HOSTS", ".localhost,127.0.0.1,[::1]").split(",")
 
+# ALLOWED_HOSTS = ["0.0.0.0"]
+
 CSRF_TRUSTED_ORIGINS = ["http://3.139.14.216:80"]
 
 CORS_ORIGIN_WHITELIST = ["http://3.139.14.216:80"]

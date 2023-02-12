@@ -3,13 +3,13 @@ from this import d
 from typing import Optional
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_list_or_404, get_object_or_404, redirect, render
 from django.urls import reverse
-from django.contrib.auth import get_user_model
 
 from ..forms import (
     ApproveChangeRequestForm,
@@ -17,6 +17,7 @@ from ..forms import (
     NewDropRequestForm,
     NewShiftForm,
     NewShiftForTutorForm,
+    SetToPendingForm,
     NewShiftRecurringForm
 )
 from ..models import Shift, ShiftChangeRequest
@@ -84,17 +85,22 @@ def view_shift_change_requests(request: HttpRequest, kind: str, state: str) -> H
     if kind == "All":
         requests = ShiftChangeRequest.objects.filter(state=state)
     else:
-        requests = ShiftChangeRequest.objects.filter((Q(new_kind=kind) | Q(shift_to_update__kind=kind)), state=state, is_drop_request=False)
+        requests = ShiftChangeRequest.objects.filter(
+            (Q(new_kind=kind) | Q(shift_to_update__kind=kind)), state=state, is_drop_request=False
+        )
     return render(
         request,
         "scheduling/view_shift_change_requests.html",
         {"change_requests": requests, "kind": kind, "state": state, "drop": False},
     )
 
+
 @restrict_to_groups("Office staff", "Supervisors")
 @restrict_to_http_methods("GET")
 def view_drop_shift_requests(request: HttpRequest, kind: str, state: str) -> HttpResponse:
-    requests = ShiftChangeRequest.objects.filter((Q(new_kind=kind) | Q(shift_to_update__kind=kind)), state=state, is_drop_request=True)
+    requests = ShiftChangeRequest.objects.filter(
+        (Q(new_kind=kind) | Q(shift_to_update__kind=kind)), state=state, is_drop_request=True
+    )
     return render(
         request,
         "scheduling/view_shift_change_requests.html",
@@ -116,6 +122,7 @@ def view_shift_change_requests_by_user(request: HttpRequest, user_id: int) -> Ht
         "scheduling/view_shift_change_requests.html",
         {"change_requests": requests, "kind": f"{target_user.first_name}'s"},
     )
+
 
 @login_required
 @restrict_to_http_methods("GET")
@@ -140,6 +147,16 @@ def deny_request(request: HttpRequest, request_id: int) -> HttpResponse:
     return redirect("view_single_request", request_id)
 
 
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET")
+def make_pending(request: HttpRequest, request_id: int) -> HttpResponse:
+    shift_request = get_object_or_404(ShiftChangeRequest, id=request_id)
+    shift_request.state = "Pending"
+    shift_request.save()
+    return redirect("view_single_request", request_id)
+
+
+# approve_new_request, works well for drop requests
 @restrict_to_groups("Office staff", "Supervisors")
 @restrict_to_http_methods("GET", "POST")
 def approve_pending_request(request: HttpRequest, request_id: int) -> HttpResponse:
@@ -178,6 +195,41 @@ def approve_pending_request(request: HttpRequest, request_id: int) -> HttpRespon
     else:
         form = ApproveChangeRequestForm(instance=shift, initial=initial)
         return render(request, "scheduling/approvePendingForm.html", {"form": form, "request_id": request_id})
+
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def set_to_pending(request: HttpRequest, request_id: int) -> HttpResponse:
+    request_cur = get_object_or_404(ShiftChangeRequest, id=request_id)
+    shift = request_cur.shift_to_update or Shift()
+
+    initial = {
+        "associated_person": request_cur.new_associated_person or shift.associated_person,
+        "start": request_cur.new_start or shift.start,
+        "duration": request_cur.new_duration or shift.duration,
+        "location": request_cur.new_location or shift.location,
+        "kind": request_cur.new_kind or shift.kind,
+    }
+
+    if request.method == "POST":
+        form = SetToPendingForm(
+            request.POST,
+            instance=shift,
+            initial=initial,
+        )
+
+        if not form.is_valid():
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("view_single_request", request_id)
+
+        form.save()
+        request_cur.state = "Pending"
+        request_cur.save()
+        return redirect("index")
+
+    else:
+        form = SetToPendingForm(instance=shift, initial=initial)
+        return render(request, "scheduling/SetToPendingForm.html", {"form": form, "request_id": request_id})
 
 
 @restrict_to_groups("Office staff", "Supervisors")

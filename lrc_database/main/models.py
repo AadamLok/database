@@ -27,6 +27,7 @@ class Course(models.Model):
         max_length=64,
         help_text='The human-legible name of the course, like "Programming with Data Structures."',
     )
+
     class Meta:
         ordering = ('department','number')
 

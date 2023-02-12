@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<form action="{% url 'set_to_pending' request_id %}" method="POST" role="form">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit" class="btn btn-primary" id="add-btn">Make Pending Request</button>
+</form>
+{% endblock content %}

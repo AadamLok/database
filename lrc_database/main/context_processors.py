@@ -33,12 +33,10 @@ def alert_counts(request: HttpRequest) -> Union[AlertCountDict, EmptyDict]:
     if not is_privileged(request.user):
         return {}
 
-    si_count = ShiftChangeRequest.objects.filter(
-        (Q(new_kind="SI") | Q(shift_to_update__kind="SI")), state="New"
-    )
+    si_count = ShiftChangeRequest.objects.filter((Q(new_kind="SI") | Q(shift_to_update__kind="SI")), state="New")
     si_count_change = si_count.filter(is_drop_request=False).count()
     si_count_drop = si_count.filter(is_drop_request=True).count()
-    
+
     tutoring_count = ShiftChangeRequest.objects.filter(
         (Q(new_kind="Tutoring") | Q(shift_to_update__kind="Tutoring")), state="New"
     )

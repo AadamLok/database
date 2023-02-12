@@ -204,6 +204,7 @@ def create_groups():
 
     print("Creating groups...")
     group_names = ("Office staff", "Supervisors", "Staff")
+    
     for group_name in group_names:
         Group.objects.create(name=group_name)
     
