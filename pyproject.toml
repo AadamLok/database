@@ -63,7 +63,7 @@ django-ses = "^3.3.0"
 bandit = {extras = ["toml"], version = "^1.7.4"}
 black = "^23.1.0"
 django-stubs = "^1.12.0"
-faker = "^16.6.1"
+faker = "^17.6.0"
 isort = "^5.10.1"
 mypy = "^1.0"
 
