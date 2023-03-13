@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
-from this import d
-from typing import Optional
 
 from django.contrib import messages
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -16,7 +15,6 @@ from ..forms import (
     NewChangeRequestForm,
     NewDropRequestForm,
     NewShiftForm,
-    NewShiftForTutorForm,
     SetToPendingForm,
     NewShiftRecurringForm
 )
@@ -114,7 +112,7 @@ def view_shift_change_requests_by_user(request: HttpRequest, user_id: int) -> Ht
     if not is_privileged(request.user) and request.user.id != user_id:
         raise PermissionDenied
     requests = ShiftChangeRequest.objects.filter(
-        (Q(new_associated_person__id=user_id) | Q(shift_to_update__associated_person__id=user_id)),
+        (Q(new_position__person__id=user_id) | Q(shift_to_update__position__person__id=user_id)),
     )
     target_user = get_object_or_404(User, id=user_id)
     return render(
@@ -129,9 +127,9 @@ def view_shift_change_requests_by_user(request: HttpRequest, user_id: int) -> Ht
 def view_shift_change_request(request: HttpRequest, request_id: int) -> HttpResponse:
     shift_request = get_object_or_404(ShiftChangeRequest, pk=request_id)
     is_for_user = False
-    if shift_request.new_associated_person == request.user:
+    if shift_request.new_position.person == request.user:
         is_for_user = True
-    elif shift_request.shift_to_update is not None and shift_request.shift_to_update.associated_person == request.user:
+    elif shift_request.shift_to_update is not None and shift_request.shift_to_update.position.person == request.user:
         is_for_user = True
     if not is_privileged(request.user) and not is_for_user:
         raise PermissionDenied
@@ -169,7 +167,7 @@ def approve_pending_request(request: HttpRequest, request_id: int) -> HttpRespon
         return redirect("index")
 
     initial = {
-        "associated_person": request_cur.new_associated_person or shift.associated_person,
+        "position": request_cur.new_position or shift.position,
         "start": request_cur.new_start or shift.start,
         "duration": request_cur.new_duration or shift.duration,
         "location": request_cur.new_location or shift.location,
@@ -241,6 +239,7 @@ def new_shift(request: HttpRequest) -> HttpResponse:
     else:
         form = NewShiftForm(request.POST)
         if form.is_valid():
+            form.cleaned_data['late_datetime'] = timezone.now()
             shift = Shift(**form.cleaned_data)
             shift.save()
             return redirect("view_shift", shift.id)
@@ -268,10 +267,11 @@ def new_shift_recurring(request: HttpRequest) -> HttpResponse:
             first_shift = datetime.combine(first_shift_date, shift_time)
 
             shift_data = {
-                'associated_person': data["associated_person"], 
+                'position': data["position"], 
                 'duration': data["duration"], 
                 'location': data["location"], 
                 'kind': data["kind"],
+                'late_datetime': timezone.now(),
                 'start': None
             }
 
@@ -283,7 +283,7 @@ def new_shift_recurring(request: HttpRequest) -> HttpResponse:
                 final_shift.save()
                 shift_start += timedelta(days=7)
 
-            first_name = data["associated_person"].first_name
+            first_name = data["position"].person.first_name
             messages.add_message(request, messages.SUCCESS, f"Succesfully added recuring shift for {first_name}.")
             return redirect("new_shift_recurring")
         else:
@@ -311,27 +311,29 @@ def new_shift_tutors_only(request: HttpRequest) -> HttpResponse:
             return redirect("new_shift_tutors_only")
 
 
-@restrict_to_groups("SIs")
 @restrict_to_http_methods("GET", "POST")
 def new_shift_request(request: HttpRequest) -> HttpResponse:
     if request.method == "GET":
-        form = NewChangeRequestForm()
+        form = NewChangeRequestForm(request.user)
         return render(
             request,
             "shifts/new_shift_request.html",
             {"form": form},
         )
     else:
-        form = NewChangeRequestForm(request.POST)
+        form = NewChangeRequestForm(request.user, request.POST)
         print(form.data)
         if form.is_valid():
-            change_request = ShiftChangeRequest(
+            data = form.cleaned_data
+            change_request = ShiftChangeRequest.objects.create(
                 shift_to_update=None,
                 state="New",
-                new_associated_person=request.user,
-                # approved_by=None,
-                # approved_on=None,
-                **form.cleaned_data,
+                new_position=data["_new_position"],
+                reason=data["reason"],
+                new_start=data["new_start"],
+                new_duration=data["new_duration"],
+                new_location=data["new_location"],
+                new_kind=data["new_kind"]
             )
             change_request.save()
             return redirect("view_single_request", change_request.id)

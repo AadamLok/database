@@ -1,13 +1,39 @@
 from django import forms
 from django.contrib.auth.models import Group
 
-from .models import ClassDetails, Course, DaySwitch, FullCourse, Hardware, Holidays, Loan, LRCDatabaseUser, Semester, Shift, ShiftChangeRequest, StaffUserPosition
+from .custom_field import TypedModelListField, ListTextWidget
+
+from .models import (
+    ClassDetails, 
+    Course, 
+    DaySwitch, 
+    FullCourse, 
+    Hardware, 
+    Holidays, 
+    Loan, 
+    LRCDatabaseUser, 
+    Semester, 
+    Shift, 
+    ShiftChangeRequest, 
+    StaffUserPosition
+)
 
 
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ("department", "number", "name")
+
+class ReadOnlyFullCourseForm(forms.ModelForm):
+    class Meta:
+        model = FullCourse
+        fields = ("semester", "course", "faculty")
+        widgets = {
+            'semester': forms.TextInput(attrs={'disabled': True}),
+            'course': forms.TextInput(attrs={'disabled': True}),
+            'faculty': forms.TextInput(attrs={'disabled': True}),
+        }
+
 
 class FullCourseForm(forms.ModelForm):
     class Meta:
@@ -17,23 +43,64 @@ class FullCourseForm(forms.ModelForm):
 class ClassDetailsForm(forms.ModelForm):
     class Meta:
         model = ClassDetails
-        fields = ("full_course", "location", "class_day", "class_time")
+        fields = ("location", "class_day", "class_time", "class_duration")
+        widgets = {
+            "class_time": forms.TimeInput(attrs={'type': 'time'})
+        }
 
 class SemesterForm(forms.ModelForm):
     class Meta:
         model = Semester
         fields = ("name", "start_date", "end_date")
 
+class SemesterSelectForm(forms.Form):
+    semester = forms.ModelChoiceField(required=True, queryset=Semester.objects.all())
+    semester_select_form = forms.BooleanField(widget=forms.HiddenInput, initial=True)
+
+    def __init__(self, *args, onchange=False, **kwargs):
+        super(SemesterSelectForm, self).__init__(*args, **kwargs)
+        if onchange:
+            self.fields['semester'].widget.attrs = {"onchange":"this.form.submit()"}
+
+class UserSelectForm(forms.Form):
+    user = forms.ModelChoiceField(required=True, queryset=LRCDatabaseUser.objects.all())
+    user_select_form = forms.BooleanField(widget=forms.HiddenInput, initial=True)
+
+    def __init__(self, *args, onchange=False, **kwargs):
+        super(UserSelectForm, self).__init__(*args, **kwargs)
+        if onchange:
+            self.fields['user'].widget.attrs = {"onchange":"this.form.submit()"}
+
+class ReadOnlySemesterForm(forms.ModelForm):
+    class Meta:
+        model = Semester
+        fields = ("name", "start_date", "end_date")
+        widgets = {
+            'name': forms.TextInput(attrs={'disabled': True}),
+            'start_date': forms.TextInput(attrs={'disabled': True}),
+            'end_date': forms.TextInput(attrs={'disabled': True}),
+        }
+
 
 class HolidaysForm(forms.ModelForm):
     class Meta:
         model = Holidays
-        fields = ("semester","date")
+        fields = ("date",)
+        widgets = {
+            "date": forms.DateInput(attrs={'type': 'date'}),
+        }
+    
+    holiday_form = forms.BooleanField(widget=forms.HiddenInput, initial=True)
 
 class DaySwitchForm(forms.ModelForm):
     class Meta:
         model = DaySwitch
-        fields = ("semester", "date_of_switch", "day_to_follow")
+        fields = ("date_of_switch", "day_to_follow")
+        widgets = {
+            "date_of_switch": forms.DateInput(attrs={'type': 'date'}),
+        }
+    
+    day_switch_form = forms.BooleanField(widget=forms.HiddenInput, initial=True)
 
 class CreateUserForm(forms.ModelForm):
     class Meta:
@@ -78,13 +145,13 @@ class EditProfileForm(forms.ModelForm):
 class ApproveChangeRequestForm(forms.ModelForm):
     class Meta:
         model = Shift
-        fields = ("associated_person", "start", "duration", "location", "kind")
+        fields = ("position", "start", "duration", "location", "kind")
 
 
 class SetToPendingForm(forms.ModelForm):
     class Meta:
         model = Shift
-        fields = ("associated_person", "start", "duration", "location", "kind")
+        fields = ("position", "start", "duration", "location", "kind")
 
 
 class NewChangeRequestForm(forms.ModelForm):
@@ -92,10 +159,11 @@ class NewChangeRequestForm(forms.ModelForm):
         model = ShiftChangeRequest
         fields = ("reason", "new_start", "new_duration", "new_location", "new_kind")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, form_person, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.fields["new_start"].widget = forms.DateTimeInput()
-
+        if form_person is not None:
+            active_positions = StaffUserPosition.objects.filter(person=form_person, semester=Semester.objects.get_active_sem()).all()
+            self.fields["_new_position"] = forms.ModelChoiceField(required=True, queryset=active_positions)
 
 class NewDropRequestForm(forms.ModelForm):
     class Meta:
@@ -111,9 +179,19 @@ class AddHardwareForm(forms.ModelForm):
 
 
 class NewShiftForm(forms.ModelForm):
+    position = TypedModelListField(queryset=StaffUserPosition.objects.all())
     class Meta:
         model = Shift
-        exclude = ()
+        exclude = ('signed','reason','attended','late', 'late_datetime')
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        dataset = StaffUserPosition.objects.filter(semester=Semester.objects.get_active_sem()).all()
+        self.fields['position'].queryset = dataset
+        self.fields['position'].widget = ListTextWidget(
+            dataset=dataset, 
+            name='position')
+
 class NewShiftRecurringForm(forms.ModelForm):
     shift_start_time = forms.TimeField(
         widget= forms.TimeInput(attrs={'type':'time'}))
@@ -126,13 +204,8 @@ class NewShiftRecurringForm(forms.ModelForm):
     recurring_day_of_week = forms.ChoiceField(choices=[(0,"Monday"),(1,"Tuesday"),(2,"Wednesday"),(3,"Thurday"),(4,"Friday"),(5,"Saturday"),(6,"Sunday")])
     class Meta:
         model = Shift
-        exclude = ("start",)
+        exclude = ("start","signed","attended","reason", "late", "late_datetime")
 
-
-class NewShiftForTutorForm(forms.ModelForm):
-    class Meta:
-        model = Shift
-        exclude = ("associated_person", "location", "kind")
 
 
 class NewLoanForm(forms.ModelForm):
@@ -153,3 +226,12 @@ class NewLoanForm(forms.ModelForm):
     class Meta:
         model = Loan
         fields = ("target", "hardware_user", "start_time", "return_time")
+
+class PayrollForm(forms.ModelForm):
+    class Meta:
+        model = Shift
+        fields = ("attended","reason")
+    
+    def __init__(self, identifier, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields[f'form-{identifier}'] = forms.BooleanField(widget=forms.HiddenInput, initial=True)

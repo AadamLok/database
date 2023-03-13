@@ -1,8 +1,8 @@
 import datetime
-from xml.parsers.expat import model
 
 import pytz
 from django import forms
+from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django.core import validators
 from django.db import models
@@ -10,7 +10,6 @@ from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from .custom_validators import validate_course_number
-
 
 class Course(models.Model):
     department = models.CharField(
@@ -36,6 +35,10 @@ class Course(models.Model):
 
     def __str__(self):
         return f"{self.department} {self.number}: {self.name}"
+
+class SemesterManager(models.Manager):
+    def get_active_sem(self):
+        return self.filter(active=True).first()
 
 class Semester(models.Model):
     name = models.CharField(
@@ -64,6 +67,8 @@ class Semester(models.Model):
         null=False,
         blank=False
     )
+
+    objects = SemesterManager()
 
     def __str__(self):
         return self.name
@@ -123,7 +128,7 @@ class FullCourse(models.Model):
         blank=False,
         null=False,
         related_name="full_course_course_number",
-        verbose_name="Full Course Detail"
+        verbose_name="Course Code"
     )
 
     faculty = models.CharField(
@@ -187,11 +192,20 @@ class LRCDatabaseUser(AbstractUser):
     def is_privileged(self) -> bool:
         return self.groups.filter(name__in=("Office staff", "Supervisors")).exists()
 
+    def is_si(self) -> bool:
+        num_si_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="SI").count()
+        return num_si_position > 0
+    
+    def is_tutor(self) -> bool:
+        num_tutor_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="Tutor").count()
+        return num_tutor_position > 0
+    
+    def is_pm(self) -> bool:
+        num_pm_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="PM").count()
+        return num_pm_position > 0
+
     def __str__(self) -> str:
-        if not (self.first_name and self.last_name):
-            return self.username
-        else:
-            return f"{self.first_name} {self.last_name}"
+        return f"{self.first_name}\u2004{self.last_name}"
 
 class StaffUserPosition(models.Model):
     person = models.ForeignKey(
@@ -241,6 +255,12 @@ class StaffUserPosition(models.Model):
         related_name="pm_staff_peers"
     )
 
+    class Meta:
+        unique_together = ('person','semester', 'position', 'si_course')
+
+    def __str__(self):
+        return f"{self.position}, {self.person.__str__()}"
+
     def peers_list(self):
         return self.peers.all()
     
@@ -266,13 +286,61 @@ class StaffUserPosition(models.Model):
     
     def assign_tutor_course(self, course):
         self.tutor_courses.add(course)
+    
+
+class ShiftManager(models.Manager):
+    def all_on_date(self, date):
+        tz_adjusted_range_start = datetime.datetime(
+            date.year, date.month, date.day, tzinfo=pytz.timezone("America/New_York")
+        )
+        tz_adjusted_range_end = tz_adjusted_range_start + datetime.timedelta(days=1)
+        return self.filter(
+            start__gte=tz_adjusted_range_start,
+            start__lte=tz_adjusted_range_end,
+        )
+
+    def add_class_shift(self, associated_postion, course):
+        sem = course.semester
+        
+        classes = ClassDetails.objects.filter(full_course=course).all()
+        holidays = Holidays.objects.filter(semester=sem).all()
+        day_switch = DaySwitch.objects.filter(semester=sem).all()
+        dates_of_switch = day_switch.values("date_of_switch")
+        day_to_follow = day_switch.values("day_to_follow")
+
+        shift_details = {
+            "position": associated_postion,
+            "kind": "Class"
+        }
+
+        for lecture in classes:
+            days_ahead = (lecture.class_day - sem.start_date.weekday()) % 7
+            class_date = sem.start_date + datetime.timedelta(days_ahead)
+
+            shift_details["duration"] = lecture.class_duration
+            shift_details["location"] = lecture.location
+            shift_details["late_datetime"] = timezone.now()
+
+            while class_date <= sem.end_date:
+                if class_date in holidays or class_date in dates_of_switch:
+                    continue
+                
+                shift_details["start"] = datetime.datetime.combine(class_date, lecture.class_time)
+                self.create(**shift_details)
+
+                class_date += datetime.timedelta(7)
+            
+            for index, day in enumerate(day_to_follow):
+                if day == lecture.class_day:
+                    shift_details["start"] = datetime.datetime.combine(dates_of_switch[index], lecture.class_time)
+                    self.create(**shift_details)
 
 
 class Shift(models.Model):
-    associated_person = models.ForeignKey(
-        to=LRCDatabaseUser,
+    position = models.ForeignKey(
+        to=StaffUserPosition,
         on_delete=models.CASCADE,
-        help_text="The person who is associated with this work shift.",
+        help_text="Which user and their possition is this shift for?"
     )
 
     start = models.DateTimeField(help_text="The time that the shift starts.")
@@ -285,28 +353,51 @@ class Shift(models.Model):
     )
 
     kind = models.CharField(
-        max_length=11,
-        choices=(("SI", "SI"), ("Tutoring", "Tutoring"), ("Training", "Training"), ("Observation", "Observation"), ("Class", "Class")),
+        max_length=14,
+        choices=(("SI", "SI"), 
+                 ("Tutoring", "Tutoring"), 
+                 ("Training", "Training"), 
+                 ("Observation", "Observation"), 
+                 ("Class", "Class"),
+                 ("SI-Preparation","SI-Preparation")),
         help_text="The kind of shift this is: tutoring, SI, Training, Class, or Observation.",
     )
+
+    attended = models.BooleanField(
+        default=False,
+        null=False
+    )
+
+    signed = models.BooleanField(
+        default=False,
+        null=False
+    )
+
+    reason = models.CharField(
+        max_length=500,
+        help_text="Reason, if you were not able to attend your shift.",
+        null=True,
+        blank=True
+    )
+
+    late = models.BooleanField(
+        default=False,
+        null=False
+    )
+
+    late_datetime = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    objects = ShiftManager()
 
     class Meta:
         ordering = ('start',)
 
-    @staticmethod
-    def all_on_date(date: datetime.date) -> QuerySet["Shift"]:
-        tz_adjusted_range_start = datetime.datetime(
-            date.year, date.month, date.day, tzinfo=pytz.timezone("America/New_York")
-        )
-        tz_adjusted_range_end = tz_adjusted_range_start + datetime.timedelta(days=1)
-        return Shift.objects.filter(
-            start__gte=tz_adjusted_range_start,
-            start__lte=tz_adjusted_range_end,
-        )
-
     def __str__(self):
         tz = pytz.timezone("America/New_York")
-        return f"{self.associated_person} in {self.location} at {self.start.astimezone(tz)} for {self.kind} Session"
+        return f"{self.kind}, {self.location}"
 
 
 class ShiftChangeRequest(models.Model):
@@ -333,13 +424,13 @@ class ShiftChangeRequest(models.Model):
 
     is_drop_request = models.BooleanField(default=False)
 
-    new_associated_person = models.ForeignKey(
-        to=LRCDatabaseUser,
+    new_position = models.ForeignKey(
+        to=StaffUserPosition,
         on_delete=models.CASCADE,
         blank=True,
         null=True,
         default=None,
-        help_text="The person who is associated with this work shift.",
+        help_text="The position that this shit is associated with this work shift.",
     )
 
     new_start = models.DateTimeField(
@@ -365,8 +456,15 @@ class ShiftChangeRequest(models.Model):
     )
 
     new_kind = models.CharField(
-        max_length=11,
-        choices=(("SI", "SI"), ("Tutoring", "Tutoring"), ("Training", "Training"), ("Observation", "Observation"), ("Class", "Class")),
+        max_length=14,
+        choices=(
+            ("SI", "SI"), 
+            ("Tutoring", "Tutoring"), 
+            ("Training", "Training"), 
+            ("Observation", "Observation"), 
+            ("Class", "Class"), 
+            ("SI-Preparation","SI-Preparation")
+        ),
         blank=True,
         null=True,
         default=None,

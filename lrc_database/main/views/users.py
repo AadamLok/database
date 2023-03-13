@@ -23,6 +23,7 @@ User = get_user_model()
 @restrict_to_http_methods("GET")
 def user_profile(request: HttpRequest, user_id: int) -> HttpResponse:
     target_user = get_object_or_404(User, id=user_id)
+    active_positions = StaffUserPosition.objects.filter(person=target_user, semester=Semester.objects.get_active_sem())
     target_users_shifts = json.dumps(
         list(
             map(
@@ -34,7 +35,7 @@ def user_profile(request: HttpRequest, user_id: int) -> HttpResponse:
                     "allDay": False,
                     "url": reverse("view_shift", args=(shift.id,)),
                 },
-                Shift.objects.filter(associated_person=target_user),
+                Shift.objects.filter(position__in=active_positions),
             )
         )
     )
@@ -59,14 +60,23 @@ def user_event_feed(request: HttpRequest, user_id: int) -> HttpResponse:
         raise BadRequest("Either start or end date is not in correct ISO8601 format.")
 
     user = get_object_or_404(User, id=user_id)
-    shifts = Shift.objects.filter(associated_person=user, start__gte=start, start__lte=end)
-    # TODO: Due to the way we store shifts in the database (start + duration only) it's difficult to find all shifts
-    # in a range. What we have here is a dirty hack that makes two assumptions:
-    #  - all shifts are short (no more than two hours-ish)
-    #  - we don't care that much if a few extra shifts are incorrectly returned (FullCalendar should handle this)
-    # It's probably worth figuring out a better way to do this at some point.
+    active_positions = StaffUserPosition.objects.filter(person=user, semester=Semester.objects.get_active_sem())
+    shifts = Shift.objects.filter(position__in=active_positions, start__gte=start, start__lte=end)
 
     def to_json(shift: Shift) -> Dict[str, Any]:
+        color = "black"
+        if shift.kind == "SI":
+            color = "orange"
+        elif shift.kind == "Tutoring":
+            color = "green"
+        elif shift.kind == "Training":
+            color = "red"
+        elif shift.kind == "Observation":
+            color = "blue"
+        elif shift.kind == "Class":
+            color = "magenta"
+        elif shift.kind == "SI-Preparation":
+            color = "teal"
         return {
             "id": str(shift.id),
             "start": shift.start.isoformat(),
@@ -74,6 +84,7 @@ def user_event_feed(request: HttpRequest, user_id: int) -> HttpResponse:
             "title": str(shift),
             "allDay": False,
             "url": reverse("view_shift", args=(shift.id,)),
+            "color": color,
         }
 
     json_response = list(map(to_json, shifts))
@@ -191,9 +202,13 @@ def view_or_edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
             data = form.cleaned_data
             user = get_object_or_404(User, pk=user_id)
 
-            if data["position"] == "SI" and data["si_course"] is None:
-                messages.add_message(request, messages.ERROR, f"To add SI position, you should assign a SI course.")
-                return redirect("view_or_edit_user", user_id)
+            if data["position"] == "SI":
+                if data["si_course"] is None:
+                    messages.add_message(request, messages.ERROR, f"To add SI position, you should assign a SI course.")
+                    return redirect("view_or_edit_user", user_id)
+                elif data["si_course"].semester != data["semester"]:
+                    messages.add_message(request, messages.ERROR, f"Trying to add SI course from different semester.")
+                    return redirect("view_or_edit_user", user_id)
             elif data["position"] == "Tutor" and len(data["tutor_courses"]) == 0:
                 messages.add_message(request, messages.ERROR, f"To add Tutor position, you should assign atleast one tutor course.")
                 return redirect("view_or_edit_user", user_id)
@@ -210,6 +225,8 @@ def view_or_edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
 
             if data["position"] == "SI":
                 new_position.si_course = data["si_course"]
+                new_position.save()
+                Shift.objects.add_class_shift(new_position, data["si_course"])
             elif data["position"] == "Tutor":
                 for course in data["tutor_courses"]:
                     new_position.assign_tutor_course(course)

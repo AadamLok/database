@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <form method="post" action="{% url 'add_semester' %}">
+        {% csrf_token %}
+        {{ sem_form|crispy }}
+        <button type="submit" class="btn btn-primary">Add Semester</button>
+    </form>
+{% endblock %}

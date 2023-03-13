@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+	<h2>Payroll Report By Week</h2>
+	<br/>
+	<div>
+		<div class="left-table-button padding-5px-tb padding-15px-lr margin-10px-bottom">
+			{% with new_offset=offset|add:'1' %}
+				<a href="{% url 'weekly_payroll' new_offset %}" class="table-button bg-dark"><</a>
+			{% endwith %}
+		</div>
+		<div class="right-table-button  padding-5px-tb padding-15px-lr margin-10px-bottom">
+			{% with new_offset=offset|add:'-1' %}
+				<a href="{% url 'weekly_payroll' new_offset %}" class="table-button bg-dark">></a>
+			{% endwith %}
+		</div>
+	</div>
+	<center><h4>Currently showing payroll for week of <b>{{cur_week}}</b>.</h4></center>
+	<br/>
+
+	<h3>Late Payroll</h3>
+	<p>Following table shows all of the late payroll from previous week, which were signed this week. Note that it is only showing the shifts that were signed this week. And this might not be indicative of what individual would be paid for that week, if few of the shift were signed it some other week or aren't signed yet.</p>
+	
+	{% if late_shifts|length == 0%}
+		<p><b>No data to show here.</b></p>
+	{% endif%}
+	{% for week_name, week_info in late_shifts.items%}
+		<h5>Addition for week of {{week_name}}</h5>
+		<div class="table-responsive">
+			<table class="table">
+				<thead>
+					<tr>
+						<th scope="col" class="text-center">Name</th>
+						<th scope="col" class="text-center">Position</th>
+						<th scope="col" class="text-center">Sunday</th>
+						<th scope="col" class="text-center">Monday</th>
+						<th scope="col" class="text-center">Tuesday</th>
+						<th scope="col" class="text-center">Wednesday</th>
+						<th scope="col" class="text-center">Thurday</th>
+						<th scope="col" class="text-center">Friday</th>
+						<th scope="col" class="text-center">Saturday</th>
+						<th scope="col" class="text-center">Total Hours</th>
+						<th scope="col" class="text-center">Pay</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for name, info in week_info.items %}
+						{% for position, col_info in info.items %}
+							{% if position == "Total" %}
+								<tr {% if forloop.parentloop.counter0|divisibleby:2 %}class="table-secondary"{% endif %}>
+									<td><b>Total</b></td>
+									<td class="text-end align-middle"><b>{{col_info.0|stringformat:"0.2f"}}</b></td>
+									<td class="text-end align-middle"><b>{{col_info.1|stringformat:"0.2f"}}</b></td>
+									<td class="text-end align-middle"><b>{{col_info.2|stringformat:"0.2f"}}</b></td>
+									<td class="text-end align-middle"><b>{{col_info.3|stringformat:"0.2f"}}</b></td>
+									<td class="text-end align-middle"><b>{{col_info.4|stringformat:"0.2f"}}</b></td>
+									<td class="text-end align-middle"><b>{{col_info.5|stringformat:"0.2f"}}</b></td>
+									<td class="text-end align-middle"><b>{{col_info.6|stringformat:"0.2f"}}</b></td>
+									<td class="text-end align-middle"><b>{{col_info.7|stringformat:"0.2f"}}</b></td>
+									<td class="text-end align-middle"><b>${{col_info.8|stringformat:"0.2f"}}</b></td>
+								</tr>
+							{% else %}
+								<tr {% if forloop.parentloop.counter0|divisibleby:2 %}class="table-secondary"{% endif %}>
+									{% if forloop.counter0 == 0 %}
+									<td rowspan="{{info|length}}" class="text-center align-middle">{{name}}</td>
+									{% endif %}
+									<td>{{position}}</td>
+									<td class="text-end align-middle">{{col_info.0|stringformat:"0.2f"}}</td>
+									<td class="text-end align-middle">{{col_info.1|stringformat:"0.2f"}}</td>
+									<td class="text-end align-middle">{{col_info.2|stringformat:"0.2f"}}</td>
+									<td class="text-end align-middle">{{col_info.3|stringformat:"0.2f"}}</td>
+									<td class="text-end align-middle">{{col_info.4|stringformat:"0.2f"}}</td>
+									<td class="text-end align-middle">{{col_info.5|stringformat:"0.2f"}}</td>
+									<td class="text-end align-middle">{{col_info.6|stringformat:"0.2f"}}</td>
+									<td class="text-end align-middle">{{col_info.7|stringformat:"0.2f"}}</td>
+									<td class="text-end align-middle">${{col_info.8|stringformat:"0.2f"}}</td>
+								</tr>
+							{% endif %}
+						{% endfor %}
+					{% endfor %}
+				</tbody>
+				<tfoot>
+					<tr>
+						<td colspan="9" class="text-end"><b>Total</b></td>
+						<td class="text-end align-middle"><b>{{week_info.Total_hours|stringformat:"0.2f"}}</b></td>
+						<td class="text-end align-middle"><b>${{week_info.Total_pay|stringformat:"0.2f"}}</b></td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+		<br/>
+	{% endfor %}
+
+	<h3>Signed Payroll</h3>
+	<p>Following table shows all of payroll for the shifts that were signed by the individuals. It might not be indicative of the total pay one should get for the certain week, this can occour when somebody didn't sign payroll for cenrtain number of shifts.</p>
+	<div class="table-responsive">
+		<table class="table">
+			<thead>
+				<tr>
+					<th scope="col" class="text-center">Name</th>
+					<th scope="col" class="text-center">Position</th>
+					<th scope="col" class="text-center">Sunday</th>
+					<th scope="col" class="text-center">Monday</th>
+					<th scope="col" class="text-center">Tuesday</th>
+					<th scope="col" class="text-center">Wednesday</th>
+					<th scope="col" class="text-center">Thurday</th>
+					<th scope="col" class="text-center">Friday</th>
+					<th scope="col" class="text-center">Saturday</th>
+					<th scope="col" class="text-center">Total Hours</th>
+					<th scope="col" class="text-center">Pay</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for name, info in cur_shifts.items %}
+					{% for position, col_info in info.items %}
+						{% if position == "Total" %}
+							<tr {% if forloop.parentloop.counter0|divisibleby:2 %}class="table-secondary"{% endif %}>
+								<td><b>Total</b></td>
+								<td class="text-end align-middle"><b>{{col_info.0|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.1|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.2|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.3|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.4|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.5|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.6|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.7|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>${{col_info.8|stringformat:"0.2f"}}</b></td>
+							</tr>
+						{% else %}
+							<tr {% if forloop.parentloop.counter0|divisibleby:2 %}class="table-secondary"{% endif %}>
+								{% if forloop.counter0 == 0 %}
+								<td rowspan="{{info|length}}" class="text-center align-middle">{{name}}</td>
+								{% endif %}
+								<td>{{position}}</td>
+								<td class="text-end align-middle">{{col_info.0|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.1|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.2|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.3|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.4|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.5|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.6|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.7|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">${{col_info.8|stringformat:"0.2f"}}</td>
+							</tr>
+						{% endif %}
+					{% endfor %}
+				{% endfor %}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="9" class="text-end"><b>Total</b></td>
+					<td class="text-end align-middle"><b>{{cur_shifts.Total_hours|stringformat:"0.2f"}}</b></td>
+					<td class="text-end align-middle"><b>${{cur_shifts.Total_pay|stringformat:"0.2f"}}</b></td>
+				</tr>
+			</tfoot>
+		</table>
+	</div>
+
+	<h3>Not Signed Yet</h3>
+	<p>Following table shows all of payroll for the shifts that are not signed yet by the individuals.</p>
+	<div class="table-responsive">
+		<table class="table">
+			<thead>
+				<tr>
+					<th scope="col" class="text-center">Name</th>
+					<th scope="col" class="text-center">Position</th>
+					<th scope="col" class="text-center">Sunday</th>
+					<th scope="col" class="text-center">Monday</th>
+					<th scope="col" class="text-center">Tuesday</th>
+					<th scope="col" class="text-center">Wednesday</th>
+					<th scope="col" class="text-center">Thurday</th>
+					<th scope="col" class="text-center">Friday</th>
+					<th scope="col" class="text-center">Saturday</th>
+					<th scope="col" class="text-center">Total Hours</th>
+					<th scope="col" class="text-center">Pay</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for name, info in not_signed.items %}
+					{% for position, col_info in info.items %}
+						{% if position == "Total" %}
+							<tr {% if forloop.parentloop.counter0|divisibleby:2 %}class="table-secondary"{% endif %}>
+								<td><b>Total</b></td>
+								<td class="text-end align-middle"><b>{{col_info.0|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.1|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.2|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.3|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.4|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.5|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.6|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>{{col_info.7|stringformat:"0.2f"}}</b></td>
+								<td class="text-end align-middle"><b>${{col_info.8|stringformat:"0.2f"}}</b></td>
+							</tr>
+						{% else %}
+							<tr {% if forloop.parentloop.counter0|divisibleby:2 %}class="table-secondary"{% endif %}>
+								{% if forloop.counter0 == 0 %}
+								<td rowspan="{{info|length}}" class="text-center align-middle">{{name}}</td>
+								{% endif %}
+								<td>{{position}}</td>
+								<td class="text-end align-middle">{{col_info.0|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.1|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.2|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.3|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.4|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.5|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.6|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">{{col_info.7|stringformat:"0.2f"}}</td>
+								<td class="text-end align-middle">${{col_info.8|stringformat:"0.2f"}}</td>
+							</tr>
+						{% endif %}
+					{% endfor %}
+				{% endfor %}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="9" class="text-end"><b>Total</b></td>
+					<td class="text-end align-middle"><b>{{not_signed.Total_hours|stringformat:"0.2f"}}</b></td>
+					<td class="text-end align-middle"><b>${{not_signed.Total_pay|stringformat:"0.2f"}}</b></td>
+				</tr>
+			</tfoot>
+		</table>
+	</div>
+{% endblock %}

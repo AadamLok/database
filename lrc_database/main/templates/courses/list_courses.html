@@ -12,7 +12,7 @@
         <tbody>
             {% for course in courses %}
                 <tr>
-                    <td><a href="{% url 'view_course' course.id %}">{{ course.department }} {{ course.number }}</a></td>
+                    <td><a href="{% url 'view_course' course.id %}">{{ course.short_name }}</a></td>
                     <td>{{ course.name }}</td>
                 </tr>
             {% empty %}
@@ -27,3 +27,4 @@
         </tbody>
     </table>
 {% endblock %}
+

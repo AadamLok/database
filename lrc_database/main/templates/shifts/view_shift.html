@@ -5,14 +5,38 @@ This entire page is ugly and should be redone.
 {% endcomment %}
 
 {% block content %}
-    <ul>
-        <li><strong>Associated person:</strong> {{ shift.associated_person }}</li>
-        <li><strong>Start:</strong> {{ shift.start }}</li>
-        <li><strong>Duration:</strong> {{ shift.duration }}</li>
-        <li><strong>Location:</strong> {{ shift.location }}</li>
-    </ul>
+    <table class="table">
+        <tr><td></td><td></td></tr>
+        <tr>
+            <th>Associated Person</th>
+            <td>{{ shift.position.person }}</td>
+        </tr>
+        <tr>
+            <th>Associated Position</th>
+            <td>{{ shift.position }}</td>
+        </tr>
+        <tr>
+            <th>Start</th>
+            <td>{{ shift.start }}</td>
+        </tr>
+        <tr>
+            <th>Duration</th>
+            <td>{{ shift.duration }}</td>
+        </tr>
+        <tr>
+            <th>Location</th>
+            <td>{{ shift.location }}</td>
+        </tr>
+        <tr>
+            <th>Kind</th>
+            <td>{{ shift.kind }}</td>
+        </tr>
+    </table>
+
+    <br/>
+
     <strong>
-        {% if user.id == shift.associated_person.id %}
+        {% if user.id == shift.position.person.id %}
             Change requests (<a href="{% url 'new_shift_change_request' shift.id %}">update shift</a>, <a href="{% url 'new_drop_request' shift.id %}">drop</a>):
         {% else %}
             Change requests:

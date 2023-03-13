@@ -31,7 +31,7 @@
         {% for change_request in change_requests %}
             <tr class="clickable-row" data-href="{% url 'view_single_request' change_request.id %}" style="cursor: pointer;">
                 {% if kind == "SI" or kind == "Tutoring" or kind == "All" %}
-                    <td>{{ change_request.new_associated_person }}</td>
+                    <td>{{ change_request.new_position.person }}</td>
                 {% endif %}
                 {% if kind != "SI" and kind != "Tutoring" %}
                     {% if kind != "All" %}

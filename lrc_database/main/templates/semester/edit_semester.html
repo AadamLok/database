@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+	<h2>View/Edit Semester</h2>
+	<h4>Basic Information</h4>
+	<form method="post" action="{% url 'edit_semester' name %}">
+		{% csrf_token %}
+        {{ form_for_sem|crispy }}
+	</form>
+	<br/>
+	<h4>Holidays</h4>
+	<table class="table table-striped table-hover">
+		<thead>
+			<th scope="col">Date</th>
+			<th scope="col" class="text-center">Delete</th>
+		</thead>
+		<tbody>
+			{% for holiday in holidays %}
+				<tr>
+					<td>{{holiday.date}}</td>
+					<td class="text-center"><a href="{% url 'delete_holiday' name holiday.date %}"><i class="bi bi-trash3 text-red"></i></a></td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	<br/>
+	<h5>Add New Holiday</h5>
+	<form method="post" action="{% url 'edit_semester' name %}">
+		{% csrf_token %}
+        {{ form_for_holiday|crispy }}
+		<button type="submit" class="btn btn-primary">Add Holiday</button>
+	</form>
+	<br/>
+	<h4>Day Switch</h4>
+	<table class="table table-striped table-hover">
+		<thead>
+			<th scope="col">Date</th>
+			<th scope="col">Day to Follow</th>
+			<th scope="col" class="text-center">Delete</th>
+		</thead>
+		<tbody>
+			{% for ds in day_switch %}
+				<tr>
+					<td>{{ds.date_of_switch}}</td>
+					<td>{{ds.day_to_follow}}</td>
+					<td class="text-center"><a href="{% url 'delete_day_switch' name ds.date_of_switch %}"><i class="bi bi-trash3 text-red"></i></a></td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	<br/>
+	<h5>Add New Holiday</h5>
+	<form method="post" action="{% url 'edit_semester' name %}">
+		{% csrf_token %}
+        {{ form_for_day_switch|crispy }}
+		<button type="submit" class="btn btn-primary">Add Day Switch</button>
+	</form>
+{% endblock %}

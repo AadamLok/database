@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<script type="text/javascript">
+		function ChangeActive(link, sem_name, sem_active) {
+			if (sem_active === 'True') {
+				if (confirm("This will make all the staff position assigned to " 
+					+ sem_name + " semester inactive, payrolls for this semester will stop.")) {
+						location.href=link
+				}
+			} else {
+				if (confirm("This will make all the staff position assigned to " 
+					+ sem_name + " semester active, and also make any currently active semester inactive, \
+					payroll for that semester will stop.")) {
+						location.href=link
+				}
+			}
+		}
+	</script>
+	<table class="table table-striped table-hover">
+		<thead>
+			<th scope="col">Name</th>
+			<th scope="col">Start Date</th>
+			<th scope="col">End Date</th>
+			<th scope="col" class="text-center">Active</th>
+			<th scope="col" class="text-center">Edit</th>
+		</thead>
+		<tbody>
+			{% for sem in semesters %}
+				<tr>
+					<td>{{sem.name}}</td>
+					<td>{{sem.start_date}}</td>
+					<td>{{sem.end_date}}</td>
+					{% url 'change_active_semester' sem.name as link%}
+					<td class="text-center"><input type="checkbox" class="radio" onclick="ChangeActive('{{link}}', '{{sem.name}}', '{{sem.active}}')" {% if sem.active %} checked {% endif %}/></td>
+					<td class="text-center"><a href="{% url 'edit_semester' sem.name %}"><i class="bi bi-pencil-square"></i></a></td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% endblock %}

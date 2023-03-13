@@ -10,8 +10,8 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from ..forms import CourseForm
-from ..models import Course, Shift
+from ..forms import CourseForm, SemesterSelectForm, FullCourseForm, ReadOnlyFullCourseForm, ClassDetailsForm
+from ..models import Course, Shift, Semester, FullCourse, StaffUserPosition, ClassDetails
 from . import restrict_to_groups, restrict_to_http_methods
 
 User = get_user_model()
@@ -28,8 +28,8 @@ def list_courses(request: HttpRequest) -> HttpResponse:
 @restrict_to_http_methods("GET")
 def view_course(request: HttpRequest, course_id: int) -> HttpResponse:
     course = get_object_or_404(Course, id=course_id)
-    tutors = User.objects.filter(courses_tutored__in=(course,))
-    sis = User.objects.filter(si_course=course)
+    tutors = StaffUserPosition.objects.filter(tutor_courses__in=(course,), semester=Semester.objects.get_active_sem())
+    sis = StaffUserPosition.objects.filter(si_course__course=course, semester=Semester.objects.get_active_sem())
     return render(
         request,
         "courses/view_course.html",
@@ -53,6 +53,85 @@ def add_course(request: HttpRequest) -> HttpResponse:
         form = CourseForm()
         return render(request, "courses/add_course.html", {"form": form})
 
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def list_course_sections(request: HttpRequest, sem:str) -> HttpResponse:
+    if request.method == "POST":
+        form = SemesterSelectForm(request.POST)
+        
+        if not form.is_valid():
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("list_course_sections", sem)
+
+        data = form.cleaned_data
+
+        return redirect("list_course_sections", data["semester"].name)
+    else:
+        filter_sem = Semester.objects.filter(name=sem).first() if sem != "none" else Semester.objects.get_active_sem()
+        form = SemesterSelectForm(initial={'semester':filter_sem})
+        form.fields['semester'].widget.attrs.update({"onchange" : "post_form()"})
+        courses = FullCourse.objects.filter(semester=filter_sem).all()
+        context = {"form": form, "sem": sem, "courses": courses}
+        return render(request, "courses/list_course_sections.html", context)
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def add_course_section(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        form = FullCourseForm(request.POST)
+        
+        if not form.is_valid():
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("add_course_section")
+        
+        data = form.cleaned_data
+
+        course = FullCourse.objects.create(
+			semester=data["semester"],
+			course=data["course"],
+			faculty=data["faculty"]
+		)
+
+        return redirect("edit_course_section", course.id)
+    else:
+        form = FullCourseForm()
+        context = {"form": form}
+        return render(request, "courses/add_course_section.html", context)
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET","POST")
+def edit_course_section(request: HttpRequest, course_id: int) -> HttpResponse:
+    if request.method == "POST":
+        form = ClassDetailsForm(request.POST)
+        
+        if not form.is_valid():
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("edit_course_section", course_id)
+        
+        data = form.cleaned_data
+
+        ClassDetails.objects.create(
+            full_course=FullCourse.objects.get(id=course_id),
+            location=data["location"],
+            class_day=data["class_day"],
+            class_time=data["class_time"],
+            class_duration=data["class_duration"]
+        )
+
+        return redirect("edit_course_section", course_id)
+    else:
+        context = {"course_id": course_id}
+        context["course_form"] = ReadOnlyFullCourseForm(instance=FullCourse.objects.get(id=course_id))
+        context["class_form"] = ClassDetailsForm()
+        context["class_times"] = ClassDetails.objects.filter(full_course__id=course_id).all()
+
+        return render(request, "courses/edit_course_section.html", context)
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET")
+def delete_class_time(request: HttpRequest, class_id: int, course_id: int) -> HttpResponse:
+    ClassDetails.objects.get(id=class_id).delete()
+    return redirect("edit_course_section", course_id)
 
 @restrict_to_groups("Office staff", "Supervisors")
 @restrict_to_http_methods("GET", "POST")
@@ -95,7 +174,7 @@ def course_event_feed(request: HttpRequest, course_id: int) -> JsonResponse:
 
     # TODO: problematic, see comment on user_event_feed
     shifts = Shift.objects.filter(
-        Q(associated_person__si_course=course) | Q(associated_person__courses_tutored=course),
+        Q(position__si_course__course=course) | Q(position__tutor_courses__in=(course,)),
         start__gte=start,
         start__lte=end,
     )

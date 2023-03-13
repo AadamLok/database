@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
-from ..models import Course, Shift
+from ..models import Shift, Course, StaffUserPosition
 from . import restrict_to_groups, restrict_to_http_methods
 
 timezone = pytz.timezone("America/New_York")
@@ -37,13 +37,13 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
 
     for shift in shifts:
         s_kind = shift.kind
-        s_person = shift.associated_person
+        s_position = shift.position
         if s_kind == "SI" and (kind == "SI" or kind == "All"):
-            s_course = s_person.si_course.short_name()
-            info[s_course][1][(shift.start.weekday() - start_day) % 7].append(shift)
+            s_course = s_position.si_course.course.short_name()
+            info[s_course][1][(shift.start.weekday()-start_day)%7].append(shift)
         elif kind == "Tutoring" or kind == "All":
-            for course in s_person.courses_tutored.all():
-                info[course.short_name()][1][(shift.start.weekday() - start_day) % 7].append(shift)
+            for course in s_position.tutor_courses.all():
+                info[course.short_name()][1][(shift.start.weekday()-start_day)%7].append(shift)
 
     return render(
         request, "schedule/schedule_view.html", {"kind": kind, "offset": offset, "weekdays": weekdays, "info": info}

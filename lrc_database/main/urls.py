@@ -1,7 +1,8 @@
 from typing import List, Union
 
 from django.contrib.auth import views as auth_views
-from django.urls import URLPattern, URLResolver, include, path
+from django.urls import URLPattern, URLResolver, include, path, register_converter
+from .converters import DateConverter, NegativeIntConverter
 
 from .views import index
 from .views.bulk_shift_editing_views import (
@@ -12,7 +13,16 @@ from .views.bulk_shift_editing_views import (
     swap_shift_dates,
     swap_shift_dates_confirmation,
 )
-from .views.courses import add_course, course_event_feed, edit_course, list_courses, view_course
+from .views.courses import (
+    add_course, 
+    course_event_feed, 
+    edit_course, 
+    list_courses, 
+    view_course,
+    list_course_sections,
+    add_course_section,
+    edit_course_section
+)
 from .views.hardware import add_hardware, add_loans, edit_hardware, edit_loans, show_hardware, show_loans
 from .views.schedule import view_schedule
 from .views.shifts import (
@@ -33,10 +43,23 @@ from .views.shifts import (
     view_drop_shift_requests,
     new_shift_recurring
 )
-from .views.users import create_user, create_users_in_bulk, edit_profile, list_users, user_event_feed, user_profile, view_or_edit_user, delete_user_staff_position
+from .views.users import (
+    create_user, 
+    create_users_in_bulk, 
+    edit_profile, list_users, 
+    user_event_feed, 
+    user_profile, 
+    view_or_edit_user, 
+    delete_user_staff_position
+)
 from .views.schedule import view_schedule
+from .views.semester import list_semesters, add_semester, edit_semester, delete_holiday, delete_day_switch, change_active_semester
+from .views.payroll import sign_payroll, view_payroll, user_payroll, weekly_payroll
 
 URLs = List[Union[URLPattern, URLResolver]]
+
+register_converter(DateConverter, 'date')
+register_converter(NegativeIntConverter, 'negint')
 
 MISC_URLS: URLs = [
     path("", index, name="index"),
@@ -60,6 +83,9 @@ COURSES_URLS: URLs = [
     path("courses/<int:course_id>", view_course, name="view_course"),
     path("courses/<int:course_id>/edit", edit_course, name="edit_course"),
     path("courses/add", add_course, name="add_course"),
+    path("courses/list_course_sections/<str:sem>", list_course_sections, name="list_course_sections"),
+    path("courses/add_course_section", add_course_section, name="add_course_section"),
+    path("courses/edit_course_section/<int:course_id>", edit_course_section, name="edit_course_section")
 ]
 
 HARDWARE_URLS: URLs = [
@@ -117,14 +143,32 @@ USERS_URLS: URLs = [
 
 SCHEDULE_URL: URLs = [path("schedule/<str:kind>/<str:offset>", view_schedule, name="view_schedule")]
 
+SEMESTER_URL: URLs = [
+    path("semester/list_semester", list_semesters, name="list_semesters"),
+    path("semester/add_semester", add_semester, name="add_semester"),
+    path("semester/edit_semester/<str:name>", edit_semester, name="edit_semester"),
+    path("semester/delete_holiday/<str:name>/<date:date>", delete_holiday, name="delete_holiday"),
+    path("semester/delete_day_switch/<str:name>/<date:date>", delete_day_switch, name="delete_day_switch"), 
+    path("semester/change_active_semester/<str:name>", change_active_semester, name="change_active_semester")
+]
+
+PAYROLL_URL :URLs = [
+    path("payroll/sign", sign_payroll, name="sign_payroll"),
+    path("payroll/view", view_payroll, name="view_payroll"),
+    path("payroll/user/<int:id>", user_payroll, name="user_payroll"),
+    path("payroll/weekly/<negint:offset>", weekly_payroll, name="weekly_payroll"),
+]
+
 urlpatterns: URLs = (
-    MISC_URLS
-    + ACCOUNTS_URLS
-    + API_URLS
-    + COURSES_URLS
-    + HARDWARE_URLS
-    + SCHEDULING_URLS
-    + SHIFTS_URLS
-    + USERS_URLS
-    + SCHEDULE_URL
+    MISC_URLS + 
+    ACCOUNTS_URLS + 
+    API_URLS + 
+    COURSES_URLS + 
+    HARDWARE_URLS + 
+    SCHEDULING_URLS + 
+    SHIFTS_URLS + 
+    USERS_URLS + 
+    SCHEDULE_URL + 
+    SEMESTER_URL +
+    PAYROLL_URL
 )
