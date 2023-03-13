@@ -13,13 +13,16 @@ def is_in_groups(user: LRCDatabaseUser, *groups: str) -> bool:
 
 @register.filter
 def is_si(user: LRCDatabaseUser) -> bool:
-    return is_in_groups(user, "SIs")
+    return user.is_si()
 
 
 @register.filter
 def is_tutor(user: LRCDatabaseUser) -> bool:
-    return is_in_groups(user, "Tutors")
+    return user.is_tutor()
 
+@register.filter
+def is_pm(user: LRCDatabaseUser) -> bool:
+    return user.is_pm()
 
 @register.filter
 def is_office_staff(user: LRCDatabaseUser) -> bool:

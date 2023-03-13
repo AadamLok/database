@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load groups static %}
+{% load position_helper static %}
 
 {% block extra_includes %}
     <script>
@@ -38,28 +39,32 @@
                 <div class="card-body">
                     <p class="card-text"><strong>Name:</strong> {{ target_user.first_name }} {{ target_user.last_name }}</p>
                     <p class="card-text"><strong>Email:</strong> <a href="mailto:{{ target_user.email }}">{{ target_user.email }}</a></p>
-                    <p class="card-text"><strong>Groups:</strong> {{ target_user.groups.all|join:', '}}</p>
+                    {% comment %} <p class="card-text"><strong>Groups:</strong> {{ target_user.groups.all|join:', '}}</p> {% endcomment %}
+                    <p class="card-text"><strong>Position:</strong>
+                        <ul>
+                            {% for pos in target_user|positions %}
+                                <li>{{pos}}</li>
+                            {% endfor %}
+                        </ul>
+                    </p>
                     {% if target_user|is_si %}
                         <p class="card-text">
                             <strong>SI course:</strong>
-                            {% if target_user.si_course %}
-                                <a href="{% url 'view_course' target_user.si_course.id %}">{{ target_user.si_course }}</a>
-                            {% else %}
-                                None
-                            {% endif %}
+                            <ul>
+                                {% for pos in target_user|get_si_courses %}
+                                    <li><a href="{% url 'view_course' pos.course_id %}">{{ pos.course_name }}</a></li>
+                                {% endfor %}
+                            </ul>
                         </p>
                     {% endif %}
                     {% if target_user|is_tutor %}
                         <p class="card-text">
                             <strong>Tutored courses:</strong>
-                            {% if target_user.courses_tutored %}
-                                <ul>
-                                {% for course in target_user.courses_tutored.all %}
-                                    <li><a href="{% url 'view_course' course.id %}">{{ course }}</a></li>
+                            <ul>
+                                {% for pos in target_user|get_tutor_courses %}
+                                    <li><a href="{% url 'view_course' pos.course_id %}">{{ pos.course_name }}</a></li>
                                 {% endfor %}
-                            {% else %}
-                                None.
-                            {% endif %}
+                            </ul>
                     {% endif %}
                 </div>
             </div>
@@ -72,10 +77,8 @@
                     <div class="card-body">
                         <p class="card-text">
                             <ul>
-                                {% if target_user|is_si %}
+                                {% if target_user|is_si or target_user|is_tutor %}
                                     <li><a href="{% url 'new_shift_request' %}">Schedule new session</a></li>
-                                {% elif target_user|is_tutor %}
-                                    <li><a href="{% url 'new_shift_tutors_only' %}">Schedule new shift</a></li>
                                 {% endif %}
                                 <li><a href="{% url 'view_shift_change_requests_by_user' user.id %}">View shift change requests</a></li>
                             </ul>

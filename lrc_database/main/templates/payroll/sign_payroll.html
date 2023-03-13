@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block extra_includes %}
+<script src="{% static 'js/confetti.js' %}"></script> 
+<script type="text/javascript">
+	let state = 0;
+	const audio = new Audio("{% static 'audio/celebration.mp3' %}");
+
+	function button_click() {
+		if(state === 0) {
+			document.getElementById("celebrate").innerHTML = "Stop The Celebration";
+			confetti.start();
+			audio.play();
+			state += 1;
+		} else {
+			confetti.stop();
+			document.getElementById("celebrate").innerHTML = "Let's Celebrate!!";
+			state -= 1;
+		}
+	}
+</script>
+{% endblock %}
+
+{% block content %}
+	<div class="event-schedule-area-two bg-color pad100">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="section-title text-center">
+						{% if shifts == None%}
+							<p>
+								You don't have any new payroll to sign. Thank you for signing all the payroll.
+							</p>
+							<button id="celebrate" class="btn btn-primary" onClick="button_click()">Let's Celebrate!!</button>
+						{% else %}
+							<p>
+								To sign payroll just click on checkbox next to it indicating you did that shift. If you weren't able to
+								complete that shift please indicate the reason and don't check the checkbox. After doing so hit the submit 
+								button.
+							</p>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+			{% if shifts != None %}
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="tab-content" id="myTabContent">
+							<div class="tab-pane fade active show" id="home" role="tabpanel">
+								<div class="table-responsive">
+									<table class="table">
+										<thead>
+											<tr>
+												<th class="text-center" scope="col">Date</th>
+												<th scope="col">Session</th>
+												<th class="text-center" scope="col">Payroll Info</th>
+											</tr>
+										</thead>
+										<tbody>
+											{% for shift in shifts %}
+												<tr class="inner-box">
+													<th scope="row">
+														<div class="event-date">
+															<span>{{shift.date}}</span>
+															<p>{{shift.month}}</p>
+														</div>
+													</th>
+													<td>
+														<div class="event-wrap">
+															<h3><a href="#">{{shift.kind}}</a></h3>
+															<div class="meta">
+																<div>
+																	<a href="#" style="text-decoration: none">{{shift.position}}</a>
+																</div>
+																<div class="time">
+																	<span>{{shift.start}} - {{shift.end}} {{shift.duration}}</span>
+																</div>
+															</div>
+														</div>
+													</td>
+													<td>
+														<div class="primary-btn">
+															<form method="post" action="{% url 'sign_payroll' %}">
+																{% csrf_token %}
+																{{ shift.form|crispy }}
+																<button type="submit" class="btn btn-primary">Approve</button>
+															</form>
+														</div>
+													</td>
+												</tr>
+											{% endfor %}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}

@@ -17,7 +17,7 @@ class LRCDatabaseUserAdmin(UserAdmin):
 @admin.register(Shift)
 class ShiftAdmin(admin.ModelAdmin):
     list_display = (
-        "associated_person",
+        "position",
         "start",
         "duration",
         "location",

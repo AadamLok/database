@@ -49,8 +49,21 @@
                             Courses
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
-                            <li><a class="dropdown-item" href="{% url 'list_courses' %}">Course list</a></li>
-                            <li><a class="dropdown-item" href="{% url 'add_course' %}">Add course</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_courses' %}">Course List</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_course' %}">Add Course</a></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><a class="dropdown-item" href="{% url 'list_course_sections' 'none' %}">Course Section List</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_course_section' %}">Add Course Section</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbar-account-dropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Semester
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
+                            <li><a class="dropdown-item" href="{% url 'list_semesters' %}">List Semester</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_semester' %}">Add Semester</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
@@ -82,6 +95,23 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbar-account-dropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
+                            Payroll
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
+                            {% if user|is_privileged %}
+                            <li><h6 class="dropdown-header">Manage Payroll</h6></li>
+                            <li><a class="dropdown-item" href="{% url 'weekly_payroll' 0 %}">Weekly View</a></li>
+                            <li><a class="dropdown-item" href="{% url 'user_payroll' 0 %}">User View</a></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><h6 class="dropdown-header">Your Payroll</h6></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{% url 'sign_payroll' %}">Sign Payroll</a></li>
+                            <li><a class="dropdown-item" href="{% url 'view_payroll' %}">View Payroll</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbar-account-dropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             Account
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
@@ -95,7 +125,7 @@
             </ul>
             {% if user.is_authenticated %}
                 <span class="navbar-text">
-                    Signed in as <a href="{% url 'user_profile' user.id %}">{{ user.first_name }} {{ user.last_name }}</a>
+                    <a href="{% url 'user_profile' user.id %}">{{ user.first_name }} {{ user.last_name }}</a>
                 </span>
             {% endif %}
         </div>

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+	<h2>Payroll View</h2>
+	<br/>
+	<h5>Total Pay that you have recived for this semester: {{total_pay}}</h5>
+	<p>This page shows you the pay that you should revice this semester. If their is any discripancy in pay please contact LRC over email.</p>
+	<p>Guide to understanding hours, if you click on any hours you will get to know more about that shift. And following is the color palet which will help you understand your hours.</p>
+	<span class="dot" style="background-color: orange;"></span> - SI Session<br/>
+	<span class="dot" style="background-color: teal;"></span> - SI Session Preparation<br/>
+	<span class="dot" style="background-color: green;"></span> - Tutoring Session<br/>
+	<span class="dot" style="background-color: red;"></span> - Training<br/>
+	<span class="dot" style="background-color: blue;"></span> - Observation<br/>
+	<span class="dot" style="background-color: magenta;"></span> - Class<br/>
+	<span class="dot" style="background-color: black;"></span> - Other<br/>
+	<br/>
+	<div class="table-responsive">
+		<table class="table">
+			<thead>
+				<tr>
+					<th scope="col" class="text-center">Week</th>
+					<th scope="col" class="text-center">Position</th>
+					<th scope="col" class="text-center">Sunday</th>
+					<th scope="col" class="text-center">Monday</th>
+					<th scope="col" class="text-center">Tuesday</th>
+					<th scope="col" class="text-center">Wednesday</th>
+					<th scope="col" class="text-center">Thurday</th>
+					<th scope="col" class="text-center">Friday</th>
+					<th scope="col" class="text-center">Saturday</th>
+					<th scope="col" class="text-center">Total Hours</th>
+					<th scope="col" class="text-center">Pay</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for name, week in weeks.items %}
+					{% for position, day_shift in week.items %}
+						<tr>
+							{% if forloop.counter0 == 0 %}
+								<td rowspan="{{week|length}}" class="text-center align-middle">{{name}}</td>
+							{% endif %}
+							<td class="align-middle">{{position}}</td>
+							<td class="text-center">
+								<div class="mt-2"></div>
+								{% for s in day_shift.0 %}
+									<span class="{{s.color}} p-1 border-radius-5 text-white font-size16 
+									xs-font-size13">
+									{% if s.late %}<i class="bi bi-exclamation-triangle"></i>{% endif %}
+									<a href="{% url 'view_shift' s.id%}" class="link-light">{{s.time}}</a></span>
+									<div class="mt-2"></div>
+								{% endfor %}
+							</td>
+							<td class="text-center">
+								<div class="mt-2"></div>
+								{% for s in day_shift.1 %}
+									<span class="{{s.color}} p-1 border-radius-5 text-white font-size16 
+									xs-font-size13">
+									{% if s.late %}<i class="bi bi-exclamation-triangle"></i>{% endif %}
+									<a href="{% url 'view_shift' s.id%}" class="link-light">{{s.time}}</a></span>
+									<div class="mt-2"></div>
+								{% endfor %}
+							</td>
+							<td class="text-center">
+								<div class="mt-2"></div>
+								{% for s in day_shift.2 %}
+									<span class="{{s.color}} p-1 border-radius-5 text-white font-size16 
+									xs-font-size13">
+									{% if s.late %}<i class="bi bi-exclamation-triangle"></i>{% endif %}
+									<a href="{% url 'view_shift' s.id%}" class="link-light">{{s.time}}</a></span>
+									<div class="mt-2"></div>
+								{% endfor %}
+							</td>
+							<td class="text-center">
+								<div class="mt-2"></div>
+								{% for s in day_shift.3 %}
+									<span class="{{s.color}} p-1 border-radius-5 text-white font-size16 
+									xs-font-size13">
+									{% if s.late %}<i class="bi bi-exclamation-triangle"></i>{% endif %}
+									<a href="{% url 'view_shift' s.id%}" class="link-light">{{s.time}}</a></span>
+									<div class="mt-2"></div>
+								{% endfor %}
+							</td>
+							<td class="text-center">
+								<div class="mt-2"></div>
+								{% for s in day_shift.4 %}
+									<span class="{{s.color}} p-1 border-radius-5 text-white font-size16 
+									xs-font-size13">
+									{% if s.late %}<i class="bi bi-exclamation-triangle"></i>{% endif %}
+									<a href="{% url 'view_shift' s.id%}" class="link-light">{{s.time}}</a></span>
+									<div class="mt-2"></div>
+								{% endfor %}
+							</td>
+							<td class="text-center">
+								<div class="mt-2"></div>
+								{% for s in day_shift.5 %}
+									<span class="{{s.color}} p-1 border-radius-5 text-white font-size16 
+									xs-font-size13">
+									{% if s.late %}<i class="bi bi-exclamation-triangle"></i>{% endif %}
+									<a href="{% url 'view_shift' s.id%}" class="link-light">{{s.time}}</a></span>
+									<div class="mt-2"></div>
+								{% endfor %}
+							</td>
+							<td class="text-center">
+								<div class="mt-2"></div>
+								{% for s in day_shift.6 %}
+									<span class="{{s.color}} p-1 border-radius-5 text-white font-size16 
+									xs-font-size13">
+									{% if s.late %}<i class="bi bi-exclamation-triangle"></i>{% endif %}
+									<a href="{% url 'view_shift' s.id%}" class="link-light">{{s.time}}</a></span>
+									<div class="mt-2"></div>
+								{% endfor %}
+							</td>
+							<td class="text-end align-middle">{{day_shift.7}}</td>
+							<td class="text-end align-middle">{{day_shift.8}}</td>
+						</tr>
+					{% endfor %}
+				{% endfor %}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="9" class="text-end"><b>Total</b></td>
+					<td class="text-end align-middle">{{total_hours}}</td>
+					<td class="text-end align-middle">{{total_pay}}</td>
+				</tr>
+			</tfoot>
+		</table>
+	</div>
+{% endblock %}

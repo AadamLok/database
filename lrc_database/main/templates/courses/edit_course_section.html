@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+	<h2>View/Edit Course Section</h2>
+	<h4>Basic Information</h4>
+	<form method="post">
+		{% csrf_token %}
+        {{ course_form|crispy }}
+	</form>
+	<h4>Class Times</h4>
+	<table class="table table-striped table-hover">
+		<thead>
+			<tr>
+				<th scope="col">Location</th>
+				<th scope="col">Day</th>
+				<th scope="col">Time</th>
+				<th scope="col">Duration</th>
+				<th scope="col" class="text-center">Delete</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% if class_times|length == 0%}
+				<tr>
+					<td colspan="5" class="text-center">None</td>
+				</tr>
+			{% endif %}
+			{% for class in class_times %}
+				<tr>
+					<td>{{class.location}}</td>
+					<td>{{class.class_day}}</td>
+					<td>{{class.class_time}}</td>
+					<td>{{class.class_duration}}</td>
+					<td class="text-center"><i class="bi bi-trash3 text-red"></i></td>
+					{% comment %} <a href="{% url 'delete_user_staff_position' user_id forloop.counter0 %}"></a> {% endcomment %}
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	<h4>Add Class Times</h4>
+	<form method="post" action="{% url 'edit_course_section' course_id %}">
+		{% csrf_token %}
+        {{ class_form|crispy }}
+        <button type="submit" class="btn btn-primary">Add Class</button>
+	</form>
+{% endblock %}

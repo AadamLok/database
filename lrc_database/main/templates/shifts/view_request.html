@@ -34,9 +34,14 @@
         </tr>
     </thead>
     <tr>
-        <th>Associated person</th>
-        <td>{{ shift_request.shift_to_update.associated_person }}</td>
-        <td>{{ shift_request.new_associated_person }}</td>
+        <th>Associated Person</th>
+        <td>{{ shift_request.shift_to_update.position.person  }}</td>
+        <td>{{ shift_request.new_position.person }}</td>
+    </tr>
+    <tr>
+        <th>Associated Position</th>
+        <td>{{ shift_request.shift_to_update.position }}</td>
+        <td>{{ shift_request.new_position }}</td>
     </tr>
     <tr>
         <th>Start</th>
