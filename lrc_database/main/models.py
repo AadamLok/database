@@ -20,7 +20,7 @@ class Course(models.Model):
     number = models.CharField(
         max_length=10,
         validators=[validate_course_number],
-        help_text="Course number, like the 189C in COMPSCI 189C.",
+        help_text="Course number, like the 198C in COMPSCI 198C.",
     )
     name = models.CharField(
         max_length=64,

@@ -6,11 +6,12 @@ def validate_course_number(value):
     class_number = None
     try:
         class_number = "0"
-        for c in value.split():
+        for c in value:
             if c.isdigit():
                 class_number += c
             else:
                 break
+        print(class_number)
         class_number = int(class_number)
     except:
         raise ValidationError(_("First 3 characters of course number should be a number"))
