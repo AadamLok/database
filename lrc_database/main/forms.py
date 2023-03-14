@@ -52,6 +52,10 @@ class SemesterForm(forms.ModelForm):
     class Meta:
         model = Semester
         fields = ("name", "start_date", "end_date")
+        widgets = {
+            "start_date": forms.DateInput(attrs={'type': 'date'}),
+            "end_date": forms.DateInput(attrs={'type': 'date'})
+        }
 
 class SemesterSelectForm(forms.Form):
     semester = forms.ModelChoiceField(required=True, queryset=Semester.objects.all())
@@ -135,6 +139,8 @@ class StaffUserPositionForm(forms.ModelForm):
 class CreateUsersInBulkForm(forms.Form):
     user_data = forms.CharField(widget=forms.Textarea)
 
+class AddCoursesInBulkForm(forms.Form):
+    course_data = forms.CharField(widget=forms.Textarea)
 
 class EditProfileForm(forms.ModelForm):
     class Meta:

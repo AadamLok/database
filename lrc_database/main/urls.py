@@ -21,7 +21,8 @@ from .views.courses import (
     view_course,
     list_course_sections,
     add_course_section,
-    edit_course_section
+    edit_course_section,
+    add_courses_in_bulk
 )
 from .views.hardware import add_hardware, add_loans, edit_hardware, edit_loans, show_hardware, show_loans
 from .views.schedule import view_schedule
@@ -85,7 +86,8 @@ COURSES_URLS: URLs = [
     path("courses/add", add_course, name="add_course"),
     path("courses/list_course_sections/<str:sem>", list_course_sections, name="list_course_sections"),
     path("courses/add_course_section", add_course_section, name="add_course_section"),
-    path("courses/edit_course_section/<int:course_id>", edit_course_section, name="edit_course_section")
+    path("courses/edit_course_section/<int:course_id>", edit_course_section, name="edit_course_section"),
+    path("courses/add_courses_in_bulk", add_courses_in_bulk, name="add_courses_in_bulk")
 ]
 
 HARDWARE_URLS: URLs = [

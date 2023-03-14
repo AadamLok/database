@@ -149,15 +149,16 @@ def create_users_in_bulk(request: HttpRequest) -> HttpResponse:
             return redirect("create_users_in_bulk")
         user_data = form.cleaned_data["user_data"]
         user_data = user_data.split("\n")
-        user_data = [s.strip() for s in user_data]
-        user_data = [s.split(",") for s in user_data]
 
-        for line_number, data in enumerate(user_data):
+        for line_number in range(len(user_data)):
+            data = user_data[line_number].split(',')
+            data = [s.strip() for s in data]
             if len(data) != 3 or len(data[0]) == 0 or '@' not in data[0] or len(data[1]) == 0 or len(data[2]) == 0:
                 messages.add_message(request, messages.ERROR, f"No users have been added yet.\
                                      <br/><br/>Line number <b>{line_number+1}</b>\
                                       doesn't look right.<br/><br/>Please correct this error and try again.")
                 return redirect("create_users_in_bulk")
+            user_data[line_number] = data
 
         staff_group = Group.objects.get(name="Staff")
         for line_num, data in enumerate(user_data):
