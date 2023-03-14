@@ -28,7 +28,7 @@
 			{% for class in class_times %}
 				<tr>
 					<td>{{class.location}}</td>
-					<td>{{class.class_day}}</td>
+					<td>{{class.get_class_day_display}}</td>
 					<td>{{class.class_time}}</td>
 					<td>{{class.class_duration}}</td>
 					<td class="text-center"><i class="bi bi-trash3 text-red"></i></td>
