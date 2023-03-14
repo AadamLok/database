@@ -121,16 +121,16 @@ def create_user(request: HttpRequest) -> HttpResponse:
         form = CreateUserForm(request.POST)
         if form.is_valid():
             user = LRCDatabaseUser.objects.create_user(
-                username=form.cleaned_data["username"],
-                email=form.cleaned_data["email"],
-                first_name=form.cleaned_data["first_name"],
-                last_name=form.cleaned_data["last_name"],
-                password=form.cleaned_data["password"]
+                username=form.cleaned_data["email"].lower(),
+                email=form.cleaned_data["email"].lower(),
+                first_name=form.cleaned_data["first_name"].capitalize(),
+                last_name=form.cleaned_data["last_name"].capitalize(),
+                password=form.cleaned_data["last_name"].capitalize()
             )
             for group in form.cleaned_data["groups"]:
                 group.user_set.add(user)
-            messages.add_message(request, messages.SUCCESS, f"Account for {form.cleaned_data['username']} successfully created.")
-            return redirect("create_user")
+            messages.add_message(request, messages.SUCCESS, f"Account for {form.cleaned_data['email']} successfully created.")
+            return redirect("view_or_edit_user", user.id)
         else:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
             return redirect("create_user")
@@ -151,12 +151,31 @@ def create_users_in_bulk(request: HttpRequest) -> HttpResponse:
         user_data = user_data.split("\n")
         user_data = [s.strip() for s in user_data]
         user_data = [s.split(",") for s in user_data]
-        for username, email, first_name, last_name, primary_group in user_data:
-            user = LRCDatabaseUser.objects.create_user(
-                username=username, email=email, first_name=first_name, last_name=last_name, password=last_name
-            )
-            groups = Group.objects.filter(name=primary_group)
-            user.groups.add(*groups)
+
+        for line_number, data in enumerate(user_data):
+            if len(data) != 3 or len(data[0]) == 0 or '@' not in data[0] or len(data[1]) == 0 or len(data[2]) == 0:
+                messages.add_message(request, messages.ERROR, f"No users have been added yet.\
+                                     <br/><br/>Line number <b>{line_number+1}</b>\
+                                      doesn't look right.<br/><br/>Please correct this error and try again.")
+                return redirect("create_users_in_bulk")
+
+        staff_group = Group.objects.get(name="Staff")
+        for line_num, data in enumerate(user_data):
+            email, first_name, last_name = data
+            try:
+                user = LRCDatabaseUser.objects.create_user(
+                    username=email.lower(), 
+                    email=email.lower(), 
+                    first_name=first_name.capitalize(), 
+                    last_name=last_name.capitalize(), 
+                    password=last_name.capitalize()
+                )
+                user.groups.add(staff_group)
+            except Exception as err:
+                messages.add_message(request, messages.ERROR, f"Successfully added users till line number\
+                                      {line_num}.<br/><br/>Got the following error while trying to add new\
+                                      user at line number <b>{line_num+1}</b>:<br/>{err}")
+                return redirect("create_users_in_bulk")
         messages.add_message(request, messages.SUCCESS, f"Users successfully created.")
         return redirect("create_users_in_bulk")
     else:
