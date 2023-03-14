@@ -322,17 +322,18 @@ class ShiftManager(models.Manager):
             shift_details["late_datetime"] = timezone.now()
 
             while class_date <= sem.end_date:
-                if class_date in holidays or class_date in dates_of_switch:
+                if holidays.filter(date=class_date).exists() or dates_of_switch.filter(date_of_switch=class_date).exists():
+                    class_date += datetime.timedelta(7)
                     continue
                 
-                shift_details["start"] = datetime.datetime.combine(class_date, lecture.class_time)
+                shift_details["start"] = timezone.make_aware(datetime.datetime.combine(class_date, lecture.class_time))
                 self.create(**shift_details)
 
                 class_date += datetime.timedelta(7)
             
             for index, day in enumerate(day_to_follow):
-                if day == lecture.class_day:
-                    shift_details["start"] = datetime.datetime.combine(dates_of_switch[index], lecture.class_time)
+                if day["day_to_follow"] == lecture.class_day:
+                    shift_details["start"] = timezone.make_aware(datetime.datetime.combine(dates_of_switch[index]["date_of_switch"], lecture.class_time))
                     self.create(**shift_details)
 
 
