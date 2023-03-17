@@ -50,9 +50,9 @@
 										{% if s.kind == "SI" %}
 											<div class="font-size16" style="margin-bottom:10px">{{s.position.si_course.faculty}}</div>
 										{% endif %}
-										<span class="{% if s.kind == 'SI' %}bg-lightred{% else %}bg-green{% endif %} padding-5px-tb 
+										<div class="{% if s.kind == 'SI' %}bg-lightred{% else %}bg-green{% endif %} padding-5px-tb 
 											padding-15px-lr border-radius-5 margin-10px-bottom text-white font-size16 
-											xs-font-size13">{{s.location}}</span>
+											xs-font-size13">{{s.location}}</div>
 										<div class="margin-10px-top font-size14">{{s.start| date:"h:i A" |lower}} - {{s.start|add_datetime:s.duration|date:"h:i A"|lower}}</div>
 										<div class="font-size13">{% if privileged %}<a href="{% url 'user_profile' s.position.person.id %}">{% endif %}{% if s.position.person.0 == "*" %}All Sections{% else %}{{s.position.person}}{% endif %}{% if privileged %}</a>{% endif %}</div>
 									</div>

@@ -54,8 +54,16 @@ from .views.users import (
     delete_user_staff_position
 )
 from .views.schedule import view_schedule
-from .views.semester import list_semesters, add_semester, edit_semester, delete_holiday, delete_day_switch, change_active_semester
+from .views.semester import (
+    list_semesters, 
+    add_semester, 
+    edit_semester, 
+    delete_holiday, 
+    delete_day_switch, 
+    change_active_semester
+)
 from .views.payroll import sign_payroll, view_payroll, user_payroll, weekly_payroll
+from .views.pm import pm_schedule
 
 URLs = List[Union[URLPattern, URLResolver]]
 
@@ -154,11 +162,15 @@ SEMESTER_URL: URLs = [
     path("semester/change_active_semester/<str:name>", change_active_semester, name="change_active_semester")
 ]
 
-PAYROLL_URL :URLs = [
+PAYROLL_URL: URLs = [
     path("payroll/sign", sign_payroll, name="sign_payroll"),
     path("payroll/view", view_payroll, name="view_payroll"),
     path("payroll/user/<int:id>", user_payroll, name="user_payroll"),
     path("payroll/weekly/<negint:offset>", weekly_payroll, name="weekly_payroll"),
+]
+
+PM_URL: URLs = [
+    path("pm/schedule/<negint:offset>", pm_schedule, name="pm_schedule")
 ]
 
 urlpatterns: URLs = (
@@ -172,5 +184,6 @@ urlpatterns: URLs = (
     USERS_URLS + 
     SCHEDULE_URL + 
     SEMESTER_URL +
-    PAYROLL_URL
+    PAYROLL_URL +
+    PM_URL
 )
