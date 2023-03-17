@@ -18,6 +18,15 @@ def get_tutor_courses(user: LRCDatabaseUser):
 			pos_list.append({'course_name':str(course),'course_id':course.id})
 	return pos_list
 
+@register.filter(name='get_peers')
+def get_peers(user: LRCDatabaseUser):
+	active_position = StaffUserPosition.objects.filter(person=user, semester=Semester.objects.get_active_sem(), position="PM").all()
+	peers = []
+	for pos in active_position:
+		for peer in pos.peers_list():
+			peers.append({'name':str(peer),'id':peer.id})
+	return peers
+
 @register.filter(name='positions')
 def positions(user: LRCDatabaseUser):
 	active_position = StaffUserPosition.objects.filter(person=user, semester=Semester.objects.get_active_sem()).all()

@@ -41,7 +41,7 @@ def view_shift(request: HttpRequest, shift_id: int) -> HttpResponse:
 @restrict_to_http_methods("GET", "POST")
 def new_shift_change_request(request: HttpRequest, shift_id: int) -> HttpResponse:
     shift = get_object_or_404(Shift, pk=shift_id)
-    if shift.associated_person.id != request.user.id:
+    if shift.position.person.id != request.user.id:
         # TODO: let privileged users edit anyone's shifts
         raise PermissionDenied
     if request.method == "POST":
@@ -61,8 +61,11 @@ def new_shift_change_request(request: HttpRequest, shift_id: int) -> HttpRespons
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
             return redirect("new_shift_change_request", shift_id)
     else:
+        shift = get_object_or_404(Shift, pk=shift_id)
         form = NewChangeRequestForm(
+            form_person = shift.position.person,
             initial={
+                "new_position": shift.position,
                 "new_start": shift.start,
                 "new_duration": shift.duration,
                 "new_location": shift.location,
@@ -322,13 +325,12 @@ def new_shift_request(request: HttpRequest) -> HttpResponse:
         )
     else:
         form = NewChangeRequestForm(request.user, request.POST)
-        print(form.data)
         if form.is_valid():
             data = form.cleaned_data
             change_request = ShiftChangeRequest.objects.create(
                 shift_to_update=None,
                 state="New",
-                new_position=data["_new_position"],
+                new_position=data["new_position"],
                 reason=data["reason"],
                 new_start=data["new_start"],
                 new_duration=data["new_duration"],
@@ -342,11 +344,11 @@ def new_shift_request(request: HttpRequest) -> HttpResponse:
             return redirect("new_shift_request")
 
 
-@restrict_to_groups("SIs", "Tutors")
+# @restrict_to_groups("SIs", "Tutors")
 @restrict_to_http_methods("GET", "POST")
 def new_drop_request(request: HttpRequest, shift_id: int) -> HttpResponse:
     shift = get_object_or_404(Shift, id=shift_id)
-    if shift.associated_person != request.user:
+    if shift.position.person != request.user:
         raise PermissionDenied
 
     if request.method == "GET":
@@ -363,7 +365,7 @@ def new_drop_request(request: HttpRequest, shift_id: int) -> HttpResponse:
                 shift_to_update=shift,
                 state="New",
                 is_drop_request=True,
-                new_associated_person=request.user,
+                new_position=shift.position,
                 new_kind=shift.kind,
                 new_start=shift.start,
                 # approved_by=None,

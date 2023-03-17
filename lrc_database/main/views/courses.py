@@ -223,6 +223,19 @@ def course_event_feed(request: HttpRequest, course_id: int) -> JsonResponse:
     )
 
     def to_json(shift: Shift) -> Dict[str, Any]:
+        color = "black"
+        if shift.kind == "SI":
+            color = "orange"
+        elif shift.kind == "Tutoring":
+            color = "green"
+        elif shift.kind == "Training":
+            color = "red"
+        elif shift.kind == "Observation":
+            color = "blue"
+        elif shift.kind == "Class":
+            color = "magenta"
+        elif shift.kind == "SI-Preparation":
+            color = "teal"
         return {
             "id": str(shift.id),
             "start": shift.start.isoformat(),
@@ -230,6 +243,7 @@ def course_event_feed(request: HttpRequest, course_id: int) -> JsonResponse:
             "title": str(shift),
             "allDay": False,
             "url": reverse("view_shift", args=(shift.id,)),
+            "color": color,
         }
 
     json_response = list(map(to_json, shifts))
