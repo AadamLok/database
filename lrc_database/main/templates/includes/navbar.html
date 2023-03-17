@@ -83,6 +83,20 @@
                     </li>
                 {% endif %}
                 {% if user.is_authenticated %}
+                    {% if user|is_pm %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbar-account-dropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                PM
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
+                                <li><a class="dropdown-item" href="{% url 'pm_schedule' 0 %}">Check Schedule</a></li>
+                                <li><a class="dropdown-item" href="{% url 'view_schedule' 'All' '0' %}">Schedule Meeting</a></li>
+                                <li><a class="dropdown-item" href="{% url 'view_schedule' 'All' '0' %}">Record Observation</a></li>
+                                <li><a class="dropdown-item" href="{% url 'view_schedule' 'All' '0' %}">Past Observation</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbar-account-dropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
