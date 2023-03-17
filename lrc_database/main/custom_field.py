@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django import forms
 from django.db.models import Q
 from .models import LRCDatabaseUser, Semester
@@ -38,3 +40,19 @@ class ListTextWidget(forms.TextInput):
 			# data_list += f'<option value="{item.id}">{item}</option>'
         data_list += '</datalist>'
         return (text_html + data_list)
+
+class CustomDurationField(forms.fields.DurationField):
+    def to_python(self, value):
+        if self.required:
+            if value == '' or value == None:
+                raise forms.ValidationError('Cannot be empty')
+        try:
+            value += ":00"
+        except:
+            raise forms.ValidationError('Select a valid choice. That choice is not one of the available choices.')
+        value = super().to_python(value)
+        return value
+
+    def __init__(self, *args, **kwargs):
+        self.validate_field= kwargs.pop('validate_field', None)
+        super().__init__(*args, **kwargs)

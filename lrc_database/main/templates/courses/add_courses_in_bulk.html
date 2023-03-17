@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <h2>Add Courses in Bulk</h2>
+    <p>
+        Write course data into the text area below. For each course you wish to add, add a single line with the following values in order and separated by commas.
+        <ul>
+            <li>department short name, like "COMPSCI"</li>
+            <li>course number, like "198C"</li>
+            <li>course name, like "Programming in C"</li>
+        </ul>
+        so the full line would be something like <code>COMPSCI,198C,Programming in C</code><br/><br/>
+    </p>
+    <p>You can export large numbers of lines like this easily from programs like Excel by looking for an "export to CSV" (<a href="https://en.wikipedia.org/wiki/Comma-separated_values" target="_blank">comma-separated values</a>) or similar option.</p>
+    <hr />
+    <form method="post" action="{% url 'add_courses_in_bulk' %}">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">Add Courses</button>
+    </form>
+{% endblock %}

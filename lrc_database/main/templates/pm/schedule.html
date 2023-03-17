@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% load schedule %}
+
+{% block content %}
+
+<h2>PM Schedule View</h2>
+
+<div class="table-responsive">
+	<div>
+		<div class="left-table-button padding-5px-tb padding-15px-lr margin-10px-bottom">
+			{% with new_offset=offset|add:'-7' %}
+				<a href="{% url 'pm_schedule' new_offset %}" class="table-button bg-dark"><<</a>
+			{% endwith %}
+			{% with new_offset=offset|add:'-1' %}
+				<a href="{% url 'pm_schedule' new_offset %}" class="table-button bg-dark"><</a>
+			{% endwith %}
+		</div>
+		<div class="right-table-button  padding-5px-tb padding-15px-lr margin-10px-bottom">
+			{% with new_offset=offset|add:'1' %}
+				<a href="{% url 'pm_schedule' new_offset %}" class="table-button bg-dark">></a>
+			{% endwith %}
+			{% with new_offset=offset|add:'7' %}
+				<a href="{% url 'pm_schedule' new_offset %}" class="table-button bg-dark">>></a>
+			{% endwith %}
+		</div>
+	</div>
+	<table class="table table-bordered text-center equal-col">
+		<thead>
+			<tr>
+				<th scope="col" class="text-uppercase align-middle">Peer</th>
+				<th scope="col" class="text-uppercase align-middle">Course</th>
+				{% for day in weekdays %}
+					<th scope="col" class="text-uppercase align-middle"><span>{{ day|date:"l" }}<span><div>{{ day|date:"m/d" }}</div></th>
+				{% endfor %}
+			</tr>
+		</thead>
+		<tbody>
+			{% for peer, courses in info.items%}
+				{% for course, days in courses.1.items %}
+					<tr>
+						{% if forloop.first %}
+							<td rowspan="{{courses.1|length}}" class="align-middle"><a href="{% url 'user_profile' courses.0 %}">{{peer}}</a></td>
+						{% endif %}
+						<td class="align-middle"><a href="{% url 'view_course' days.0 %}">{{course}}</a></td>
+						{% for day in days.1 %}
+							{% if day|length == 0 %}
+								<td class="bg-light-gray"></td>
+							{% else %}
+								<td>
+									{% for s in day %}
+										<div class="margin-10px-top">
+											{% if s.kind == "SI" %}
+												<div class="font-size16" style="margin-bottom:10px">{% if s.position.si_course.faculty == "*" %}All Sections{% else %}{{s.position.si_course.faculty}}{% endif %}</div>
+											{% endif %}
+											<div class="{% if s.kind == 'SI' %}bg-lightred{% else %}bg-green{% endif %} padding-5px-tb 
+												padding-15px-lr border-radius-5 margin-10px-bottom text-center text-white 
+												font-size16 xs-font-size13">{{s.location}}</div>
+											<div class="margin-10px-top font-size14">{{s.start| date:"h:i A" |lower}} - {{s.start|add_datetime:s.duration|date:"h:i A"|lower}}</div>
+										</div>
+										{% if not forloop.last %}
+											<div class="mb-1 mt-1" style="height:2px;background-color:rgba(0,0,0,0.2);border-radius:1px;"></div>
+										{% endif %}
+									{% endfor %}
+								</td>
+							{% endif %}
+						{% endfor %}
+					</tr>
+				{% empty %}
+					<tr>
+						<td class="align-middle"><a href="{% url 'user_profile' courses.0 %}">{{peer}}</a></td>
+						<td class="align-middle"> None </td>
+						<td class="bg-light-gray"></td>
+						<td class="bg-light-gray"></td>
+						<td class="bg-light-gray"></td>
+						<td class="bg-light-gray"></td>
+						<td class="bg-light-gray"></td>
+						<td class="bg-light-gray"></td>
+						<td class="bg-light-gray"></td>
+					</tr>
+				{% endfor %}
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+
+{% endblock %}

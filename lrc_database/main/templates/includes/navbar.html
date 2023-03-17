@@ -51,6 +51,7 @@
                         <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
                             <li><a class="dropdown-item" href="{% url 'list_courses' %}">Course List</a></li>
                             <li><a class="dropdown-item" href="{% url 'add_course' %}">Add Course</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_courses_in_bulk' %}">Add Course in Bulk</a></li>
                             <li><hr class="dropdown-divider" /></li>
                             <li><a class="dropdown-item" href="{% url 'list_course_sections' 'none' %}">Course Section List</a></li>
                             <li><a class="dropdown-item" href="{% url 'add_course_section' %}">Add Course Section</a></li>
@@ -72,13 +73,30 @@
                             Shifts
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
-                            <li><a class="dropdown-item" href="{% url 'new_shift' %}">Schedule new shift</a></li>
-                            <li><a class="dropdown-item" href="{% url 'drop_shifts_on_date' %}">Drop shifts on date</a></li>
-                            <li><a class="dropdown-item" href="{% url 'swap_shift_dates' %}">Swap shift dates</a></li>
-                            <li><a class="dropdown-item" href="{% url 'move_shifts_from_date' %}">Move shifts from date</a></li>
+                            <li><a class="dropdown-item" href="{% url 'new_shift' %}">Schedule New Shift</a></li>
                             <li><a class="dropdown-item" href="{% url 'new_shift_recurring' %}">Add Recurring Shifts</a></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><a class="dropdown-item" href="{% url 'drop_shifts_on_date' %}">Drop Shifts on Date</a></li>
+                            <li><a class="dropdown-item" href="{% url 'swap_shift_dates' %}">Swap Shift Dates</a></li>
+                            <li><a class="dropdown-item" href="{% url 'move_shifts_from_date' %}">Move Shifts from Date</a></li>
                         </ul>
                     </li>
+                {% endif %}
+                {% if user.is_authenticated %}
+                    {% if user|is_pm %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbar-account-dropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                PM
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
+                                <li><a class="dropdown-item" href="{% url 'pm_schedule' 0 %}">Check Schedule</a></li>
+                                <li><a class="dropdown-item" href="{% url 'view_schedule' 'All' '0' %}">Schedule Meeting</a></li>
+                                <li><a class="dropdown-item" href="{% url 'view_schedule' 'All' '0' %}">Record Observation</a></li>
+                                <li><a class="dropdown-item" href="{% url 'view_schedule' 'All' '0' %}">Past Observation</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbar-account-dropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
@@ -90,8 +108,6 @@
                             <li><a class="dropdown-item" href="{% url 'view_schedule' 'Tutoring' '0' %}">Tutoring</a></li>
                         </ul>
                     </li>
-                {% endif %}
-                {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbar-account-dropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">

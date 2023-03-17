@@ -48,10 +48,15 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
         shift_to_edit.save()
 
         if shift_to_edit.kind == "SI":
+            duration = timedelta(hours=2)
+            if shift_to_edit.duration > timedelta(hours=1, minutes=15):
+                duration += (shift_to_edit.duration-timedelta(hours=1, minutes=15))*(timedelta(hours=1)/timedelta(minutes=45))
+            if duration > timedelta(hours=3):
+                duration = timedelta(hours=3)
             Shift.objects.create(
                 position=shift_to_edit.position,
                 start=shift_to_edit.start,
-                duration=timedelta(hours=3) if shift_to_edit.duration == timedelta(hours=2) else timedelta(hours=2),
+                duration=duration,
                 location="None",
                 kind="SI-Preparation",
                 attended=True,

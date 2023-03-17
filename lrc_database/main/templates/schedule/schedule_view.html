@@ -7,24 +7,26 @@
 <h2>{{kind}} Schedule</h2>
 
 <div class="table-responsive">
-	<div>
-		<div class="left-table-button padding-5px-tb padding-15px-lr margin-10px-bottom">
-			{% with new_offset=offset|add:'-7' %}
-				<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark"><<</a>
-			{% endwith %}
-			{% with new_offset=offset|add:'-1' %}
-				<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark"><</a>
-			{% endwith %}
+	{% if privileged %}
+		<div>
+			<div class="left-table-button padding-5px-tb padding-15px-lr margin-10px-bottom">
+				{% with new_offset=offset|add:'-7' %}
+					<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark"><<</a>
+				{% endwith %}
+				{% with new_offset=offset|add:'-1' %}
+					<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark"><</a>
+				{% endwith %}
+			</div>
+			<div class="right-table-button  padding-5px-tb padding-15px-lr margin-10px-bottom">
+				{% with new_offset=offset|add:'1' %}
+					<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark">></a>
+				{% endwith %}
+				{% with new_offset=offset|add:'7' %}
+					<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark">>></a>
+				{% endwith %}
+			</div>
 		</div>
-		<div class="right-table-button  padding-5px-tb padding-15px-lr margin-10px-bottom">
-			{% with new_offset=offset|add:'1' %}
-				<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark">></a>
-			{% endwith %}
-			{% with new_offset=offset|add:'7' %}
-				<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark">>></a>
-			{% endwith %}
-		</div>
-	</div>
+	{% endif %}
 	<table class="table table-bordered text-center equal-col">
 		<thead>
 			<tr>
@@ -37,7 +39,7 @@
 		<tbody>
 			{% for course, days in info.items %}
 				<tr>
-					<td class="align-middle"><a href="{% url 'view_course' days.0 %}">{{course}}</a></td>
+					<td class="align-middle">{% if privileged %}<a href="{% url 'view_course' days.0 %}">{{course}}</a>{% else %}{{course}}{% endif %}</td>
 					{% for day in days.1 %}
 						{% if day|length == 0 %}
 							<td class="bg-light-gray"></td>
@@ -48,12 +50,15 @@
 										{% if s.kind == "SI" %}
 											<div class="font-size16" style="margin-bottom:10px">{{s.position.si_course.faculty}}</div>
 										{% endif %}
-										<span class="{% if s.kind == 'SI' %}bg-lightred{% else %}bg-green{% endif %} padding-5px-tb 
+										<div class="{% if s.kind == 'SI' %}bg-lightred{% else %}bg-green{% endif %} padding-5px-tb 
 											padding-15px-lr border-radius-5 margin-10px-bottom text-white font-size16 
-											xs-font-size13">{{s.location}}</span>
+											xs-font-size13">{{s.location}}</div>
 										<div class="margin-10px-top font-size14">{{s.start| date:"h:i A" |lower}} - {{s.start|add_datetime:s.duration|date:"h:i A"|lower}}</div>
-										<div class="font-size13"><a href="{% url 'user_profile' s.position.person.id %}">{% if s.position.person.0 == "*" %}All Sections{% else %}{{s.position.person}}{% endif %}</a></div>
+										<div class="font-size13">{% if privileged %}<a href="{% url 'user_profile' s.position.person.id %}">{% endif %}{% if s.position.person.0 == "*" %}All Sections{% else %}{{s.position.person}}{% endif %}{% if privileged %}</a>{% endif %}</div>
 									</div>
+									{% if not forloop.last %}
+										<div class="mb-1 mt-1" style="height:2px;background-color:rgba(0,0,0,0.2);border-radius:1px;"></div>
+									{% endif %}
 								{% endfor %}
 							</td>
 						{% endif %}

@@ -12,7 +12,10 @@ from . import restrict_to_groups, restrict_to_http_methods
 
 
 class DropShiftsOnDateForm(forms.Form):
-    date = forms.DateField(help_text="MM/DD/YYYY")
+    date = forms.DateField(
+        help_text="MM/DD/YYYY", 
+        widget = forms.widgets.DateInput(attrs={'type': 'date'}),
+    )
 
 
 @restrict_to_groups("Office staff", "Supervisors")
@@ -43,8 +46,14 @@ def drop_shifts_on_date_confirmation(request: HttpRequest) -> HttpResponse:
 
 
 class SwapShiftDates(forms.Form):
-    first_date = forms.DateField(help_text="MM/DD/YYYY")
-    second_date = forms.DateField(help_text="MM/DD/YYYY")
+    first_date = forms.DateField(
+        help_text="MM/DD/YYYY", 
+        widget = forms.widgets.DateInput(attrs={'type': 'date'}),
+    )
+    second_date = forms.DateField(
+        help_text="MM/DD/YYYY", 
+        widget = forms.widgets.DateInput(attrs={'type': 'date'}),
+    )
 
 
 @restrict_to_groups("Office staff", "Supervisors")
@@ -65,8 +74,8 @@ def swap_shift_dates_confirmation(request: HttpRequest) -> HttpResponse:
         first_date = form.cleaned_data["first_date"]
         second_date = form.cleaned_data["second_date"]
 
-        first_date_shifts = Shift.all_on_date(first_date)
-        second_date_shifts = Shift.all_on_date(second_date)
+        first_date_shifts = Shift.objects.all_on_date(first_date)
+        second_date_shifts = Shift.objects.all_on_date(second_date)
 
         return render(
             request,
@@ -83,8 +92,8 @@ def swap_shift_dates_confirmation(request: HttpRequest) -> HttpResponse:
         first_date = date.fromisoformat(request.GET["first"])
         second_date = date.fromisoformat(request.GET["second"])
 
-        first_date_shifts = Shift.all_on_date(first_date)
-        second_date_shifts = Shift.all_on_date(second_date)
+        first_date_shifts = Shift.objects.all_on_date(first_date)
+        second_date_shifts = Shift.objects.all_on_date(second_date)
 
         for shift in first_date_shifts:
             start = shift.start.astimezone(pytz.timezone("America/New_York"))
@@ -113,8 +122,14 @@ def swap_shift_dates_confirmation(request: HttpRequest) -> HttpResponse:
 
 
 class MoveShiftsFromDateForm(forms.Form):
-    from_ = forms.DateField(help_text="MM/DD/YYYY")
-    to_ = forms.DateField(help_text="MM/DD/YYYY")
+    from_ = forms.DateField(
+        help_text="MM/DD/YYYY", 
+        widget = forms.widgets.DateInput(attrs={'type': 'date'}),
+    )
+    to_ = forms.DateField(
+        help_text="MM/DD/YYYY", 
+        widget = forms.widgets.DateInput(attrs={'type': 'date'}),
+    )
 
 
 @restrict_to_groups("Office staff", "Supervisors")
@@ -135,7 +150,7 @@ def move_shifts_from_date_confirmation(request: HttpRequest) -> HttpResponse:
 
         from_date: date = form.cleaned_data["from_"]
         to_date: date = form.cleaned_data["to_"]
-        from_date_shifts = Shift.all_on_date(from_date)
+        from_date_shifts = Shift.objects.all_on_date(from_date)
 
         return render(
             request,
@@ -145,7 +160,7 @@ def move_shifts_from_date_confirmation(request: HttpRequest) -> HttpResponse:
     else:  # request.method == "GET"
         from_date = date.fromisoformat(request.GET["from"])
         to_date = date.fromisoformat(request.GET["to"])
-        from_date_shifts = Shift.all_on_date(from_date)
+        from_date_shifts = Shift.objects.all_on_date(from_date)
         for shift in from_date_shifts:
             start = shift.start.astimezone(pytz.timezone("America/New_York"))
             start = start.replace(

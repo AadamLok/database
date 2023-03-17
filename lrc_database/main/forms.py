@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import Group
 
-from .custom_field import TypedModelListField, ListTextWidget
+from .custom_field import TypedModelListField, ListTextWidget, CustomDurationField
 
 from .models import (
     ClassDetails, 
@@ -52,6 +52,10 @@ class SemesterForm(forms.ModelForm):
     class Meta:
         model = Semester
         fields = ("name", "start_date", "end_date")
+        widgets = {
+            "start_date": forms.DateInput(attrs={'type': 'date'}),
+            "end_date": forms.DateInput(attrs={'type': 'date'})
+        }
 
 class SemesterSelectForm(forms.Form):
     semester = forms.ModelChoiceField(required=True, queryset=Semester.objects.all())
@@ -105,7 +109,7 @@ class DaySwitchForm(forms.ModelForm):
 class CreateUserForm(forms.ModelForm):
     class Meta:
         model = LRCDatabaseUser
-        fields = ("username", "email", "first_name", "last_name", "password")
+        fields = ("email", "first_name", "last_name")
 
     groups = forms.ModelMultipleChoiceField(queryset=Group.objects.all(), widget=forms.CheckboxSelectMultiple)
 
@@ -135,6 +139,8 @@ class StaffUserPositionForm(forms.ModelForm):
 class CreateUsersInBulkForm(forms.Form):
     user_data = forms.CharField(widget=forms.Textarea)
 
+class AddCoursesInBulkForm(forms.Form):
+    course_data = forms.CharField(widget=forms.Textarea)
 
 class EditProfileForm(forms.ModelForm):
     class Meta:
@@ -157,13 +163,13 @@ class SetToPendingForm(forms.ModelForm):
 class NewChangeRequestForm(forms.ModelForm):
     class Meta:
         model = ShiftChangeRequest
-        fields = ("reason", "new_start", "new_duration", "new_location", "new_kind")
+        fields = ("new_position","reason", "new_start", "new_duration", "new_location", "new_kind")
 
-    def __init__(self, form_person, *args, **kwargs):
+    def __init__(self, form_person = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if form_person is not None:
             active_positions = StaffUserPosition.objects.filter(person=form_person, semester=Semester.objects.get_active_sem()).all()
-            self.fields["_new_position"] = forms.ModelChoiceField(required=True, queryset=active_positions)
+            self.fields["new_position"] = forms.ModelChoiceField(required=True, queryset=active_positions, label="New Position")
 
 class NewDropRequestForm(forms.ModelForm):
     class Meta:
@@ -180,6 +186,7 @@ class AddHardwareForm(forms.ModelForm):
 
 class NewShiftForm(forms.ModelForm):
     position = TypedModelListField(queryset=StaffUserPosition.objects.all())
+    duration = CustomDurationField(required=True)
     class Meta:
         model = Shift
         exclude = ('signed','reason','attended','late', 'late_datetime')

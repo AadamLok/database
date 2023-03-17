@@ -10,7 +10,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from ..forms import CourseForm, SemesterSelectForm, FullCourseForm, ReadOnlyFullCourseForm, ClassDetailsForm
+from ..forms import CourseForm, SemesterSelectForm, FullCourseForm, ReadOnlyFullCourseForm, ClassDetailsForm, AddCoursesInBulkForm
 from ..models import Course, Shift, Semester, FullCourse, StaffUserPosition, ClassDetails
 from . import restrict_to_groups, restrict_to_http_methods
 
@@ -52,6 +52,49 @@ def add_course(request: HttpRequest) -> HttpResponse:
     else:
         form = CourseForm()
         return render(request, "courses/add_course.html", {"form": form})
+
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def add_courses_in_bulk(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        form = AddCoursesInBulkForm(request.POST)
+        if form.is_valid():
+            course_data = form.cleaned_data["course_data"]
+            course_data = course_data.split("\n")
+
+            for line_number in range(len(course_data)):
+                data = course_data[line_number].split(',')
+                data = [s.strip() for s in data]
+                if len(data) != 3 or len(data[0]) == 0 or len(data[1]) == 0 or len(data[2]) == 0:
+                    messages.add_message(request, messages.ERROR, f"No course have been added yet.\
+                                        <br/><br/>Line number <b>{line_number+1}</b>\
+                                        doesn't look right.<br/><br/>Please correct this error and try again.")
+                    return redirect("add_courses_in_bulk")
+                course_data[line_number] = data
+
+            for line_num, data in enumerate(course_data):
+                department, number, name = data
+                try:
+                    Course.objects.create(
+                        department=department.upper(),
+                        number=number.upper(),
+                        name=name
+                    )
+                except Exception as err:
+                    messages.add_message(request, messages.ERROR, f"Successfully added courses till line number\
+                                        {line_num}.<br/><br/>Got the following error while trying to add new\
+                                        course at line number <b>{line_num+1}</b>:<br/>{err}")
+                    return redirect("add_course_in_bulk")
+            messages.add_message(request, messages.SUCCESS, f"Courses successfully created.")
+            return redirect("add_courses_in_bulk")
+        else:
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("add_courses_in_bulk")
+    else:
+        form = AddCoursesInBulkForm()
+        return render(request, "courses/add_courses_in_bulk.html", {"form": form})
+
 
 @restrict_to_groups("Office staff", "Supervisors")
 @restrict_to_http_methods("GET", "POST")
@@ -140,8 +183,8 @@ def edit_course(request: HttpRequest, course_id: int) -> HttpResponse:
     if request.method == "POST":
         form = CourseForm(request.POST)
         if form.is_valid():
-            course.department = form.cleaned_data["department"]
-            course.number = form.cleaned_data["number"]
+            course.department = form.cleaned_data["department"].upper()
+            course.number = form.cleaned_data["number"].upper()
             course.name = form.cleaned_data["name"]
             course.save()
             return redirect("view_course", course.id)
@@ -180,6 +223,19 @@ def course_event_feed(request: HttpRequest, course_id: int) -> JsonResponse:
     )
 
     def to_json(shift: Shift) -> Dict[str, Any]:
+        color = "black"
+        if shift.kind == "SI":
+            color = "orange"
+        elif shift.kind == "Tutoring":
+            color = "green"
+        elif shift.kind == "Training":
+            color = "red"
+        elif shift.kind == "Observation":
+            color = "blue"
+        elif shift.kind == "Class":
+            color = "magenta"
+        elif shift.kind == "SI-Preparation":
+            color = "teal"
         return {
             "id": str(shift.id),
             "start": shift.start.isoformat(),
@@ -187,6 +243,7 @@ def course_event_feed(request: HttpRequest, course_id: int) -> JsonResponse:
             "title": str(shift),
             "allDay": False,
             "url": reverse("view_shift", args=(shift.id,)),
+            "color": color,
         }
 
     json_response = list(map(to_json, shifts))
