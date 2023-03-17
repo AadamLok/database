@@ -93,9 +93,11 @@ class Command(BaseCommand):
                 options["net_id"],
                 options["password"]
             )
+            print("Superuser Added!")
         if options["tech_user"]:
             create_tech_user(
                 options["net_id"],
                 options["password"]
             )
-        print("Superuser Added!")
+            print("Tech User Added!")
+        

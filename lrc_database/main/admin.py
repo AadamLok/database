@@ -1,18 +1,97 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Course, Hardware, Loan, LRCDatabaseUser, Shift, ShiftChangeRequest
+from .models import (
+    Course,
+    Semester,
+    Holidays,
+    DaySwitch,
+    FullCourse,
+    ClassDetails,
+    LRCDatabaseUser,
+    StaffUserPosition,
+    Shift,
+    ShiftChangeRequest,
+    Hardware,
+    Loan
+)
 
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    ordering = ("department", "number")
+    list_display = (
+        "department",
+        "number",
+        "name"
+    )
+    ordering = (
+        "department",
+        "number"
+    )
 
+@admin.register(Semester)
+class SemesterAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "start_date",
+        "end_date",
+        "active"
+    )
+    ordering = (
+        "active",
+        "start_date"
+    )
+
+@admin.register(Holidays)
+class HolidaysAdmin(admin.ModelAdmin):
+    list_display = (
+        "semester",
+        "date"
+    )
+    ordering = ("date","semester")
+
+@admin.register(DaySwitch)
+class DaySwitchAdmin(admin.ModelAdmin):
+    list_display = (
+        "semester",
+        "date_of_switch",
+        "day_to_follow"
+    )
+    ordering = ("date_of_switch","semester")
+
+@admin.register(FullCourse)
+class FullCourseAdmin(admin.ModelAdmin):
+    list_display = (
+        "semester",
+        "course",
+        "faculty"
+    )
+    ordering = ("semester", "course", "faculty")
+
+@admin.register(ClassDetails)
+class ClassDetalisAdmin(admin.ModelAdmin):
+    list_display = (
+        "full_course",
+        "location",
+        "class_day",
+        "class_time",
+        "class_duration"
+    )
+    ordering = ("full_course__semester","class_day")
 
 @admin.register(LRCDatabaseUser)
 class LRCDatabaseUserAdmin(UserAdmin):
     pass
 
+@admin.register(StaffUserPosition)
+class StaffUserPositionAdmin(admin.ModelAdmin):
+    list_display = (
+        "semester",
+        "position",
+        "person",
+        "hourly_rate"
+    )
+    ordering = ("semester", "position", "person")
 
 @admin.register(Shift)
 class ShiftAdmin(admin.ModelAdmin):
@@ -20,38 +99,19 @@ class ShiftAdmin(admin.ModelAdmin):
         "position",
         "start",
         "duration",
-        "location",
+        "kind"
     )
-
+    ordering = ("start",)
 
 @admin.register(ShiftChangeRequest)
 class ShiftChangeRequestAdmin(admin.ModelAdmin):
-    fieldsets = (
-        (
-            "Approval",
-            {
-                "fields": (
-                    "shift_to_update",
-                    "reason",
-                    "state",
-                    # "approved_by",
-                    # "approved_on",
-                )
-            },
-        ),
-        (
-            "New data",
-            {"fields": ("new_associated_person", "new_start", "new_duration", "new_location", "new_kind")},
-        ),
-    )
-    ordering = ("new_start",)
     list_display = (
         "shift_to_update",
         "reason",
         "state",
-        # "approved_by",
-        # "approved_on",
+        "is_drop_request"
     )
+    ordering = ("new_start",)
 
 
 @admin.register(Hardware)

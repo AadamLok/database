@@ -398,7 +398,6 @@ class Shift(models.Model):
         ordering = ('start',)
 
     def __str__(self):
-        tz = pytz.timezone("America/New_York")
         return f"{self.kind}, {self.location}"
 
 
