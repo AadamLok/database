@@ -20,15 +20,15 @@
         <h2>{{ target_user.first_name }} {{ target_user.last_name }}</h2>
     </div>
     <div class="row">
-        <div class="col-md-8">
+        <div id="cal-div" class="col-md-8">
             <div class="card mb-3">
-                <div class="card-header">Calendar</div>
+                <div id="cal-header" class="card-header">Calendar</div>
                 <div class="card-body">
                     <div id="calendar"></div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div id="main-div" class="col-md-4">
             <div class="card">
                 <div class="card-header">
                     Biography
@@ -63,6 +63,15 @@
                             <ul>
                                 {% for pos in target_user|get_tutor_courses %}
                                     <li><a href="{% url 'view_course' pos.course_id %}">{{ pos.course_name }}</a></li>
+                                {% endfor %}
+                            </ul>
+                    {% endif %}
+                    {% if target_user|is_pm %}
+                        <p class="card-text">
+                            <strong>Peers:</strong>
+                            <ul>
+                                {% for person in target_user|get_peers %}
+                                    <li><a href="{% url 'user_profile' person.id %}">{{ person.name }}</a></li>
                                 {% endfor %}
                             </ul>
                     {% endif %}

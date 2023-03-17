@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
+    <h2>Edit Course</h2>
     <form method="post" action="{% url 'edit_course' course_id %}">
         {% csrf_token %}
         {{ form|crispy }}

@@ -2,9 +2,10 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
+    <h2>Update Shift Request</h2>
     <form method="post" action="{% url 'new_shift_change_request' shift_id %}">
         {% csrf_token %}
         {{ form|crispy }}
-        <input type="submit" value="Submit">
+        <button type="submit" class="btn btn-primary">Submit Request</button>
     </form>
 {% endblock %}

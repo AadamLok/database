@@ -2,10 +2,10 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-    <h2>Drop shift</h2>
+    <h2>Drop Shift Request</h2>
     <form method="post" action="{% url 'new_drop_request' shift_id %}">
         {% csrf_token %}
         {{ form|crispy }}
-        <input type="submit" value="Submit">
+        <button type="submit" class="btn btn-primary">Submit Request</button>
     </form>
 {% endblock %}

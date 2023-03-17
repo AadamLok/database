@@ -346,7 +346,8 @@ class Shift(models.Model):
 
     start = models.DateTimeField(help_text="The time that the shift starts.")
 
-    duration = models.DurationField(help_text="How long the shift will last, in HH:MM:SS format.")
+    duration = models.DurationField(
+        help_text="How long the shift will last. Format: HH:MM. E.g. if you want shift to be 1 hour 15 mins long, enter 01:15")
 
     location = models.CharField(
         max_length=32,
