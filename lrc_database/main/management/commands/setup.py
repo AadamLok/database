@@ -17,13 +17,17 @@ User = get_user_model()
 
 def create_superuser(net_id: str, password: str):
     print("Creating superuser...")
-    User.objects.create_superuser(
+    user = User.objects.create_superuser(
         username=f"{net_id}+lrcadmin@umass.edu", 
         password=password, 
         email=f"{net_id}+lrcadmin@umass.edu", 
         first_name="Admin", 
         last_name=net_id
     )
+
+    supervisor_group = Group.objects.filter(name="Supervisors").first()
+    supervisor_group.user_set.add(user)
+    supervisor_group.save()
 
 def create_tech_user(net_id: str, password: str):
     print("Creating tech user...")
@@ -55,6 +59,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser) -> None:
         parser.add_argument("-a", "--add-user", action='store_true', default=False)
+        parser.add_argument("-s", "--super-user", action='store_true', default=False)
+        parser.add_argument("-t", "--tech-user", action='store_true', default=False)
         parser.add_argument("--net-id", type=str)
         parser.add_argument("--password", type=str)
 
@@ -82,12 +88,14 @@ class Command(BaseCommand):
         if not options["add_user"]:
             create_groups()
             print("Database is ready to use!")
-        create_superuser(
-            options["net_id"],
-            options["password"]
-        )
-        create_tech_user(
-            options["net_id"],
-            options["password"]
-        )
+        if options["super_user"]:
+            create_superuser(
+                options["net_id"],
+                options["password"]
+            )
+        if options["tech_user"]:
+            create_tech_user(
+                options["net_id"],
+                options["password"]
+            )
         print("Superuser Added!")
