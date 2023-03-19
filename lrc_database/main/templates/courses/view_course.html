@@ -28,7 +28,7 @@
                 <div class="card-header">Tutors</div>
                 <div class="card-body">
                     {% for tutor in tutors %}
-                        <p class="card-text"><a href="{% url 'user_profile' tutor.id %}">{{ tutor }}</a></p>
+                        <p class="card-text"><a href="{% url 'user_profile' tutor.person.id %}">{{ tutor.person }}</a></p>
                     {% empty %}
                         <p class="card-text">None.</p>
                     {% endfor %}
@@ -38,7 +38,7 @@
                 <div class="card-header">SI leaders</div>
                 <div class="card-body">
                     {% for si in sis %}
-                        <p class="card-text"><a href="{% url 'user_profile' si.id %}">{{ si }}</a></p>
+                        <p class="card-text"><a href="{% url 'user_profile' si.person.id %}">{{ si.person }}</a></p>
                     {% empty %}
                         <p class="card-text">None.</p>
                     {% endfor %}

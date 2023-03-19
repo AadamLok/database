@@ -20,7 +20,7 @@ class Course(models.Model):
     number = models.CharField(
         max_length=10,
         validators=[validate_course_number],
-        help_text="Course number, like the 189C in COMPSCI 189C.",
+        help_text="Course number, like the 198C in COMPSCI 198C.",
     )
     name = models.CharField(
         max_length=64,
@@ -322,17 +322,18 @@ class ShiftManager(models.Manager):
             shift_details["late_datetime"] = timezone.now()
 
             while class_date <= sem.end_date:
-                if class_date in holidays or class_date in dates_of_switch:
+                if holidays.filter(date=class_date).exists() or dates_of_switch.filter(date_of_switch=class_date).exists():
+                    class_date += datetime.timedelta(7)
                     continue
                 
-                shift_details["start"] = datetime.datetime.combine(class_date, lecture.class_time)
+                shift_details["start"] = timezone.make_aware(datetime.datetime.combine(class_date, lecture.class_time))
                 self.create(**shift_details)
 
                 class_date += datetime.timedelta(7)
             
             for index, day in enumerate(day_to_follow):
-                if day == lecture.class_day:
-                    shift_details["start"] = datetime.datetime.combine(dates_of_switch[index], lecture.class_time)
+                if day["day_to_follow"] == lecture.class_day:
+                    shift_details["start"] = timezone.make_aware(datetime.datetime.combine(dates_of_switch[index]["date_of_switch"], lecture.class_time))
                     self.create(**shift_details)
 
 
@@ -345,7 +346,8 @@ class Shift(models.Model):
 
     start = models.DateTimeField(help_text="The time that the shift starts.")
 
-    duration = models.DurationField(help_text="How long the shift will last, in HH:MM:SS format.")
+    duration = models.DurationField(
+        help_text="How long the shift will last. Format: HH:MM. E.g. if you want shift to be 1 hour 15 mins long, enter 01:15")
 
     location = models.CharField(
         max_length=32,
@@ -396,7 +398,6 @@ class Shift(models.Model):
         ordering = ('start',)
 
     def __str__(self):
-        tz = pytz.timezone("America/New_York")
         return f"{self.kind}, {self.location}"
 
 

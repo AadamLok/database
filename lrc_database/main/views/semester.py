@@ -61,13 +61,13 @@ def add_semester(request: HttpRequest) -> HttpResponse:
 		data = form.cleaned_data
 
 		Semester.objects.create(
-			name=data["name"],
+			name=data["name"].upper(),
 			start_date=data["start_date"],
 			end_date=data["end_date"],
 			active=False
 		)
 
-		return redirect("edit_semester", data["name"])
+		return redirect("edit_semester", data["name"].upper())
 
 	else:
 		form = SemesterForm()

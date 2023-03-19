@@ -16,6 +16,11 @@
 			<th scope="col" class="text-center">Delete</th>
 		</thead>
 		<tbody>
+			{% if holidays|length == 0 %}
+				<tr>
+					<td class="text-center" colspan="2"><i>None</i></td>
+				</tr>
+			{% endif %}
 			{% for holiday in holidays %}
 				<tr>
 					<td>{{holiday.date}}</td>
@@ -40,10 +45,15 @@
 			<th scope="col" class="text-center">Delete</th>
 		</thead>
 		<tbody>
+			{% if day_switch|length == 0 %}
+				<tr>
+					<td class="text-center" colspan="3"><i>None</i></td>
+				</tr>
+			{% endif %}
 			{% for ds in day_switch %}
 				<tr>
 					<td>{{ds.date_of_switch}}</td>
-					<td>{{ds.day_to_follow}}</td>
+					<td>{{ds.get_day_to_follow_display}}</td>
 					<td class="text-center"><a href="{% url 'delete_day_switch' name ds.date_of_switch %}"><i class="bi bi-trash3 text-red"></i></a></td>
 				</tr>
 			{% endfor %}

@@ -3,20 +3,24 @@ from urllib import request
 
 import pytz
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
 from ..models import Shift, Course, StaffUserPosition
 from . import restrict_to_groups, restrict_to_http_methods
 
 timezone = pytz.timezone("America/New_York")
+User = get_user_model()
 
 
 @login_required
 @restrict_to_http_methods("GET")
-@restrict_to_groups("Office staff", "Supervisors")
+# @restrict_to_groups("Office staff", "Supervisors")
 def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
-    offset = int(offset)
+    user = get_object_or_404(User, id=request.user.id)
+    privileged = user.is_privileged()
+    offset = int(offset) if privileged else -7
     
     today = timezone.localize(datetime.combine(datetime.today(), datetime.min.time()))
     start = today + timedelta(days=offset)
@@ -45,6 +49,12 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
             for course in s_position.tutor_courses.all():
                 info[course.short_name()][1][(shift.start.weekday()-start_day)%7].append(shift)
 
-    return render(
-        request, "schedule/schedule_view.html", {"kind": kind, "offset": offset, "weekdays": weekdays, "info": info}
-    )
+    context = {
+        "privileged": privileged, 
+        "kind": kind, 
+        "offset": offset, 
+        "weekdays": weekdays, 
+        "info": info
+    }
+
+    return render(request, "schedule/schedule_view.html", context)

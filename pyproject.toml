@@ -46,8 +46,8 @@ ignore_errors = true
 [tool.poetry]
 name = "lrc-database"
 version = "0.1.0"
-description = "Session scheduling program for peer tutors and SI leaders (and some other things)"
-authors = ["Simon Andrews <sbandrews@umass.edu>", "Lily Rosenbaum <lrosenbaum@umass.edu>"]
+description = "Managment tool to run all internal operations of LRC@UMASS."
+authors = ["Simon Andrews <sbandrews@umass.edu>", "Lily Rosenbaum <lrosenbaum@umass.edu>", "Aadam Lokhandwala <alokhandwala@umass.edu>", "Manan Talwar <mtalwar@umass.edu>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"

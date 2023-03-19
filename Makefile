@@ -43,6 +43,13 @@ reset_database:
 	./lrc_database/manage.py migrate
 	./lrc_database/manage.py bootstrapdatabase
 
+reset_database_final:
+	rm -rf ./lrc_database/main/migrations/*.py
+	touch ./lrc_database/main/migrations/__init__.py
+	rm -f ./lrc_database/db.sqlite3
+	./lrc_database/manage.py makemigrations main
+	./lrc_database/manage.py migrate
+
 win_reset:
 	del lrc_database\main\migrations\*.py
 	type nul > lrc_database\main\migrations\__init__.py
@@ -50,6 +57,13 @@ win_reset:
 	python lrc_database\manage.py makemigrations main
 	python lrc_database\manage.py migrate
 	python lrc_database\manage.py bootstrapdatabase
+
+win_reset_final:
+	del lrc_database\main\migrations\*.py
+	type nul > lrc_database\main\migrations\__init__.py
+	del lrc_database\db.sqlite3
+	python lrc_database\manage.py makemigrations main
+	python lrc_database\manage.py migrate
 
 migrate:
 	./lrc_database/manage.py makemigrations main
