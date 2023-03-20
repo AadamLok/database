@@ -124,9 +124,10 @@ def create_user(request: HttpRequest) -> HttpResponse:
                 username=form.cleaned_data["email"].lower(),
                 email=form.cleaned_data["email"].lower(),
                 first_name=form.cleaned_data["first_name"].capitalize(),
-                last_name=form.cleaned_data["last_name"].capitalize(),
-                password=form.cleaned_data["last_name"].capitalize()
+                last_name=form.cleaned_data["last_name"].capitalize()
             )
+            user.set_unusable_password()
+            user.save()
             for group in form.cleaned_data["groups"]:
                 group.user_set.add(user)
             messages.add_message(request, messages.SUCCESS, f"Account for {form.cleaned_data['email']} successfully created.")
@@ -168,10 +169,11 @@ def create_users_in_bulk(request: HttpRequest) -> HttpResponse:
                     username=email.lower(), 
                     email=email.lower(), 
                     first_name=first_name.capitalize(), 
-                    last_name=last_name.capitalize(), 
-                    password=last_name.capitalize()
+                    last_name=last_name.capitalize()
                 )
+                user.set_unusable_password()
                 user.groups.add(staff_group)
+                user.save()
             except Exception as err:
                 messages.add_message(request, messages.ERROR, f"Successfully added users till line number\
                                       {line_num}.<br/><br/>Got the following error while trying to add new\
@@ -189,15 +191,16 @@ def create_users_in_bulk(request: HttpRequest) -> HttpResponse:
 def list_users(request: HttpRequest, group: Optional[str] = None) -> HttpResponse:
     if group is not None:
         if group == "SI" or group == "Tutor":
-            users = get_list_or_404(User.objects.all(), groups__name="Staff")
-            active_sem = Semester.objects.filter(active=True).first()
-            user_ids = StaffUserPosition.objects.filter(Q(person__in=users) & Q(semester=active_sem) & Q(position=group)).all().values('person')
-            users = User.objects.filter(id__in=user_ids).all()
+            users = User.objects.filter(groups__name="Staff").all()
+            active_sem = Semester.objects.get_active_sem()
+            if len(users) > 0:
+                user_ids = StaffUserPosition.objects.filter(Q(person__in=users) & Q(semester=active_sem) & Q(position=group)).all().values('person')
+                users = User.objects.filter(id__in=user_ids).all()
         else:
-            users = get_list_or_404(User.objects.all(), groups__name=group)
+            users = User.objects.filter(groups__name=group).all()
     else:
         group = "All users"
-        users = get_list_or_404(User.objects.all())
+        users = User.objects.all()
     return render(request, "users/list_users.html", {"users": users, "group": group})
 
 

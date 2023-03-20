@@ -185,9 +185,12 @@ class ClassDetails(models.Model):
 class LRCDatabaseUser(AbstractUser):
     first_name = models.CharField(_("first name"), max_length=100, blank=False)
     last_name = models.CharField(_("last name"), max_length=100, blank=False)
-    email = models.EmailField(_("email"), max_length=100, blank=False)
+    email = models.EmailField(_("email"), max_length=100, blank=False, unique=True)
 
     REQUIRED_FIELDS = [first_name, last_name, email]
+
+    class Meta:
+        ordering = ('first_name','last_name','email')
 
     def is_privileged(self) -> bool:
         return self.groups.filter(name__in=("Office staff", "Supervisors")).exists()
@@ -205,7 +208,7 @@ class LRCDatabaseUser(AbstractUser):
         return num_pm_position > 0
 
     def __str__(self) -> str:
-        return f"{self.first_name}\u2004{self.last_name}"
+        return f"{self.first_name} {self.last_name} [{self.email}]"
 
 class StaffUserPosition(models.Model):
     person = models.ForeignKey(
@@ -260,6 +263,9 @@ class StaffUserPosition(models.Model):
 
     def __str__(self):
         return f"{self.position}, {self.person.__str__()}"
+    
+    def short_str(self):
+        return f"{self.position}"
 
     def peers_list(self):
         return self.peers.all()
@@ -289,6 +295,9 @@ class StaffUserPosition(models.Model):
     
 
 class ShiftManager(models.Manager):
+    def filter(self, *args, **kwargs):
+        return super().filter(*args, deleted=False, **kwargs)
+
     def all_on_date(self, date):
         tz_adjusted_range_start = datetime.datetime(
             date.year, date.month, date.day, tzinfo=pytz.timezone("America/New_York")
@@ -390,6 +399,11 @@ class Shift(models.Model):
     late_datetime = models.DateTimeField(
         null=True,
         blank=True
+    )
+
+    deleted = models.BooleanField(
+        default=False,
+        null=False
     )
 
     objects = ShiftManager()
