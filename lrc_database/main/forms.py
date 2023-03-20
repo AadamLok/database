@@ -18,6 +18,12 @@ from .models import (
     StaffUserPosition
 )
 
+class LogIn(forms.Form):
+    username = forms.CharField(label="Username", max_length=150, required=True)
+    password = forms.CharField(label="Password", max_length=150, required=True, widget=forms.PasswordInput())
+
+class ResetPassword(forms.Form):
+    user = forms.ModelChoiceField(required=True, queryset=LRCDatabaseUser.objects.all())
 
 class CourseForm(forms.ModelForm):
     class Meta:

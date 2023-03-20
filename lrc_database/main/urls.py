@@ -34,7 +34,6 @@ from .views.shifts import (
     new_shift,
     new_shift_change_request,
     new_shift_request,
-    new_shift_tutors_only,
     set_to_pending,
     view_drop_shift_requests,
     view_shift,
@@ -64,6 +63,7 @@ from .views.semester import (
 )
 from .views.payroll import sign_payroll, view_payroll, user_payroll, weekly_payroll
 from .views.pm import pm_schedule
+from .views.auth import login_user, reset_password
 
 URLs = List[Union[URLPattern, URLResolver]]
 
@@ -75,11 +75,11 @@ MISC_URLS: URLs = [
 ]
 
 ACCOUNTS_URLS: URLs = [
-    # path("accounts/", include("django.contrib.auth.urls")),
-    path("accounts/login/", auth_views.LoginView.as_view(), name="login"),
+    path("accounts/login/", login_user, name="login"),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("accounts/password_change/", auth_views.PasswordChangeView.as_view(), name="password_change"),
     path("accounts/password_change/done/", auth_views.PasswordChangeDoneView.as_view(), name="password_change_done"),
+    path("accounts/reset_password/", reset_password, name="reset_password"),
 ]
 
 API_URLS: URLs = [
@@ -131,7 +131,6 @@ SHIFTS_URLS: URLs = [
     path("shifts/<int:shift_id>/request_drop", new_drop_request, name="new_drop_request"),
     path("shifts/<int:shift_id>/request_change", new_shift_change_request, name="new_shift_change_request"),
     path("shifts/new", new_shift, name="new_shift"),
-    path("shifts/new/tutoring", new_shift_tutors_only, name="new_shift_tutors_only"),
     path("shifts/new/recurring", new_shift_recurring, name="new_shift_recurring"),
 ]
 

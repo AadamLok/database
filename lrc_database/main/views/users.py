@@ -189,15 +189,16 @@ def create_users_in_bulk(request: HttpRequest) -> HttpResponse:
 def list_users(request: HttpRequest, group: Optional[str] = None) -> HttpResponse:
     if group is not None:
         if group == "SI" or group == "Tutor":
-            users = get_list_or_404(User.objects.all(), groups__name="Staff")
-            active_sem = Semester.objects.filter(active=True).first()
-            user_ids = StaffUserPosition.objects.filter(Q(person__in=users) & Q(semester=active_sem) & Q(position=group)).all().values('person')
-            users = User.objects.filter(id__in=user_ids).all()
+            users = User.objects.filter(groups__name="Staff").all()
+            active_sem = Semester.objects.get_active_sem()
+            if len(users) > 0:
+                user_ids = StaffUserPosition.objects.filter(Q(person__in=users) & Q(semester=active_sem) & Q(position=group)).all().values('person')
+                users = User.objects.filter(id__in=user_ids).all()
         else:
-            users = get_list_or_404(User.objects.all(), groups__name=group)
+            users = User.objects.filter(groups__name=group).all()
     else:
         group = "All users"
-        users = get_list_or_404(User.objects.all())
+        users = User.objects.all()
     return render(request, "users/list_users.html", {"users": users, "group": group})
 
 
