@@ -32,15 +32,16 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
                             <li><h6 class="dropdown-header">List users</h6></li>
-                            <li><a class="dropdown-item" href="{% url 'list_users' %}">All users</a></li>
-                            <li><a class="dropdown-item" href="{% url 'list_users' 'SI' %}">SI leaders</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' %}">All Users</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' 'SI' %}">SI Leaders</a></li>
                             <li><a class="dropdown-item" href="{% url 'list_users' 'Tutor' %}">Tutors</a></li>
-                            <li><a class="dropdown-item" href="{% url 'list_users' 'Office staff' %}">Office staff</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' 'Office staff' %}">Office Staff</a></li>
                             <li><a class="dropdown-item" href="{% url 'list_users' 'Supervisors' %}">Supervisors</a></li>
                             <li><hr class="dropdown-divider" /></li>
                             <li><h6 class="dropdown-header">Manage users</h6></li>
-                            <li><a class="dropdown-item" href="{% url 'create_user' %}">Create user</a></li>
-                            <li><a class="dropdown-item" href="{% url 'create_users_in_bulk' %}">Create users in bulk</a></li>
+                            <li><a class="dropdown-item" href="{% url 'reset_password' %}">Reset User Password</a></li>
+                            <li><a class="dropdown-item" href="{% url 'create_user' %}">Create User</a></li>
+                            <li><a class="dropdown-item" href="{% url 'create_users_in_bulk' %}">Create Users in Bulk</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">

@@ -86,9 +86,7 @@
                     <div class="card-body">
                         <p class="card-text">
                             <ul>
-                                {% if target_user|is_si or target_user|is_tutor %}
-                                    <li><a href="{% url 'new_shift_request' %}">Schedule new session</a></li>
-                                {% endif %}
+                                <li><a href="{% url 'new_shift_request' %}">Schedule new session</a></li>
                                 <li><a href="{% url 'view_shift_change_requests_by_user' user.id %}">View shift change requests</a></li>
                             </ul>
                         </p>

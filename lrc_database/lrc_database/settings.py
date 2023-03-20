@@ -30,9 +30,9 @@ ALLOWED_HOSTS: List[str] = os.environ.get("LRC_DATABASE_ALLOWED_HOSTS", ".localh
 
 # ALLOWED_HOSTS = ["0.0.0.0"]
 
-CSRF_TRUSTED_ORIGINS = ["http://3.139.14.216:8000"]
+CSRF_TRUSTED_ORIGINS = ["http://3.139.14.216:80"]
 
-CORS_ORIGIN_WHITELIST = ["http://3.139.14.216:8000"]
+CORS_ORIGIN_WHITELIST = ["http://3.139.14.216:80"]
 
 DEBUG = os.environ.get("LRC_DATABASE_DEBUG", "0") == "1"
 
