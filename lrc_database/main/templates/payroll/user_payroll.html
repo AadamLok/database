@@ -13,9 +13,11 @@
     </form>
 	<br/>
 	<p>Guide to understanding hours, if you click on any hours you will get to know more about that shift. And following is the color palet which will help you understand your hours.</p>
+	<center>
 	{% for type, color in color_coder.items %}
-		<span class="dot" style="background-color: {{color}};"></span> - {{type}}<br/>
+		<span class="dot" style="background-color: {{color}};"></span> {{type}} &emsp;
 	{% endfor %}
+	</center>
 	<br/>
 	<div class="table-responsive">
 		<table class="table">

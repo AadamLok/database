@@ -8,7 +8,7 @@
 	<p>This page shows you the pay that you should revice this semester. If their is any discripancy in pay please contact LRC over email.</p>
 	<p>Guide to understanding hours, if you click on any hours you will get to know more about that shift. And following is the color palet which will help you understand your hours.</p>
 	{% for type, color in color_coder.items %}
-		<span class="dot" style="background-color: {{color}};"></span> - {{type}}<br/>
+		<span class="dot" style="background-color: {{color}};"></span> {{type}} &emsp;
 	{% endfor %}
 	<br/>
 	<div class="table-responsive">
