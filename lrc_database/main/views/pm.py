@@ -5,9 +5,11 @@ import pytz
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import PermissionDenied
+from django.contrib import messages
 
+from ..forms import PMAddMeetingForm
 from ..models import Shift, Course, StaffUserPosition, Semester
 from . import restrict_to_groups, restrict_to_http_methods
 
@@ -76,3 +78,44 @@ def pm_schedule(request: HttpRequest, offset: int) -> HttpResponse:
     }
 
 	return render(request, "pm/schedule.html", context)
+
+@login_required
+@restrict_to_http_methods("GET", "POST")
+def pm_add_meeting(request: HttpRequest) -> HttpResponse:
+	if request.method == "POST":
+		pm_position = StaffUserPosition.objects.filter(
+			person=request.user,
+			semester=Semester.objects.get_active_sem(),
+			position="PM"
+		).first()
+		form = PMAddMeetingForm(pm_position, request.POST)
+		if not form.is_valid():
+			messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+			return redirect("pm_add_meeting")
+		else:
+			data = form.cleaned_data
+			Shift.objects.create(
+				position=data["position"],
+				start=data["start"],
+				duration=data["duration"],
+				location=data["location"],
+				kind="Meeting"
+			)
+			Shift.objects.create(
+				position=pm_position,
+				start=data["start"],
+				duration=data["duration"],
+				location=data["location"],
+				kind="Meeting"
+			)
+			messages.add_message(request, messages.SUCCESS, f"Meeting successfully added!")
+			return redirect("pm_add_meeting")
+	else:
+		pm_position = StaffUserPosition.objects.filter(
+			person=request.user,
+			semester=Semester.objects.get_active_sem(),
+			position="PM"
+		).first()
+		form = PMAddMeetingForm(pm=pm_position)
+		context = {"form":form}
+		return render(request, "pm/add_meeting.html", context)

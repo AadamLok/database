@@ -13,6 +13,7 @@ from . import restrict_to_groups, restrict_to_http_methods
 
 from ..models import Shift, Semester, StaffUserPosition
 from ..forms import PayrollForm, SemesterSelectForm, UserSelectForm
+from ..color_coder import color_coder, get_color_coder_dict
 
 
 def get_week_from_date(date):
@@ -47,7 +48,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
             shift_to_edit.late_datetime = timezone.now()
         shift_to_edit.save()
 
-        if shift_to_edit.kind == "SI":
+        if shift_to_edit.kind == "SI" or shift_to_edit.kind == "GT":
             duration = timedelta(hours=2)
             if shift_to_edit.duration > timedelta(hours=1, minutes=15):
                 duration += (shift_to_edit.duration-timedelta(hours=1, minutes=15))*(timedelta(hours=1)/timedelta(minutes=45))
@@ -58,7 +59,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
                 start=shift_to_edit.start,
                 duration=duration,
                 location="None",
-                kind="SI-Preparation",
+                kind="Preparation",
                 attended=True,
                 signed=True,
                 late=shift_to_edit.late,
@@ -89,7 +90,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
         return render(request, "payroll/sign_payroll.html", context)
 
 def get_user_payroll(user_id, semester):
-    context = {"weeks":{}}
+    context = {"weeks":{}, "color_coder":get_color_coder_dict()}
 
     shifts = Shift.objects.filter(position__semester=semester, position__person__id=user_id, attended=True, signed=True).all()
     shifts = shifts.order_by("start")
@@ -112,23 +113,10 @@ def get_user_payroll(user_id, semester):
                 position = str(shift.position)
                 hours = round(shift.duration.seconds/3600,2)
                 pay = round(shift.duration.seconds/3600 * float(shift.position.hourly_rate),2)
-                color = "black"
-                if shift.kind == "SI":
-                    color = "orange"
-                elif shift.kind == "Tutoring":
-                    color = "green"
-                elif shift.kind == "Training":
-                    color = "red"
-                elif shift.kind == "Observation":
-                    color = "blue"
-                elif shift.kind == "Class":
-                    color = "magenta"
-                elif shift.kind == "SI-Preparation":
-                    color = "teal"
                 position_wise_pay[position][(shift.start.weekday()+1)%7].append({
                     "time": f"{hours:0.2f}",
                     "id": shift.id,
-                    "color": f"bg-{color}",
+                    "color": f"bg-{color_coder(shift.kind)}",
                     "late": shift.late
                 })
                 position_wise_pay[position][7] += hours

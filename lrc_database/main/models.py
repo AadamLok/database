@@ -31,9 +31,13 @@ class Course(models.Model):
         ordering = ('department','number')
 
     def short_name(self):
+        if self.department == "STUDY-SKILL":
+            return "Study-Skill"
         return f"{self.department} {self.number}"
 
     def __str__(self):
+        if self.department == "STUDY-SKILL":
+            return "Study-Skill"
         return f"{self.department} {self.number}: {self.name}"
 
 class SemesterManager(models.Manager):
@@ -203,6 +207,14 @@ class LRCDatabaseUser(AbstractUser):
         num_tutor_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="Tutor").count()
         return num_tutor_position > 0
     
+    def is_gt(self) -> bool:
+        num_gt_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="GT").count()
+        return num_gt_position > 0
+    
+    def is_ours_mentor(self) -> bool:
+        num_om_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="OursM").count()
+        return num_om_position > 0
+    
     def is_pm(self) -> bool:
         num_pm_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="PM").count()
         return num_pm_position > 0
@@ -226,7 +238,7 @@ class StaffUserPosition(models.Model):
 
     position = models.CharField(
         max_length=5,
-        choices=[("SI","SI"),("Tutor", "Tutor"),("PM", "PM")]
+        choices=[("SI","SI"),("Tutor", "Tutor"),("PM", "PM"),("GT", "Group-Tutor"), ("OursM", "OURS-Mentor")]
     )
 
     hourly_rate = models.DecimalField(
@@ -248,7 +260,7 @@ class StaffUserPosition(models.Model):
         null=True,
         default=None,
         related_name="lrc_database_user_si_course",
-        verbose_name="SI course",
+        verbose_name="SI/Group-Tutor course",
     )
 
     peers = models.ManyToManyField(
@@ -262,7 +274,9 @@ class StaffUserPosition(models.Model):
         unique_together = ('person','semester', 'position', 'si_course')
 
     def __str__(self):
-        return f"{self.position}, {self.person.__str__()}"
+        if self.position == "SI":
+            return f"{self.position} - {self.si_course.course.short_name()}, {self.person.first_name} {self.person.last_name}"
+        return f"{self.position}, {self.person.first_name} {self.person.last_name}"
     
     def short_str(self):
         return f"{self.position}"
@@ -366,11 +380,15 @@ class Shift(models.Model):
     kind = models.CharField(
         max_length=14,
         choices=(("SI", "SI"), 
-                 ("Tutoring", "Tutoring"), 
+                 ("Tutoring", "Tutoring"),
+                 ("Group Tutoring", "Group Tutoring"), 
                  ("Training", "Training"), 
                  ("Observation", "Observation"), 
                  ("Class", "Class"),
-                 ("SI-Preparation","SI-Preparation")),
+                 ("Preparation","Preparation"),
+                 ("Meeting","Meeting"),
+                 ("OURS Mentor", "OURS Mentor"),
+                 ("Other","Other")),
         help_text="The kind of shift this is: tutoring, SI, Training, Class, or Observation.",
     )
 
@@ -474,11 +492,15 @@ class ShiftChangeRequest(models.Model):
         max_length=14,
         choices=(
             ("SI", "SI"), 
-            ("Tutoring", "Tutoring"), 
+            ("Tutoring", "Tutoring"),
+            ("Group Tutoring", "Group Tutoring"), 
             ("Training", "Training"), 
             ("Observation", "Observation"), 
-            ("Class", "Class"), 
-            ("SI-Preparation","SI-Preparation")
+            ("Class", "Class"),
+            ("Preparation","Preparation"),
+            ("Meeting","Meeting"),
+            ("OURS Mentor", "OURS Mentor"),
+            ("Other","Other"),
         ),
         blank=True,
         null=True,
