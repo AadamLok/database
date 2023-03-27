@@ -40,7 +40,7 @@
 				{% for course, days in courses.1.items %}
 					<tr>
 						{% if forloop.first %}
-							<td rowspan="{{courses.1|length}}" class="align-middle"><a href="{% url 'user_profile' courses.0 %}">{{peer}}</a></td>
+							<td rowspan="{{courses.1|length}}" class="align-middle"><a href="{% url 'user_profile' courses.0 %}"><div style="overflow-wrap: break-word;">{{peer}}</div></a></td>
 						{% endif %}
 						<td class="align-middle"><a href="{% url 'view_course' days.0 %}">{{course}}</a></td>
 						{% for day in days.1 %}
@@ -68,7 +68,7 @@
 					</tr>
 				{% empty %}
 					<tr>
-						<td class="align-middle"><a href="{% url 'user_profile' courses.0 %}">{{peer}}</a></td>
+						<td class="align-middle"><a href="{% url 'user_profile' courses.0 %}"><div style="overflow-wrap: break-word;">{{peer}}</div></a></td>
 						<td class="align-middle"> None </td>
 						<td class="bg-light-gray"></td>
 						<td class="bg-light-gray"></td>

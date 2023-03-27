@@ -13,13 +13,9 @@
     </form>
 	<br/>
 	<p>Guide to understanding hours, if you click on any hours you will get to know more about that shift. And following is the color palet which will help you understand your hours.</p>
-	<span class="dot" style="background-color: orange;"></span> - SI Session<br/>
-	<span class="dot" style="background-color: teal;"></span> - SI Session Preparation<br/>
-	<span class="dot" style="background-color: green;"></span> - Tutoring Session<br/>
-	<span class="dot" style="background-color: red;"></span> - Training<br/>
-	<span class="dot" style="background-color: blue;"></span> - Observation<br/>
-	<span class="dot" style="background-color: magenta;"></span> - Class<br/>
-	<span class="dot" style="background-color: black;"></span> - Other<br/>
+	{% for type, color in color_coder.items %}
+		<span class="dot" style="background-color: {{color}};"></span> - {{type}}<br/>
+	{% endfor %}
 	<br/>
 	<div class="table-responsive">
 		<table class="table">

@@ -86,26 +86,41 @@ def view_shift_change_requests(request: HttpRequest, kind: str, state: str) -> H
     if kind == "All":
         requests = ShiftChangeRequest.objects.filter(state=state)
     else:
-        requests = ShiftChangeRequest.objects.filter(
-            (Q(new_kind=kind) | Q(shift_to_update__kind=kind)), state=state, is_drop_request=False
-        )
+        if kind != "Other":
+            requests = ShiftChangeRequest.objects.filter(
+                (Q(new_position__position=kind) | Q(shift_to_update__position__position=kind)), state=state, is_drop_request=False
+            )
+        else:
+            requests = ShiftChangeRequest.objects.filter(
+                ~(Q(new_position__position__in=["SI","Tutor","GT","OursM"]) | Q(shift_to_update__position__position__in=["SI","Tutor","GT","OursM"])), 
+                state=state, is_drop_request=False
+            )
+    kind = "Group-Tutor" if kind == "GT" else ("OURS Mentor" if kind == "OursM" else kind)
     return render(
         request,
         "scheduling/view_shift_change_requests.html",
-        {"change_requests": requests, "kind": kind, "state": state, "drop": False},
+        {"change_requests": requests, "kind": kind, "state": state, "drop": False, "previlaged": True},
     )
 
 
 @restrict_to_groups("Office staff", "Supervisors")
 @restrict_to_http_methods("GET")
 def view_drop_shift_requests(request: HttpRequest, kind: str, state: str) -> HttpResponse:
-    requests = ShiftChangeRequest.objects.filter(
-        (Q(new_kind=kind) | Q(shift_to_update__kind=kind)), state=state, is_drop_request=True
-    )
+    requests = None
+    if kind != "Other":
+        requests = ShiftChangeRequest.objects.filter(
+            (Q(new_position__position=kind) | Q(shift_to_update__position__position=kind)), state=state, is_drop_request=True
+        )
+    else:
+        requests = ShiftChangeRequest.objects.filter(
+            ~(Q(new_position__position__in=["SI","Tutor","GT","OursM"]) | Q(shift_to_update__position__position__in=["SI","Tutor","GT","OursM"])), 
+            state=state, is_drop_request=True
+        )
+    kind = "Group-Tutor" if kind == "GT" else ("OURS Mentor" if kind == "OursM" else kind)
     return render(
         request,
         "scheduling/view_shift_change_requests.html",
-        {"change_requests": requests, "kind": kind, "state": state, "drop": True},
+        {"change_requests": requests, "kind": kind, "state": state, "drop": True, "previlaged": True},
     )
 
 

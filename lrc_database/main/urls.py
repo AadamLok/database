@@ -62,7 +62,7 @@ from .views.semester import (
     change_active_semester
 )
 from .views.payroll import sign_payroll, view_payroll, user_payroll, weekly_payroll
-from .views.pm import pm_schedule
+from .views.pm import pm_schedule, pm_add_meeting
 from .views.auth import login_user, reset_password
 
 URLs = List[Union[URLPattern, URLResolver]]
@@ -169,7 +169,8 @@ PAYROLL_URL: URLs = [
 ]
 
 PM_URL: URLs = [
-    path("pm/schedule/<negint:offset>", pm_schedule, name="pm_schedule")
+    path("pm/schedule/<negint:offset>", pm_schedule, name="pm_schedule"),
+    path("pm/add-meeting/", pm_add_meeting, name="pm_add_meeting"),
 ]
 
 urlpatterns: URLs = (
