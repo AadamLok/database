@@ -17,12 +17,54 @@
                             <span class="badge bg-secondary">{{ total_alert_count }}</span>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
-                            <li><h6 class="dropdown-header">Shift change requests</h6></li>
-                            <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'SI' 'New' %}">SI requests <span class="badge bg-secondary">{{ pending_si_change_count }}</span></a></li>
-                            <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'Tutoring' 'New' %}">Tutoring requests <span class="badge bg-secondary">{{ pending_tutoring_change_count }}</span></a></li>
-                            <li><h6 class="dropdown-header">Drop shift requests</h6></li>
-                            <li><a class="dropdown-item" href="{% url 'view_drop_shift_requests' 'SI' 'New' %}">SI requests <span class="badge bg-secondary">{{ pending_si_drop_count }}</span></a></li>
-                            <li><a class="dropdown-item" href="{% url 'view_drop_shift_requests' 'Tutoring' 'New' %}">Tutoring requests <span class="badge bg-secondary">{{ pending_tutoring_drop_count }}</span></a></li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <div>SI<span class="badge bg-secondary pull-right">{{ total_si }}</span></div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-submenu">
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'SI' 'New' %}"><div>New Change <span class="badge bg-secondary pull-right">{{ pending_si_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'SI' 'Pending' %}"><div>Pending Change <span class="badge bg-secondary">{{ new_si_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_drop_shift_requests' 'SI' 'New' %}"><div>Drop <span class="badge bg-secondary pull-right">{{ si_drop_count }}</span></div></a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <div>Group Tutor<span class="badge bg-secondary pull-right">{{ total_gt }}</span></div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-submenu">
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'GT' 'New' %}"><div>New Change <span class="badge bg-secondary pull-right">{{ pending_gt_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'GT' 'Pending' %}"><div>Pending Change <span class="badge bg-secondary">{{ new_gt_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_drop_shift_requests' 'GT' 'New' %}"><div>Drop <span class="badge bg-secondary pull-right">{{ gt_drop_count }}</span></div></a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <div>Tutor<span class="badge bg-secondary pull-right">{{ total_tutor }}</span></div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-submenu">
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'Tutor' 'New' %}"><div>Change <span class="badge bg-secondary pull-right">{{ tutoring_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_drop_shift_requests' 'Tutor' 'New' %}"><div>Drop <span class="badge bg-secondary pull-right">{{ tutoring_drop_count }}</span></div></a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <div>OURS Mentor<span class="badge bg-secondary pull-right">{{ total_om }}</span></div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-submenu">
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'OursM' 'New' %}"><div>Change <span class="badge bg-secondary pull-right">{{ om_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_drop_shift_requests' 'OursM' 'New' %}"><div>Drop <span class="badge bg-secondary pull-right">{{ om_drop_count }}</span></div></a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <div>Other<span class="badge bg-secondary pull-right">{{ total_other }}</span></div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-submenu">
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'Other' 'New' %}"><div>New Change <span class="badge bg-secondary pull-right">{{ new_other_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'Other' 'Pending' %}"><div>Pending Change <span class="badge bg-secondary">{{ pending_other_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_drop_shift_requests' 'Other' 'New' %}"><div>Drop <span class="badge bg-secondary pull-right">{{ other_drop_count }}</span></div></a></li>
+                                </ul>
+                            </li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
@@ -32,15 +74,19 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
                             <li><h6 class="dropdown-header">List users</h6></li>
-                            <li><a class="dropdown-item" href="{% url 'list_users' %}">All users</a></li>
-                            <li><a class="dropdown-item" href="{% url 'list_users' 'SI' %}">SI leaders</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' %}">All Users</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' 'SI' %}">SI Leaders</a></li>
                             <li><a class="dropdown-item" href="{% url 'list_users' 'Tutor' %}">Tutors</a></li>
-                            <li><a class="dropdown-item" href="{% url 'list_users' 'Office staff' %}">Office staff</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' 'GT' %}">Group Tutors</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' 'SST' %}">Study Skill Tutors</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' 'OursM' %}">OURS Mentor</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' 'Office staff' %}">Office Staff</a></li>
                             <li><a class="dropdown-item" href="{% url 'list_users' 'Supervisors' %}">Supervisors</a></li>
                             <li><hr class="dropdown-divider" /></li>
                             <li><h6 class="dropdown-header">Manage users</h6></li>
-                            <li><a class="dropdown-item" href="{% url 'create_user' %}">Create user</a></li>
-                            <li><a class="dropdown-item" href="{% url 'create_users_in_bulk' %}">Create users in bulk</a></li>
+                            <li><a class="dropdown-item" href="{% url 'reset_password' %}">Reset User Password</a></li>
+                            <li><a class="dropdown-item" href="{% url 'create_user' %}">Create User</a></li>
+                            <li><a class="dropdown-item" href="{% url 'create_users_in_bulk' %}">Create Users in Bulk</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
@@ -91,7 +137,7 @@
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
                                 <li><a class="dropdown-item" href="{% url 'pm_schedule' 0 %}">Check Schedule</a></li>
-                                <li><a class="dropdown-item" href="{% url 'view_schedule' 'All' '0' %}">Schedule Meeting</a></li>
+                                <li><a class="dropdown-item" href="{% url 'pm_add_meeting' %}">Schedule Meeting</a></li>
                                 <li><a class="dropdown-item" href="{% url 'view_schedule' 'All' '0' %}">Record Observation</a></li>
                                 <li><a class="dropdown-item" href="{% url 'view_schedule' 'All' '0' %}">Past Observation</a></li>
                             </ul>

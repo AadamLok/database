@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-{% if kind == "SI" or kind == "Tutoring" %}
+{% if kind != "All" %}
     <h2>{{ kind }} {% if drop %}drop shift{% else %}shift change{% endif %} requests</h2>
 {% else %}
     <h2>{{ kind }} shift drop/change requests</h2>
@@ -10,16 +10,24 @@
 {% if state == "New" or state == "Approved" or state == "Pending" or state == "Not Approved" %}
 <ul class="nav nav-tabs">
     <li class="nav-item">
-        <a class="nav-link {% if state == "New" %} active {% endif %}" aria-current="page" href="{% url 'view_shift_change_requests' kind 'New' %}">New</a>
+        <a class="nav-link {% if state == 'New' %} active {% endif %}" aria-current="page" 
+        href="{% if kind == 'All' or not drop %}{% url 'view_shift_change_requests' kind 'New' %}
+        {% else %}{% url 'view_drop_shift_requests' kind 'New' %}{% endif %}">New</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if state == "Approved" %} active {% endif %}" aria-current="page" href="{% url 'view_shift_change_requests' kind 'Approved' %}">Approved</a>
+        <a class="nav-link {% if state == 'Approved' %} active {% endif %}" aria-current="page" 
+        href="{% if kind == 'All' or not drop %}{% url 'view_shift_change_requests' kind 'Approved' %}
+        {% else %}{% url 'view_drop_shift_requests' kind 'Approved' %}{% endif %}">Approved</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if state == "Not Approved" %} active {% endif %}" aria-current="page" href="{% url 'view_shift_change_requests' kind 'Not Approved' %}">Not Approved</a>
+        <a class="nav-link {% if state == 'Not Approved' %} active {% endif %}" aria-current="page" 
+        href="{% if kind == 'All' or not drop %}{% url 'view_shift_change_requests' kind 'Not Approved' %}
+        {% else %}{% url 'view_drop_shift_requests' kind 'Not Approved' %}{% endif %}">Not Approved</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if state == "Pending" %} active {% endif %}" aria-current="page" href="{% url 'view_shift_change_requests' kind 'Pending' %}">Pending</a>
+        <a class="nav-link {% if state == 'Pending' %} active {% endif %}" aria-current="page" 
+        href="{% if kind == 'All' or not drop %}{% url 'view_shift_change_requests' kind 'Pending' %}
+        {% else %}{% url 'view_drop_shift_requests' kind 'Pending' %}{% endif %}">Pending</a>
     </li>
 </ul>
 {% endif %}

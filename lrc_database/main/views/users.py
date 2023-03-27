@@ -13,8 +13,9 @@ from django.urls import reverse
 from django.db.models import Q
 
 from ..forms import CreateUserForm, CreateUsersInBulkForm, EditProfileForm, StaffUserPositionForm, EditUserForm
-from ..models import LRCDatabaseUser, Semester, Shift, StaffUserPosition
+from ..models import LRCDatabaseUser, Semester, Shift, StaffUserPosition, Course
 from . import personal, restrict_to_groups, restrict_to_http_methods
+from ..color_coder import color_coder
 
 User = get_user_model()
 
@@ -64,19 +65,6 @@ def user_event_feed(request: HttpRequest, user_id: int) -> HttpResponse:
     shifts = Shift.objects.filter(position__in=active_positions, start__gte=start, start__lte=end)
 
     def to_json(shift: Shift) -> Dict[str, Any]:
-        color = "black"
-        if shift.kind == "SI":
-            color = "orange"
-        elif shift.kind == "Tutoring":
-            color = "green"
-        elif shift.kind == "Training":
-            color = "red"
-        elif shift.kind == "Observation":
-            color = "blue"
-        elif shift.kind == "Class":
-            color = "magenta"
-        elif shift.kind == "SI-Preparation":
-            color = "teal"
         return {
             "id": str(shift.id),
             "start": shift.start.isoformat(),
@@ -84,7 +72,7 @@ def user_event_feed(request: HttpRequest, user_id: int) -> HttpResponse:
             "title": str(shift),
             "allDay": False,
             "url": reverse("view_shift", args=(shift.id,)),
-            "color": color,
+            "color": color_coder(shift.kind),
         }
 
     json_response = list(map(to_json, shifts))
@@ -124,9 +112,10 @@ def create_user(request: HttpRequest) -> HttpResponse:
                 username=form.cleaned_data["email"].lower(),
                 email=form.cleaned_data["email"].lower(),
                 first_name=form.cleaned_data["first_name"].capitalize(),
-                last_name=form.cleaned_data["last_name"].capitalize(),
-                password=form.cleaned_data["last_name"].capitalize()
+                last_name=form.cleaned_data["last_name"].capitalize()
             )
+            user.set_unusable_password()
+            user.save()
             for group in form.cleaned_data["groups"]:
                 group.user_set.add(user)
             messages.add_message(request, messages.SUCCESS, f"Account for {form.cleaned_data['email']} successfully created.")
@@ -168,10 +157,11 @@ def create_users_in_bulk(request: HttpRequest) -> HttpResponse:
                     username=email.lower(), 
                     email=email.lower(), 
                     first_name=first_name.capitalize(), 
-                    last_name=last_name.capitalize(), 
-                    password=last_name.capitalize()
+                    last_name=last_name.capitalize()
                 )
+                user.set_unusable_password()
                 user.groups.add(staff_group)
+                user.save()
             except Exception as err:
                 messages.add_message(request, messages.ERROR, f"Successfully added users till line number\
                                       {line_num}.<br/><br/>Got the following error while trying to add new\
@@ -188,16 +178,23 @@ def create_users_in_bulk(request: HttpRequest) -> HttpResponse:
 @restrict_to_http_methods("GET")
 def list_users(request: HttpRequest, group: Optional[str] = None) -> HttpResponse:
     if group is not None:
-        if group == "SI" or group == "Tutor":
-            users = get_list_or_404(User.objects.all(), groups__name="Staff")
-            active_sem = Semester.objects.filter(active=True).first()
-            user_ids = StaffUserPosition.objects.filter(Q(person__in=users) & Q(semester=active_sem) & Q(position=group)).all().values('person')
-            users = User.objects.filter(id__in=user_ids).all()
+        if group in ["SI", "Tutor", "GT", "SST", "OursM"]:
+            users = User.objects.filter(groups__name="Staff").all()
+            active_sem = Semester.objects.get_active_sem()
+            if len(users) > 0:
+                user_ids = []
+                if group == "SST":
+                    SS_course = Course.objects.filter(department="STUDY-SKILL").all()
+                    user_ids = StaffUserPosition.objects.filter(Q(person__in=users) & Q(semester=active_sem) & Q(position="Tutor") & Q(tutor_courses__in=SS_course)).all().values('person')
+                else:
+                    user_ids = StaffUserPosition.objects.filter(Q(person__in=users) & Q(semester=active_sem) & Q(position=group)).all().values('person')
+                users = User.objects.filter(id__in=user_ids).all()
         else:
-            users = get_list_or_404(User.objects.all(), groups__name=group)
+            users = User.objects.filter(groups__name=group).all()
     else:
         group = "All users"
-        users = get_list_or_404(User.objects.all())
+        users = User.objects.all()
+    group = "Study Skill Tutor" if group == "SST" else "Group Tutor" if group == "GT" else "OURS Mentor" if group == "OursM" else group
     return render(request, "users/list_users.html", {"users": users, "group": group})
 
 
@@ -222,12 +219,12 @@ def view_or_edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
             data = form.cleaned_data
             user = get_object_or_404(User, pk=user_id)
 
-            if data["position"] == "SI":
+            if data["position"] == "SI" or data["position"] == "GT":
                 if data["si_course"] is None:
-                    messages.add_message(request, messages.ERROR, f"To add SI position, you should assign a SI course.")
+                    messages.add_message(request, messages.ERROR, f"To add SI/Group-Tutor position, you should assign a SI/Group-Tutor course.")
                     return redirect("view_or_edit_user", user_id)
                 elif data["si_course"].semester != data["semester"]:
-                    messages.add_message(request, messages.ERROR, f"Trying to add SI course from different semester.")
+                    messages.add_message(request, messages.ERROR, f"Trying to add SI/Group-Tutor course from different semester.")
                     return redirect("view_or_edit_user", user_id)
             elif data["position"] == "Tutor" and len(data["tutor_courses"]) == 0:
                 messages.add_message(request, messages.ERROR, f"To add Tutor position, you should assign atleast one tutor course.")
@@ -247,6 +244,9 @@ def view_or_edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
                 new_position.si_course = data["si_course"]
                 new_position.save()
                 Shift.objects.add_class_shift(new_position, data["si_course"])
+            elif data["position"] == "GT":
+                new_position.si_course = data["si_course"]
+                new_position.save()
             elif data["position"] == "Tutor":
                 for course in data["tutor_courses"]:
                     new_position.assign_tutor_course(course)

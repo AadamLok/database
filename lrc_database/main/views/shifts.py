@@ -86,26 +86,41 @@ def view_shift_change_requests(request: HttpRequest, kind: str, state: str) -> H
     if kind == "All":
         requests = ShiftChangeRequest.objects.filter(state=state)
     else:
-        requests = ShiftChangeRequest.objects.filter(
-            (Q(new_kind=kind) | Q(shift_to_update__kind=kind)), state=state, is_drop_request=False
-        )
+        if kind != "Other":
+            requests = ShiftChangeRequest.objects.filter(
+                (Q(new_position__position=kind) | Q(shift_to_update__position__position=kind)), state=state, is_drop_request=False
+            )
+        else:
+            requests = ShiftChangeRequest.objects.filter(
+                ~(Q(new_position__position__in=["SI","Tutor","GT","OursM"]) | Q(shift_to_update__position__position__in=["SI","Tutor","GT","OursM"])), 
+                state=state, is_drop_request=False
+            )
+    kind = "Group-Tutor" if kind == "GT" else ("OURS Mentor" if kind == "OursM" else kind)
     return render(
         request,
         "scheduling/view_shift_change_requests.html",
-        {"change_requests": requests, "kind": kind, "state": state, "drop": False},
+        {"change_requests": requests, "kind": kind, "state": state, "drop": False, "previlaged": True},
     )
 
 
 @restrict_to_groups("Office staff", "Supervisors")
 @restrict_to_http_methods("GET")
 def view_drop_shift_requests(request: HttpRequest, kind: str, state: str) -> HttpResponse:
-    requests = ShiftChangeRequest.objects.filter(
-        (Q(new_kind=kind) | Q(shift_to_update__kind=kind)), state=state, is_drop_request=True
-    )
+    requests = None
+    if kind != "Other":
+        requests = ShiftChangeRequest.objects.filter(
+            (Q(new_position__position=kind) | Q(shift_to_update__position__position=kind)), state=state, is_drop_request=True
+        )
+    else:
+        requests = ShiftChangeRequest.objects.filter(
+            ~(Q(new_position__position__in=["SI","Tutor","GT","OursM"]) | Q(shift_to_update__position__position__in=["SI","Tutor","GT","OursM"])), 
+            state=state, is_drop_request=True
+        )
+    kind = "Group-Tutor" if kind == "GT" else ("OURS Mentor" if kind == "OursM" else kind)
     return render(
         request,
         "scheduling/view_shift_change_requests.html",
-        {"change_requests": requests, "kind": kind, "state": state, "drop": True},
+        {"change_requests": requests, "kind": kind, "state": state, "drop": True, "previlaged": True},
     )
 
 
@@ -165,7 +180,10 @@ def approve_pending_request(request: HttpRequest, request_id: int) -> HttpRespon
     shift = request_cur.shift_to_update or Shift()
 
     if request_cur.is_drop_request:
-        request_cur.shift_to_update.delete()
+        request_cur.shift_to_update.deleted = True
+        request_cur.shift_to_update.save()
+        request_cur.state = "Approved"
+        request_cur.save()
         messages.add_message(request, messages.INFO, "Shift dropped.")
         return redirect("index")
 
@@ -292,27 +310,6 @@ def new_shift_recurring(request: HttpRequest) -> HttpResponse:
         else:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
             return redirect("new_shift_recurring")
-
-@restrict_to_groups("Tutors")
-@restrict_to_http_methods("GET", "POST")
-def new_shift_tutors_only(request: HttpRequest) -> HttpResponse:
-    if request.method == "GET":
-        form = NewShiftForTutorForm()
-        return render(
-            request,
-            "shifts/new_shift_request_tutors.html",
-            {"form": form, "form_action_url": reverse("new_shift_tutors_only"), "form_title": "Create new shift"},
-        )
-    else:
-        form = NewShiftForTutorForm(request.POST)
-        if form.is_valid():
-            shift = Shift(associated_person=request.user, location="LRC", kind="Tutoring", **form.cleaned_data)
-            shift.save()
-            return redirect("view_shift", shift.id)
-        else:
-            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
-            return redirect("new_shift_tutors_only")
-
 
 @restrict_to_http_methods("GET", "POST")
 def new_shift_request(request: HttpRequest) -> HttpResponse:

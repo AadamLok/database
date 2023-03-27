@@ -1,6 +1,70 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 
+{% block extra_includes %}
+	<script>
+		document.addEventListener("DOMContentLoaded", load_form_helpers);
+
+		function load_form_helpers() {
+			var sem = document.getElementById("supf-sem");
+			var pos = document.getElementById("supf-pos");
+			var tc = document.getElementById("supf-tc");
+			var sic = document.getElementById("supf-sic");
+			var peers = document.getElementById("supf-peers");
+
+			function correct_option_sic() {
+				sic.value = "";
+				Array.prototype.forEach.call(sic.options, function(option, index) {
+					if(option.text.split(',')[0] == sem.value) {
+						option.style.display = "block";
+					} else {
+						option.style.display = "none";
+					}
+				});
+			}
+
+			sem.addEventListener("change", function() {
+				correct_option_sic();
+			});
+
+			pos.addEventListener("change", function() {
+				switch(pos.value) {
+					case "SI":
+					case "GT":
+						sic.disabled = false;
+						tc.disabled = true;
+						tc.value = "";
+						peers.disabled = true;
+						peers.value = "";
+						correct_option_sic();
+						break;
+					case "Tutor":
+						tc.disabled = false;
+						sic.disabled = true;
+						sic.value = "";
+						peers.disabled = true;
+						peers.value = "";
+						break;
+					case "PM":
+						peers.disabled = false;
+						tc.disabled = true;
+						tc.value = "";
+						sic.disabled = true;
+						sic.value = "";
+						break;
+					default:
+						tc.disabled = true;
+						tc.value = "";
+						sic.disabled = true;
+						sic.value = "";
+						peers.disabled = true;
+						peers.value = "";
+				}
+			});
+		}
+	</script>
+{% endblock %}
+
 {% block content %}
 	<h2>View/Edit User</h2>
 	<h4>Basic Information</h4>

@@ -31,9 +31,13 @@ class Course(models.Model):
         ordering = ('department','number')
 
     def short_name(self):
+        if self.department == "STUDY-SKILL":
+            return "Study-Skill"
         return f"{self.department} {self.number}"
 
     def __str__(self):
+        if self.department == "STUDY-SKILL":
+            return "Study-Skill"
         return f"{self.department} {self.number}: {self.name}"
 
 class SemesterManager(models.Manager):
@@ -185,9 +189,12 @@ class ClassDetails(models.Model):
 class LRCDatabaseUser(AbstractUser):
     first_name = models.CharField(_("first name"), max_length=100, blank=False)
     last_name = models.CharField(_("last name"), max_length=100, blank=False)
-    email = models.EmailField(_("email"), max_length=100, blank=False)
+    email = models.EmailField(_("email"), max_length=100, blank=False, unique=True)
 
     REQUIRED_FIELDS = [first_name, last_name, email]
+
+    class Meta:
+        ordering = ('first_name','last_name','email')
 
     def is_privileged(self) -> bool:
         return self.groups.filter(name__in=("Office staff", "Supervisors")).exists()
@@ -200,12 +207,20 @@ class LRCDatabaseUser(AbstractUser):
         num_tutor_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="Tutor").count()
         return num_tutor_position > 0
     
+    def is_gt(self) -> bool:
+        num_gt_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="GT").count()
+        return num_gt_position > 0
+    
+    def is_ours_mentor(self) -> bool:
+        num_om_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="OursM").count()
+        return num_om_position > 0
+    
     def is_pm(self) -> bool:
         num_pm_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="PM").count()
         return num_pm_position > 0
 
     def __str__(self) -> str:
-        return f"{self.first_name}\u2004{self.last_name}"
+        return f"{self.first_name} {self.last_name} [{self.email}]"
 
 class StaffUserPosition(models.Model):
     person = models.ForeignKey(
@@ -223,7 +238,7 @@ class StaffUserPosition(models.Model):
 
     position = models.CharField(
         max_length=5,
-        choices=[("SI","SI"),("Tutor", "Tutor"),("PM", "PM")]
+        choices=[("SI","SI"),("Tutor", "Tutor"),("PM", "PM"),("GT", "Group-Tutor"), ("OursM", "OURS-Mentor")]
     )
 
     hourly_rate = models.DecimalField(
@@ -245,7 +260,7 @@ class StaffUserPosition(models.Model):
         null=True,
         default=None,
         related_name="lrc_database_user_si_course",
-        verbose_name="SI course",
+        verbose_name="SI/Group-Tutor course",
     )
 
     peers = models.ManyToManyField(
@@ -259,7 +274,12 @@ class StaffUserPosition(models.Model):
         unique_together = ('person','semester', 'position', 'si_course')
 
     def __str__(self):
-        return f"{self.position}, {self.person.__str__()}"
+        if self.position == "SI":
+            return f"{self.position} - {self.si_course.course.short_name()}, {self.person.first_name} {self.person.last_name}"
+        return f"{self.position}, {self.person.first_name} {self.person.last_name}"
+    
+    def short_str(self):
+        return f"{self.position}"
 
     def peers_list(self):
         return self.peers.all()
@@ -289,6 +309,9 @@ class StaffUserPosition(models.Model):
     
 
 class ShiftManager(models.Manager):
+    def filter(self, *args, **kwargs):
+        return super().filter(*args, deleted=False, **kwargs)
+
     def all_on_date(self, date):
         tz_adjusted_range_start = datetime.datetime(
             date.year, date.month, date.day, tzinfo=pytz.timezone("America/New_York")
@@ -357,11 +380,15 @@ class Shift(models.Model):
     kind = models.CharField(
         max_length=14,
         choices=(("SI", "SI"), 
-                 ("Tutoring", "Tutoring"), 
+                 ("Tutoring", "Tutoring"),
+                 ("Group Tutoring", "Group Tutoring"), 
                  ("Training", "Training"), 
                  ("Observation", "Observation"), 
                  ("Class", "Class"),
-                 ("SI-Preparation","SI-Preparation")),
+                 ("Preparation","Preparation"),
+                 ("Meeting","Meeting"),
+                 ("OURS Mentor", "OURS Mentor"),
+                 ("Other","Other")),
         help_text="The kind of shift this is: tutoring, SI, Training, Class, or Observation.",
     )
 
@@ -390,6 +417,11 @@ class Shift(models.Model):
     late_datetime = models.DateTimeField(
         null=True,
         blank=True
+    )
+
+    deleted = models.BooleanField(
+        default=False,
+        null=False
     )
 
     objects = ShiftManager()
@@ -460,11 +492,15 @@ class ShiftChangeRequest(models.Model):
         max_length=14,
         choices=(
             ("SI", "SI"), 
-            ("Tutoring", "Tutoring"), 
+            ("Tutoring", "Tutoring"),
+            ("Group Tutoring", "Group Tutoring"), 
             ("Training", "Training"), 
             ("Observation", "Observation"), 
-            ("Class", "Class"), 
-            ("SI-Preparation","SI-Preparation")
+            ("Class", "Class"),
+            ("Preparation","Preparation"),
+            ("Meeting","Meeting"),
+            ("OURS Mentor", "OURS Mentor"),
+            ("Other","Other"),
         ),
         blank=True,
         null=True,

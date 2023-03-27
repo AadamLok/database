@@ -18,6 +18,12 @@ from .models import (
     StaffUserPosition
 )
 
+class LogIn(forms.Form):
+    username = forms.CharField(label="Username", max_length=150, required=True)
+    password = forms.CharField(label="Password", max_length=150, required=True, widget=forms.PasswordInput())
+
+class ResetPassword(forms.Form):
+    user = forms.ModelChoiceField(required=True, queryset=LRCDatabaseUser.objects.all())
 
 class CourseForm(forms.ModelForm):
     class Meta:
@@ -133,6 +139,17 @@ class StaffUserPositionForm(forms.ModelForm):
     class Meta:
         model = StaffUserPosition
         fields = ("semester", "position", "hourly_rate", "tutor_courses", "si_course", "peers")
+
+    def __init__(self, *args, **kwargs):
+        super(StaffUserPositionForm, self).__init__(*args, **kwargs)
+        self.fields["semester"].widget.attrs['id'] = "supf-sem"
+        self.fields["position"].widget.attrs['id'] = "supf-pos"
+        self.fields["tutor_courses"].widget.attrs['id'] = "supf-tc"
+        self.fields["si_course"].widget.attrs['id'] = "supf-sic"
+        self.fields["peers"].widget.attrs['id'] = "supf-peers"
+        self.fields["tutor_courses"].widget.attrs['disabled'] = True
+        self.fields["si_course"].widget.attrs['disabled'] = True
+        self.fields["peers"].widget.attrs['disabled'] = True
     
     staff_position = forms.BooleanField(widget=forms.HiddenInput, initial=True)
 
@@ -186,10 +203,11 @@ class AddHardwareForm(forms.ModelForm):
 
 class NewShiftForm(forms.ModelForm):
     position = TypedModelListField(queryset=StaffUserPosition.objects.all())
-    duration = CustomDurationField(required=True)
+    duration = CustomDurationField(required=True, help_text="How long the shift will last.\
+                                    Format: HH:MM. E.g. if you want shift to be 1 hour 15 mins long, enter 01:15")
     class Meta:
         model = Shift
-        exclude = ('signed','reason','attended','late', 'late_datetime')
+        exclude = ('signed','reason','attended','late', 'late_datetime', 'deleted')
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -211,9 +229,24 @@ class NewShiftRecurringForm(forms.ModelForm):
     recurring_day_of_week = forms.ChoiceField(choices=[(0,"Monday"),(1,"Tuesday"),(2,"Wednesday"),(3,"Thurday"),(4,"Friday"),(5,"Saturday"),(6,"Sunday")])
     class Meta:
         model = Shift
-        exclude = ("start","signed","attended","reason", "late", "late_datetime")
+        exclude = ("start","signed","attended","reason", "late", "late_datetime", "deleted")
 
-
+class PMAddMeetingForm(forms.ModelForm):
+    position = TypedModelListField(queryset=StaffUserPosition.objects.all(), help_text="Which of your peer are you meeting with?\
+                                   Be careful and select appropriate postion of your peer.")
+    duration = CustomDurationField(required=True, help_text="How long the shift will last.\
+                                    Format: HH:MM. E.g. if you want shift to be 1 hour 15 mins long, enter 01:15")
+    class Meta:
+        model = Shift
+        fields = ("position", "duration", "start", "location")
+    
+    def __init__(self, pm=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        dataset = StaffUserPosition.objects.filter(person__in=pm.peers_list())
+        self.fields['position'].queryset = dataset
+        self.fields['position'].widget = ListTextWidget(
+            dataset=dataset, 
+            name='position')
 
 class NewLoanForm(forms.ModelForm):
     start_time = forms.DateTimeField(
