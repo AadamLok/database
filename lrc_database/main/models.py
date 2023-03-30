@@ -141,7 +141,6 @@ class FullCourse(models.Model):
     )
 
     class Meta:
-        unique_together = ('semester', 'course', 'faculty')
         ordering = ('semester', 'course', 'faculty')
     
     def __str__(self):

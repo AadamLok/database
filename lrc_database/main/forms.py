@@ -159,6 +159,9 @@ class CreateUsersInBulkForm(forms.Form):
 class AddCoursesInBulkForm(forms.Form):
     course_data = forms.CharField(widget=forms.Textarea)
 
+class AddCourseSectionsInBulkForm(forms.Form):
+    course_data = forms.CharField(widget=forms.Textarea)
+
 class EditProfileForm(forms.ModelForm):
     class Meta:
         model = LRCDatabaseUser
