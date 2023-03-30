@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <h2>Add Class Details in Bulk</h2>
+    <p>
+        Write class data into the text area below. For each class you wish to add, add a single line with the following values in order and separated by commas.
+        <ul>
+            <li>full course ID, like "1"</li>
+            <li>class day, like "Monday"</li>
+            <li>class time, like "14:00"</li>
+            <li>class location, like "ILC S311"</li>
+            <li>class duration, like "01:15"</li>
+        </ul>
+        so the full line would be something like <code>1,Monday,14:00,ILC S311,01:15</code><br/><br/>
+    </p>
+    <p>You can export large numbers of lines like this easily from programs like Excel by looking for an "export to CSV" (<a href="https://en.wikipedia.org/wiki/Comma-separated_values" target="_blank">comma-separated values</a>) or similar option.</p>
+    <hr />
+    <form method="post" action="{% url 'add_class_detail_in_bulk' %}">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">Add Class Details</button>
+    </form>
+{% endblock %}

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict
 
 from django.contrib import messages
@@ -9,8 +9,19 @@ from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.timezone import make_aware
+import pytz
 
-from ..forms import CourseForm, SemesterSelectForm, FullCourseForm, ReadOnlyFullCourseForm, ClassDetailsForm, AddCoursesInBulkForm, AddCourseSectionsInBulkForm
+from ..forms import (
+    CourseForm, 
+    SemesterSelectForm, 
+    FullCourseForm, 
+    ReadOnlyFullCourseForm, 
+    ClassDetailsForm, 
+    AddCoursesInBulkForm, 
+    AddCourseSectionsInBulkForm,
+    AddClassDetailsInBulkForm
+)
 from ..models import Course, Shift, Semester, FullCourse, StaffUserPosition, ClassDetails
 from . import restrict_to_groups, restrict_to_http_methods
 
@@ -296,3 +307,52 @@ def add_sections_in_bulk(request: HttpRequest) -> HttpResponse:
     else:
         form = AddCourseSectionsInBulkForm()
         return render(request, "courses/add_sections_in_bulk.html", {"form": form})
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def add_class_detail_in_bulk(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        form = AddClassDetailsInBulkForm(request.POST)
+        if form.is_valid():
+            class_data = form.cleaned_data["class_data"]
+            class_data = class_data.split("\n")
+
+            for line_number in range(len(class_data)):
+                data = class_data[line_number].split(',')
+                data = [s.strip() for s in data]
+                if len(data) != 5 or len(data[0]) == 0 or len(data[1]) == 0 or len(data[2]) == 0 or len(data[3]) == 0 or len(data[4]) == 0:
+                    messages.add_message(request, messages.ERROR, f"No course have been added yet.\
+                                        <br/><br/>Line number <b>{line_number+1}</b>\
+                                        doesn't look right.<br/><br/>Please correct this error and try again.")
+                    return redirect("add_class_detail_in_bulk")
+                class_data[line_number] = data
+
+            timezone= pytz.timezone("America/New_York")
+
+            for line_num, data in enumerate(class_data):
+                full_course_id, class_day, class_time, class_location, class_duration = data
+                try:
+                    class_day = datetime.strptime(class_day, "%A").weekday()
+                    class_time = make_aware(datetime.strptime(class_time,"%H:%M"), timezone=timezone).time()
+                    class_duration =  class_duration.split(":")
+                    class_duration = timedelta(hours=int(class_duration[0]), minutes=int(class_duration[1]))
+                    ClassDetails.objects.create(
+                        full_course = FullCourse.objects.get(id=full_course_id),
+                        location = class_location,
+                        class_day = class_day,
+                        class_time = class_time,
+                        class_duration = class_duration
+                    )
+                except Exception as err:
+                    messages.add_message(request, messages.ERROR, f"Successfully added courses till line number\
+                                        {line_num}.<br/><br/>Got the following error while trying to add new\
+                                        course at line number <b>{line_num+1}</b>:<br/>{err}")
+                    return redirect("add_class_detail_in_bulk")
+            messages.add_message(request, messages.SUCCESS, f"Courses successfully created.")
+            return redirect("add_class_detail_in_bulk")
+        else:
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("add_class_detail_in_bulk")
+    else:
+        form = AddClassDetailsInBulkForm()
+        return render(request, "courses/add_class_details_in_bulk.html", {"form": form})
