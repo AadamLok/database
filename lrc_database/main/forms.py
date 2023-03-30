@@ -188,7 +188,7 @@ class NewChangeRequestForm(forms.ModelForm):
         model = ShiftChangeRequest
         fields = ("new_position","reason", "new_start", "new_duration", "new_location", "new_kind")
 
-    def __init__(self, form_person = None, *args, **kwargs):
+    def __init__(self, *args, form_person = None,  **kwargs):
         super().__init__(*args, **kwargs)
         if form_person is not None:
             active_positions = StaffUserPosition.objects.filter(person=form_person, semester=Semester.objects.get_active_sem()).all()

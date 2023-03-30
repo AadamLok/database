@@ -89,6 +89,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
 
         return render(request, "payroll/sign_payroll.html", context)
 
+
 def get_user_payroll(user_id, semester):
     context = {"weeks":{}, "color_coder":get_color_coder_dict()}
 
@@ -116,7 +117,7 @@ def get_user_payroll(user_id, semester):
                 position_wise_pay[position][(shift.start.weekday()+1)%7].append({
                     "time": f"{hours:0.2f}",
                     "id": shift.id,
-                    "color": f"bg-{color_coder(shift.kind)}",
+                    "color": color_coder(shift.kind),
                     "late": shift.late
                 })
                 position_wise_pay[position][7] += hours

@@ -50,9 +50,6 @@ def new_shift_change_request(request: HttpRequest, shift_id: int) -> HttpRespons
             s = ShiftChangeRequest(
                 shift_to_update=shift,
                 state="New",
-                new_associated_person=request.user,
-                # approved_by=None,
-                # approved_on=None,
                 **form.cleaned_data,
             )
             s.save()
@@ -63,7 +60,7 @@ def new_shift_change_request(request: HttpRequest, shift_id: int) -> HttpRespons
     else:
         shift = get_object_or_404(Shift, pk=shift_id)
         form = NewChangeRequestForm(
-            form_person = shift.position.person,
+            form_person = shift.position.person.id,
             initial={
                 "new_position": shift.position,
                 "new_start": shift.start,
