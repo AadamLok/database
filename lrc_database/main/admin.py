@@ -62,6 +62,7 @@ class DaySwitchAdmin(admin.ModelAdmin):
 @admin.register(FullCourse)
 class FullCourseAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "semester",
         "course",
         "faculty"
