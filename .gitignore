@@ -17,3 +17,5 @@ poetry.lock
 
 # Virtual Enviroment
 **/venv
+
+**/documents
