@@ -247,7 +247,7 @@ class NewShiftRecurringForm(forms.ModelForm):
     recurring_day_of_week = forms.ChoiceField(choices=[(0,"Monday"),(1,"Tuesday"),(2,"Wednesday"),(3,"Thurday"),(4,"Friday"),(5,"Saturday"),(6,"Sunday")])
     class Meta:
         model = Shift
-        exclude = ("start","signed","attended","reason", "late", "late_datetime", "deleted")
+        exclude = ("start","signed","attended","reason", "late", "late_datetime", "deleted","document")
 
 class PMAddMeetingForm(forms.ModelForm):
     position = TypedModelListField(queryset=StaffUserPosition.objects.all(), help_text="Which of your peer are you meeting with?\
