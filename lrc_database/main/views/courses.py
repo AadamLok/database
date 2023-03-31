@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
+import time
 from typing import Any, Dict
+import pytz
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -10,7 +12,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.timezone import make_aware
-import pytz
+
 
 from ..forms import (
     CourseForm, 
@@ -332,7 +334,7 @@ def add_class_detail_in_bulk(request: HttpRequest) -> HttpResponse:
             for line_num, data in enumerate(class_data):
                 full_course_id, class_day, class_time, class_location, class_duration = data
                 try:
-                    class_day = datetime.strptime(class_day, "%A").weekday()
+                    class_day = time.strptime(class_day, "%A").tm_wday
                     class_time = make_aware(datetime.strptime(class_time,"%H:%M"), timezone=timezone).time()
                     class_duration =  class_duration.split(":")
                     class_duration = timedelta(hours=int(class_duration[0]), minutes=int(class_duration[1]))
