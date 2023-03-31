@@ -228,12 +228,12 @@ def course_event_feed(request: HttpRequest, course_id: int) -> JsonResponse:
 
     course = get_object_or_404(Course, id=course_id)
 
-    # TODO: problematic, see comment on user_event_feed
     shifts = Shift.objects.filter(
         Q(position__si_course__course=course) | Q(position__tutor_courses__in=(course,)),
         start__gte=start,
         start__lte=end,
     )
+    print(shifts)
 
     def to_json(shift: Shift) -> Dict[str, Any]:
         color = "black"

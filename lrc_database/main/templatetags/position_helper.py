@@ -6,7 +6,7 @@ register = Library()
 @register.filter(name='get_si_courses')
 def get_si_courses(user: LRCDatabaseUser):
     active_position = StaffUserPosition.objects.filter(person=user, semester=Semester.objects.get_active_sem(), position="SI").all()
-    pos_list = [{'course_name':str(pos.si_course.course),'course_id':pos.si_course.id} for pos in active_position]
+    pos_list = [{'course_name':str(pos.si_course.course),'course_id':pos.si_course.course.id} for pos in active_position]
     return pos_list
 
 @register.filter(name='get_tutor_courses')
