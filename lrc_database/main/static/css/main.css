@@ -163,6 +163,11 @@ body {
   float: left;
 }
 
+.center-table-button {
+  display: flex;
+  justify-content: center;
+}
+
 .right-table-button {
   display:inline;
   float: right;

@@ -15,9 +15,13 @@ User = get_user_model()
 
 
 @login_required
-@restrict_to_http_methods("GET")
+@restrict_to_http_methods("GET", "POST")
 # @restrict_to_groups("Office staff", "Supervisors")
 def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
+    checked = False
+    if request.method == "POST":
+        if "few" in request.POST:
+            checked = True
     user = get_object_or_404(User, id=request.user.id)
     privileged = user.is_privileged()
     offset = int(offset) if privileged else -7
@@ -48,13 +52,22 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
         elif kind == "Tutoring" or kind == "All":
             for course in s_position.tutor_courses.all():
                 info[course.short_name()][1][(shift.start.weekday()-start_day)%7].append(shift)
+    
+    if checked:
+        for name in list(info):
+            for day_info in info[name][1]:
+                if len(day_info) > 0:
+                    break
+            else:
+                del info[name]
 
     context = {
         "privileged": privileged, 
         "kind": kind, 
         "offset": offset, 
         "weekdays": weekdays, 
-        "info": info
+        "info": info,
+        "checked": checked
     }
 
     return render(request, "schedule/schedule_view.html", context)

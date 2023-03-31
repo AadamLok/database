@@ -2,28 +2,53 @@
 
 {% load schedule %}
 
+{% block extra_includes %}
+	<script type="text/javascript" defer> 
+		window.onload = function() { 
+			document.getElementById("course-check").addEventListener('change', function () {
+				document.getElementById("check").submit();
+			});
+		}
+	</script>  
+{% endblock%}
+
 {% block content %}
 
 <h2>{{kind}} Schedule</h2>
 
 <div class="table-responsive">
 	{% if privileged %}
-		<div>
-			<div class="left-table-button padding-5px-tb padding-15px-lr margin-10px-bottom">
-				{% with new_offset=offset|add:'-7' %}
-					<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark"><<</a>
-				{% endwith %}
-				{% with new_offset=offset|add:'-1' %}
-					<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark"><</a>
-				{% endwith %}
-			</div>
-			<div class="right-table-button  padding-5px-tb padding-15px-lr margin-10px-bottom">
-				{% with new_offset=offset|add:'1' %}
-					<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark">></a>
-				{% endwith %}
-				{% with new_offset=offset|add:'7' %}
-					<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark">>></a>
-				{% endwith %}
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-2">
+					<div class="left-table-button padding-5px-tb padding-15px-lr margin-10px-bottom">
+						{% with new_offset=offset|add:'-7' %}
+							<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark"><<</a>
+						{% endwith %}
+						{% with new_offset=offset|add:'-1' %}
+							<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark"><</a>
+						{% endwith %}
+					</div>
+				</div>
+				<div class="center-table-button col-8">
+					<form id="check" method="post" action="{% url 'view_schedule' kind offset %}">
+						{% csrf_token %}
+						<input name="few" class="form-check-input" type="checkbox" id="course-check" {% if checked %} checked {% endif %}>
+						<label class="form-check-label" for="course-check">
+							Only show course with shifts
+						</label>
+					</form>
+				</div>
+				<div class="col-2">
+					<div class="right-table-button padding-5px-tb padding-15px-lr margin-10px-bottom">
+						{% with new_offset=offset|add:'1' %}
+							<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark">></a>
+						{% endwith %}
+						{% with new_offset=offset|add:'7' %}
+							<a href="{% url 'view_schedule' kind new_offset %}" class="table-button bg-dark">>></a>
+						{% endwith %}
+					</div>
+				</div>
 			</div>
 		</div>
 	{% endif %}
