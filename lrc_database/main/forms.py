@@ -2,6 +2,9 @@ from django import forms
 from django.contrib.auth.models import Group
 
 from .custom_field import TypedModelListField, ListTextWidget, CustomDurationField
+from django.core.validators import FileExtensionValidator
+
+from .custom_validators import validate_file_extension
 
 from .models import (
     ClassDetails, 
@@ -172,6 +175,13 @@ class EditProfileForm(forms.ModelForm):
 
 
 class ApproveChangeRequestForm(forms.ModelForm):
+    document = forms.FileField(
+        label="Document", 
+        required=False, 
+        help_text="Any relevent pdf document for the shift.", 
+        validators=[validate_file_extension, FileExtensionValidator(allowed_extensions=["pdf"])]
+    )
+
     class Meta:
         model = Shift
         fields = ("position", "start", "duration", "location", "kind")
@@ -188,7 +198,7 @@ class NewChangeRequestForm(forms.ModelForm):
         model = ShiftChangeRequest
         fields = ("new_position","reason", "new_start", "new_duration", "new_location", "new_kind")
 
-    def __init__(self, *args, form_person = None,  **kwargs):
+    def __init__(self, *args, form_person = None, **kwargs):
         super().__init__(*args, **kwargs)
         if form_person is not None:
             active_positions = StaffUserPosition.objects.filter(person=form_person, semester=Semester.objects.get_active_sem()).all()
@@ -224,6 +234,8 @@ class NewShiftForm(forms.ModelForm):
             name='position')
 
 class NewShiftRecurringForm(forms.ModelForm):
+    duration = CustomDurationField(required=True, help_text="How long the shift will last.\
+                                    Format: HH:MM. E.g. if you want shift to be 1 hour 15 mins long, enter 01:15")
     shift_start_time = forms.TimeField(
         widget= forms.TimeInput(attrs={'type':'time'}))
     recurring_start_date = forms.DateField(

@@ -8,6 +8,7 @@ from django.core import validators
 from django.db import models
 from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import FileExtensionValidator
 
 from .custom_validators import validate_course_number
 
@@ -307,6 +308,10 @@ class StaffUserPosition(models.Model):
         self.tutor_courses.add(course)
     
 
+class AllFiles(models.Model):
+    doc_id = models.AutoField(primary_key=True)
+    document = models.FileField(upload_to="documents/", validators=[FileExtensionValidator(allowed_extensions=["pdf"])])
+
 class ShiftManager(models.Manager):
     def filter(self, *args, **kwargs):
         return super().filter(*args, deleted=False, **kwargs)
@@ -423,6 +428,15 @@ class Shift(models.Model):
         null=False
     )
 
+    document = models.ForeignKey(
+        to=AllFiles,
+        blank=True,
+        null=True,
+        default=None,
+        on_delete=models.SET_NULL,
+        help_text="Any pdf documnet you want to share for this shift.",
+    )
+
     objects = ShiftManager()
 
     class Meta:
@@ -510,7 +524,6 @@ class ShiftChangeRequest(models.Model):
     class Meta:
         ordering = ('new_start',)
 
-
 class Hardware(models.Model):
     class Meta:
         verbose_name_plural = "hardware"
@@ -520,7 +533,6 @@ class Hardware(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class Loan(models.Model):
     target = models.ForeignKey(
