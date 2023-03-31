@@ -311,14 +311,14 @@ def new_shift_recurring(request: HttpRequest) -> HttpResponse:
 @restrict_to_http_methods("GET", "POST")
 def new_shift_request(request: HttpRequest) -> HttpResponse:
     if request.method == "GET":
-        form = NewChangeRequestForm(request.user)
+        form = NewChangeRequestForm(form_person = request.user)
         return render(
             request,
             "shifts/new_shift_request.html",
             {"form": form},
         )
     else:
-        form = NewChangeRequestForm(request.user, request.POST)
+        form = NewChangeRequestForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
             change_request = ShiftChangeRequest.objects.create(

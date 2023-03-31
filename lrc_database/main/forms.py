@@ -194,9 +194,11 @@ class SetToPendingForm(forms.ModelForm):
 
 
 class NewChangeRequestForm(forms.ModelForm):
+    new_duration = CustomDurationField(required=True, help_text="How long the shift will last.\
+                                    Format: HH:MM. E.g. if you want shift to be 1 hour 15 mins long, enter 01:15")
     class Meta:
         model = ShiftChangeRequest
-        fields = ("new_position","reason", "new_start", "new_duration", "new_location", "new_kind")
+        fields = ("new_position","reason", "new_start", "new_location", "new_kind")
 
     def __init__(self, *args, form_person = None, **kwargs):
         super().__init__(*args, **kwargs)
