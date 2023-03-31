@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 
-{% comment %}
-This entire page is ugly and should be redone.
-{% endcomment %}
+{% block extra_includes %}
+    <script>
+        function get_doc() {
+            location.href = "{% url 'view_shift_doc' shift_id %}"
+        }
+    </script>
+{% endblock %}
 
 {% block content %}
     <h2>Shift Info</h2>
@@ -34,7 +38,9 @@ This entire page is ugly and should be redone.
         </tr>
     </table>
 
-    <br/>
+    <button onclick="get_doc()" class="btn btn-primary">Get Document</button>
+
+    <br/><br/>
 
     <strong>
         {% if user.id == shift.position.person.id %}

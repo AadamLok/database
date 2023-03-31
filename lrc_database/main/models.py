@@ -306,11 +306,6 @@ class StaffUserPosition(models.Model):
     
     def assign_tutor_course(self, course):
         self.tutor_courses.add(course)
-    
-
-class AllFiles(models.Model):
-    doc_id = models.AutoField(primary_key=True)
-    document = models.FileField(upload_to="documents/", validators=[FileExtensionValidator(allowed_extensions=["pdf"])])
 
 class ShiftManager(models.Manager):
     def filter(self, *args, **kwargs):
@@ -428,13 +423,13 @@ class Shift(models.Model):
         null=False
     )
 
-    document = models.ForeignKey(
-        to=AllFiles,
+    document = models.FileField(
+        upload_to="documents/", 
+        validators=[FileExtensionValidator(allowed_extensions=["pdf"])],
         blank=True,
         null=True,
         default=None,
-        on_delete=models.SET_NULL,
-        help_text="Any pdf documnet you want to share for this shift.",
+        help_text="Any pdf documnet you want to share for this shift."
     )
 
     objects = ShiftManager()

@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_list_or_404, get_object_or_404, redirect, render
 from django.urls import reverse
+from django.http import FileResponse
 
 from ..forms import (
     ApproveChangeRequestForm,
@@ -33,8 +34,22 @@ def view_shift(request: HttpRequest, shift_id: int) -> HttpResponse:
     return render(
         request,
         "shifts/view_shift.html",
-        {"shift": shift, "change_requests": change_requests},
+        {"shift": shift, "change_requests": change_requests, "shift_id": shift_id},
     )
+
+@login_required
+@restrict_to_http_methods("GET")
+def view_shift_doc(request: HttpRequest, shift_id: int) -> HttpResponse:
+    try:
+        shift = get_object_or_404(Shift, pk=shift_id)
+        if not shift.document.name:
+            messages.add_message(request, messages.INFO, f"No file attached with this shift.")
+            return redirect("view_shift", shift_id)
+        respond = FileResponse(shift.document.file.open('r'), content_type='application/pdf')
+        return respond
+    except FileNotFoundError:
+        messages.add_message(request, messages.ERROR, f"Some error occured getting the file.")
+        return redirect("view_shift", shift_id)
 
 
 @login_required
@@ -194,20 +209,20 @@ def approve_pending_request(request: HttpRequest, request_id: int) -> HttpRespon
 
     if request.method == "POST":
         form = ApproveChangeRequestForm(
-            request.POST,
+            request.POST, 
+            request.FILES,
             instance=shift,
-            initial=initial,
+            initial=initial
         )
 
-        if not form.is_valid():
+        if form.is_valid():
+            form.save()
+            request_cur.state = "Approved"
+            request_cur.save()
+            return redirect("index")
+        else:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
-            return redirect("view_single_request", request_id)
-
-        form.save()
-        request_cur.state = "Approved"
-        request_cur.save()
-        return redirect("index")
-
+            return redirect("approve_request", request_id)
     else:
         form = ApproveChangeRequestForm(instance=shift, initial=initial)
         return render(request, "scheduling/approvePendingForm.html", {"form": form, "request_id": request_id})

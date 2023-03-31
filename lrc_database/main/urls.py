@@ -43,7 +43,8 @@ from .views.shifts import (
     view_shift_change_requests,
     view_shift_change_requests_by_user,
     view_drop_shift_requests,
-    new_shift_recurring
+    new_shift_recurring,
+    view_shift_doc
 )
 from .views.users import (
     create_user, 
@@ -132,6 +133,7 @@ SCHEDULING_URLS: URLs = [
 
 SHIFTS_URLS: URLs = [
     path("shifts/<int:shift_id>", view_shift, name="view_shift"),
+    path("shifts/<int:shift_id>/doc", view_shift_doc, name="view_shift_doc"),
     path("shifts/<int:shift_id>/request_drop", new_drop_request, name="new_drop_request"),
     path("shifts/<int:shift_id>/request_change", new_shift_change_request, name="new_shift_change_request"),
     path("shifts/new", new_shift, name="new_shift"),

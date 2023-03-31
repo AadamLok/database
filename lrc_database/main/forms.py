@@ -175,16 +175,9 @@ class EditProfileForm(forms.ModelForm):
 
 
 class ApproveChangeRequestForm(forms.ModelForm):
-    document = forms.FileField(
-        label="Document", 
-        required=False, 
-        help_text="Any relevent pdf document for the shift.", 
-        validators=[validate_file_extension, FileExtensionValidator(allowed_extensions=["pdf"])]
-    )
-
     class Meta:
         model = Shift
-        fields = ("position", "start", "duration", "location", "kind")
+        fields = ("position", "start", "duration", "location", "kind", "document")
 
 
 class SetToPendingForm(forms.ModelForm):

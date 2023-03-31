@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
-{% block content %}
 
-<form action="{% url 'approve_request' request_id %}" method="POST" role="form">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit" class="btn btn-primary" id="add-btn">Approve Pending Request</button>
-</form>
+{% block content %}
+    <form action="{% url 'approve_request' request_id %}" enctype="multipart/form-data" method="POST" role="form">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary" id="add-btn">Approve Pending Request</button>
+    </form>
 {% endblock content %}
