@@ -199,6 +199,27 @@ class NewChangeRequestForm(forms.ModelForm):
             active_positions = StaffUserPosition.objects.filter(person=form_person, semester=Semester.objects.get_active_sem()).all()
             self.fields["new_position"] = forms.ModelChoiceField(required=True, queryset=active_positions, label="New Position")
 
+
+class ExamReviewForm(forms.ModelForm):
+    new_duration = CustomDurationField(required=True, help_text="How long the shift will last.\
+                                    Format: HH:MM. E.g. if you want shift to be 1 hour 15 mins long, enter 01:15")
+    class Meta:
+        model = ShiftChangeRequest
+        fields = ("new_position","reason", "new_start", "new_location", "new_kind")
+
+    def __init__(self, *args, form_person = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if form_person is not None:
+            active_positions = StaffUserPosition.objects.filter(person=form_person, semester=Semester.objects.get_active_sem()).all()
+            self.fields["new_position"] = forms.ModelChoiceField(required=True, queryset=active_positions, label="New Position")
+            
+            self.fields["new_position"].widget.attrs['disabled'] = True
+            self.fields["reason"].widget.attrs['disabled'] = True
+            self.fields["new_start"].widget.attrs['disabled'] = True
+            self.fields["new_location"].widget.attrs['disabled'] = True
+            self.fields["new_kind"].widget.attrs['disabled'] = True
+            self.fields["new_duration"].widget.attrs['disabled'] = True
+
 class NewDropRequestForm(forms.ModelForm):
     class Meta:
         model = ShiftChangeRequest

@@ -17,7 +17,8 @@ from ..forms import (
     NewDropRequestForm,
     NewShiftForm,
     SetToPendingForm,
-    NewShiftRecurringForm
+    NewShiftRecurringForm,
+    ExamReviewForm
 )
 from ..models import Shift, ShiftChangeRequest
 from ..templatetags.groups import is_privileged
@@ -336,6 +337,9 @@ def new_shift_request(request: HttpRequest) -> HttpResponse:
         form = NewChangeRequestForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            if data["new_position"].position in ["SI", "GT"] and data["new_duration"] > timedelta(hours=1, minutes=15):
+                form = ExamReviewForm()
+                return render("shifts/exam_review_confirmation.html", {"form":form})
             change_request = ShiftChangeRequest.objects.create(
                 shift_to_update=None,
                 state="New",

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+	<h2>Confirmation for Exam Review:</h2>
+	<p>Looks like you are trying to add a new shift for exam review in place of replacing an existing shift. Are you sure that what you want to do?</p>
+	<p>This video might help you understand how to replace a shift for exam review: link</p>
+	<p>Are you sure you want to add this exam review as new shift?</p>
+    <h2>Details of the Request</h2>
+    <form method="post" action="{% url 'new_shift_request' %}">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">Request Shift</button>
+    </form>
+{% endblock %}
