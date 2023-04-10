@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
+from django.core import serializers
 
 from ..models import Shift, Course, StaffUserPosition
 from . import restrict_to_groups, restrict_to_http_methods
@@ -96,12 +97,26 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
     for shift in shifts:
         s_kind = shift.kind
         s_position = shift.position
+        
+        faculty = None
+        if s_kind == "SI":
+            faculty = shift.position.si_course.faculty
+            faculty = "All Sections" if faculty[0] == "*" else faculty
+        start_time = shift.start.strftime("%I:%M %p").lower()
+        end_time = (shift.start+shift.duration).strftime("%I:%M %p").lower()
+        shift_dict = {
+            "faculty": faculty,
+            "location": shift.location,
+            "time": f"{start_time} - {end_time}",
+            "person": str(shift.position.person),
+        }
+        
         if s_kind == "SI" and (kind == "SI" or kind == "All"):
             s_course = s_position.si_course.course.short_name()
-            info[s_course][1][(shift.start.weekday()-start_day)%7].append(shift)
+            info[s_course][1][(shift.start.weekday()-start_day)%7].append(shift_dict)
         elif kind == "Tutoring" or kind == "All":
             for course in s_position.tutor_courses.all():
-                info[course.short_name()][1][(shift.start.weekday()-start_day)%7].append(shift)
+                info[course.short_name()][1][(shift.start.weekday()-start_day)%7].append(shift_dict)
 
     context = {
         "kind": kind, 
