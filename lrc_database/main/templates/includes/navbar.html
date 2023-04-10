@@ -22,8 +22,8 @@
                                     <div>SI<span class="badge bg-secondary pull-right">{{ total_si }}</span></div>
                                 </a>
                                 <ul class="dropdown-menu dropdown-submenu">
-                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'SI' 'New' %}"><div>New Change <span class="badge bg-secondary pull-right">{{ pending_si_change_count }}</span></div></a></li>
-                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'SI' 'Pending' %}"><div>Pending Change <span class="badge bg-secondary">{{ new_si_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'SI' 'New' %}"><div>New Change <span class="badge bg-secondary pull-right">{{ new_si_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'SI' 'Pending' %}"><div>Pending Change <span class="badge bg-secondary">{{ pending_si_change_count }}</span></div></a></li>
                                     <li><a class="dropdown-item" href="{% url 'view_drop_shift_requests' 'SI' 'New' %}"><div>Drop <span class="badge bg-secondary pull-right">{{ si_drop_count }}</span></div></a></li>
                                 </ul>
                             </li>
@@ -32,8 +32,8 @@
                                     <div>Group Tutor<span class="badge bg-secondary pull-right">{{ total_gt }}</span></div>
                                 </a>
                                 <ul class="dropdown-menu dropdown-submenu">
-                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'GT' 'New' %}"><div>New Change <span class="badge bg-secondary pull-right">{{ pending_gt_change_count }}</span></div></a></li>
-                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'GT' 'Pending' %}"><div>Pending Change <span class="badge bg-secondary">{{ new_gt_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'GT' 'New' %}"><div>New Change <span class="badge bg-secondary pull-right">{{ new_gt_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'GT' 'Pending' %}"><div>Pending Change <span class="badge bg-secondary">{{ pending_gt_change_count }}</span></div></a></li>
                                     <li><a class="dropdown-item" href="{% url 'view_drop_shift_requests' 'GT' 'New' %}"><div>Drop <span class="badge bg-secondary pull-right">{{ gt_drop_count }}</span></div></a></li>
                                 </ul>
                             </li>

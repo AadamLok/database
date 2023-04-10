@@ -51,8 +51,8 @@ def alert_counts(request: HttpRequest) -> Union[AlertCountDict, EmptyDict]:
 
     tutoring_count = ShiftChangeRequest.objects.filter(
         (Q(new_kind="Tutoring") | 
-         Q(new_position__position="Tutoring") | 
-         Q(shift_to_update__position__position="Tutoring")), state="New")
+         Q(new_position__position="Tutor") | 
+         Q(shift_to_update__position__position="Tutor")), state="New")
     tutoring_count_change = tutoring_count.filter(is_drop_request=False).count()
     tutoring_count_drop = tutoring_count.filter(is_drop_request=True).count()
 
@@ -63,11 +63,18 @@ def alert_counts(request: HttpRequest) -> Union[AlertCountDict, EmptyDict]:
     om_count_change = om_count.filter(is_drop_request=False).count()
     om_count_drop = om_count.filter(is_drop_request=True).count()
 
+    other_count = ShiftChangeRequest.objects.exclude(
+        Q(new_position__position__in=["SI","GT","Tutor","OursM"]) | 
+        Q(shift_to_update__position__position__in=["SI","GT","Tutor","OursM"]))
+    new_other_count_change = other_count.filter(is_drop_request=False, state="New").count()
+    pending_other_count_change = other_count.filter(is_drop_request=False, state="Pending").count()
+    other_count_drop = other_count.filter(is_drop_request=True, state="New").count()
+
     total_si = new_si_count_change + pending_si_count_change + si_count_drop
     total_gt = new_gt_count_change + pending_gt_count_change + gt_count_drop
     total_tutor = tutoring_count_change + tutoring_count_drop
     total_om = om_count_change + om_count_drop
-    total_other = 0
+    total_other = new_other_count_change + pending_other_count_change + other_count_drop
 
     total = total_si + total_gt + total_tutor + total_om + total_other
 
@@ -84,12 +91,12 @@ def alert_counts(request: HttpRequest) -> Union[AlertCountDict, EmptyDict]:
         "new_gt_change_count": new_gt_count_change,
         "pending_gt_change_count": pending_gt_count_change,
         "om_change_count": om_count_change,
-        "pending_other_change_count": 0,
-        "new_other_change_count": 0,
+        "pending_other_change_count": pending_other_count_change,
+        "new_other_change_count": new_other_count_change,
         "si_drop_count": si_count_drop,
         "tutoring_drop_count": tutoring_count_drop,
         "gt_drop_count": gt_count_drop,
         "om_drop_count": om_count_drop,
-        "other_drop_count": 0,
+        "other_drop_count": other_count_drop,
         "total_alert_count": total,
     }

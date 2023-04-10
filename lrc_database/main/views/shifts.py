@@ -79,7 +79,7 @@ def new_shift_change_request(request: HttpRequest, shift_id: int) -> HttpRespons
             initial={
                 "new_position": shift.position,
                 "new_start": shift.start,
-                "new_duration": shift.duration,
+                "new_duration": str(shift.duration)[:-3],
                 "new_location": shift.location,
                 "new_kind": shift.kind,
             }

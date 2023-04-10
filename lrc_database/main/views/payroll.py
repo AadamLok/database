@@ -15,7 +15,6 @@ from ..models import Shift, Semester, StaffUserPosition
 from ..forms import PayrollForm, SemesterSelectForm, UserSelectForm
 from ..color_coder import color_coder, get_color_coder_dict
 
-
 def get_week_from_date(date):
     start_week = date.replace(hour=0, minute=0)
     while start_week.weekday() != 6:
@@ -78,8 +77,8 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
                 shifts_info.append({
                     'date': shift.start.day,
                     'month': calendar.month_name[shift.start.month],
-                    'start': shift.start.time,
-                    'end': (shift.start+shift.duration).time,
+                    'start': timezone.localtime(shift.start).time,
+                    'end': timezone.localtime(shift.start+shift.duration).time,
                     'duration': shift.duration,
                     'kind': shift.kind,
                     'position': f"{shift.location} - {shift.position.position}",
@@ -240,13 +239,14 @@ def weekly_payroll(request: HttpRequest, offset: int) -> HttpResponse:
                 if person not in info:
                     info[person] = {}
                     for pshift in shift_type.filter(position__person=shift.position.person).all():
-                        position = str(pshift.position)
+                        position = pshift.position.str_pos()
                         if position not in info[person]:
                             info[person][position] = [0,0,0,0,0,0,0,0,0]
                     info[person]["Total"] = [0,0,0,0,0,0,0,0,0]
                 index = (shift.start.weekday()+1)%7
                 hours = round(shift.duration.seconds/3600,2)
                 pay = round(shift.duration.seconds/3600 * float(shift.position.hourly_rate),2)
+                position = shift.position.str_pos()
                 
                 info[person][position][index] += hours
                 info[person][position][7] += hours

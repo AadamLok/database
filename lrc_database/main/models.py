@@ -238,7 +238,7 @@ class StaffUserPosition(models.Model):
 
     position = models.CharField(
         max_length=5,
-        choices=[("SI","SI"),("Tutor", "Tutor"),("PM", "PM"),("GT", "Group-Tutor"), ("OursM", "OURS-Mentor")]
+        choices=[("SI","SI"),("Tutor", "Tutor"),("PM", "PM"),("GT", "Group-Tutor"),("OursM", "OURS-Mentor"),("Tech","Tech"),("Other","Other")]
     )
 
     hourly_rate = models.DecimalField(
@@ -274,9 +274,14 @@ class StaffUserPosition(models.Model):
         unique_together = ('person','semester', 'position', 'si_course')
 
     def __str__(self):
-        if self.position == "SI":
+        if self.position == "SI" or self.position == "GT":
             return f"{self.position} - {self.si_course.course.short_name()}, {self.person.first_name} {self.person.last_name}"
-        return f"{self.position}, {self.person.first_name} {self.person.last_name}"
+        return f"{self.position}"
+    
+    def str_pos(self):
+        if self.position == "SI" or self.position == "GT":
+            return f"{self.position} - {self.si_course.course.short_name()}"
+        return f"{self.position}"
     
     def short_str(self):
         return f"{self.position}"
