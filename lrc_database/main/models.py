@@ -276,7 +276,7 @@ class StaffUserPosition(models.Model):
     def __str__(self):
         if self.position == "SI" or self.position == "GT":
             return f"{self.position} - {self.si_course.course.short_name()}, {self.person.first_name} {self.person.last_name}"
-        return f"{self.position}"
+        return f"{self.position}, {self.person.first_name} {self.person.last_name}"
     
     def str_pos(self):
         if self.position == "SI" or self.position == "GT":

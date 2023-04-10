@@ -4,7 +4,7 @@ from urllib import request
 import pytz
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 
 from ..models import Shift, Course, StaffUserPosition
@@ -71,3 +71,43 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
     }
 
     return render(request, "schedule/schedule_view.html", context)
+
+
+@restrict_to_http_methods("GET")
+def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
+    offset = 0
+    today = timezone.localize(datetime.combine(datetime.today(), datetime.min.time()))
+    start = today + timedelta(days=offset)
+    end = start + timedelta(days=7)
+
+    shifts = Shift.objects.filter(start__gte=start.isoformat(), start__lte=end)
+
+    weekdays = [start + i * timedelta(days=1) for i in range(7)]
+
+    info = {}
+
+    courses = Course.objects.all()
+
+    for course in courses:
+        info[course.short_name()] = [course.id, [[], [], [], [], [], [], []]]
+
+    start_day = start.weekday()
+
+    for shift in shifts:
+        s_kind = shift.kind
+        s_position = shift.position
+        if s_kind == "SI" and (kind == "SI" or kind == "All"):
+            s_course = s_position.si_course.course.short_name()
+            info[s_course][1][(shift.start.weekday()-start_day)%7].append(shift)
+        elif kind == "Tutoring" or kind == "All":
+            for course in s_position.tutor_courses.all():
+                info[course.short_name()][1][(shift.start.weekday()-start_day)%7].append(shift)
+
+    context = {
+        "kind": kind, 
+        "offset": offset, 
+        "weekdays": weekdays, 
+        "info": info
+    }
+
+    return JsonResponse(context)

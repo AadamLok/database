@@ -34,6 +34,8 @@ CSRF_TRUSTED_ORIGINS = ["http://3.137.183.137:80"]
 
 CORS_ORIGIN_WHITELIST = ["http://3.137.183.137:80"]
 
+CORS_ALLOWED_ORIGINS = ["https://www.umass.edu"]
+
 DEBUG = os.environ.get("LRC_DATABASE_DEBUG", "0") == "1"
 
 
@@ -48,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "crispy_forms",
     "crispy_bootstrap5",
+    "corsheaders",
     "main",
 ]
 
@@ -59,7 +62,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    #custom middleware
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    #custom
     "main.middleware.TimezoneMiddleware"
 ]
 

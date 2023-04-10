@@ -27,7 +27,7 @@ from .views.courses import (
     add_class_detail_in_bulk
 )
 from .views.hardware import add_hardware, add_loans, edit_hardware, edit_loans, show_hardware, show_loans
-from .views.schedule import view_schedule
+from .views.schedule import view_schedule, api_schedule
 from .views.shifts import (
     approve_pending_request,
     deny_request,
@@ -88,6 +88,7 @@ ACCOUNTS_URLS: URLs = [
 API_URLS: URLs = [
     path("api/course_event_feed/<int:course_id>", course_event_feed, name="course_event_feed"),
     path("api/user_event_feed/<int:user_id>", user_event_feed, name="user_event_feed"),
+    path("api/schedule/<str:kind>", api_schedule, name="api_schedule"),
 ]
 
 COURSES_URLS: URLs = [
