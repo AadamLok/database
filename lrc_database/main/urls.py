@@ -24,7 +24,8 @@ from .views.courses import (
     edit_course_section,
     add_courses_in_bulk,
     add_sections_in_bulk,
-    add_class_detail_in_bulk
+    add_class_detail_in_bulk,
+    add_cross_listed
 )
 from .views.hardware import add_hardware, add_loans, edit_hardware, edit_loans, show_hardware, show_loans
 from .views.schedule import view_schedule, api_schedule
@@ -97,6 +98,7 @@ COURSES_URLS: URLs = [
     path("courses/<int:course_id>", view_course, name="view_course"),
     path("courses/<int:course_id>/edit", edit_course, name="edit_course"),
     path("courses/add", add_course, name="add_course"),
+    path("courses/add_cross_listed", add_cross_listed, name="add_cross_listed"),
     path("courses/list_course_sections/<str:sem>", list_course_sections, name="list_course_sections"),
     path("courses/add_course_section", add_course_section, name="add_course_section"),
     path("courses/edit_course_section/<int:course_id>", edit_course_section, name="edit_course_section"),

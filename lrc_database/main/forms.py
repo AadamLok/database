@@ -8,7 +8,8 @@ from .custom_validators import validate_file_extension
 
 from .models import (
     ClassDetails, 
-    Course, 
+    Course,
+    CrossListed, 
     DaySwitch, 
     FullCourse, 
     Hardware, 
@@ -43,6 +44,10 @@ class ReadOnlyFullCourseForm(forms.ModelForm):
             'faculty': forms.TextInput(attrs={'disabled': True}),
         }
 
+class CrossListedForm(forms.ModelForm):
+    class Meta:
+        model = CrossListed
+        fields = ("main_course", "department", "number", "name")
 
 class FullCourseForm(forms.ModelForm):
     class Meta:

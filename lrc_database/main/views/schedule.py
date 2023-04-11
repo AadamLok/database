@@ -8,7 +8,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.core import serializers
 
-from ..models import Shift, Course, StaffUserPosition
+from ..models import Shift, Course, StaffUserPosition, CrossListed
 from . import restrict_to_groups, restrict_to_http_methods
 
 timezone = pytz.timezone("America/New_York")
@@ -38,10 +38,18 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
     info = {}
 
     courses = Course.objects.all()
+    cross_listed = CrossListed.objects.all()
+
+    cross_listed_dict = {}
 
     for course in courses:
         info[course.short_name()] = [course.id, [[], [], [], [], [], [], []]]
-
+    for course in cross_listed:
+        info[course.short_name()] = [course.main_course.id, [[], [], [], [], [], [], []]]
+        if course.main_course.short_name() not in cross_listed_dict:
+            cross_listed_dict[course.main_course.short_name()] = []
+        cross_listed_dict[course.main_course.short_name()].append(course)
+        
     start_day = start.weekday()
 
     for shift in shifts:
@@ -50,10 +58,15 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
         if s_kind == "SI" and (kind == "SI" or kind == "All"):
             s_course = s_position.si_course.course.short_name()
             info[s_course][1][(shift.start.weekday()-start_day)%7].append(shift)
+            course_id = s_position.si_course.course.id
         elif kind == "Tutoring" or kind == "All":
             for course in s_position.tutor_courses.all():
                 info[course.short_name()][1][(shift.start.weekday()-start_day)%7].append(shift)
     
+    for main_course in cross_listed_dict:
+        for course in cross_listed_dict[main_course]:
+            info[course.short_name()][1] = info[main_course][1]
+
     if checked:
         for name in list(info):
             for day_info in info[name][1]:
@@ -88,9 +101,18 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
     info = {}
 
     courses = Course.objects.all()
+    cross_listed = CrossListed.objects.all()
+
+    cross_listed_dict = {}
 
     for course in courses:
         info[course.short_name()] = [course.id, [[], [], [], [], [], [], []]]
+
+    for course in cross_listed:
+        info[course.short_name()] = [course.main_course.id, [[], [], [], [], [], [], []]]
+        if course.main_course.short_name() not in cross_listed_dict:
+            cross_listed_dict[course.main_course.short_name()] = []
+        cross_listed_dict[course.main_course.short_name()].append(course)
 
     start_day = start.weekday()
 
@@ -117,6 +139,11 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
         elif kind == "Tutoring" or kind == "All":
             for course in s_position.tutor_courses.all():
                 info[course.short_name()][1][(shift.start.weekday()-start_day)%7].append(shift_dict)
+
+    
+    for main_course in cross_listed_dict:
+        for course in cross_listed_dict[main_course]:
+            info[course.short_name()][1] = info[main_course][1]
 
     context = {
         "kind": kind, 

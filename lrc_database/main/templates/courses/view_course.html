@@ -25,6 +25,16 @@
         </div>
         <div id="main-div" class="col-md-4">
             <div class="card mb-3">
+                <div class="card-header">Cross Listed Courses</div>
+                <div class="card-body">
+                    {% for course in cross_list %}
+                        <p class="card-text">{{ course }}</p>
+                    {% empty %}
+                        <p class="card-text">None.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card mb-3">
                 <div class="card-header">Tutors</div>
                 <div class="card-body">
                     {% for tutor in tutors %}

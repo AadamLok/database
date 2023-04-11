@@ -22,9 +22,10 @@ from ..forms import (
     ClassDetailsForm, 
     AddCoursesInBulkForm, 
     AddCourseSectionsInBulkForm,
-    AddClassDetailsInBulkForm
+    AddClassDetailsInBulkForm,
+    CrossListedForm
 )
-from ..models import Course, Shift, Semester, FullCourse, StaffUserPosition, ClassDetails
+from ..models import Course, Shift, Semester, FullCourse, StaffUserPosition, ClassDetails, CrossListed
 from . import restrict_to_groups, restrict_to_http_methods
 
 User = get_user_model()
@@ -41,12 +42,13 @@ def list_courses(request: HttpRequest) -> HttpResponse:
 @restrict_to_http_methods("GET")
 def view_course(request: HttpRequest, course_id: int) -> HttpResponse:
     course = get_object_or_404(Course, id=course_id)
+    cross_list = CrossListed.objects.filter(main_course__id=course_id)
     tutors = StaffUserPosition.objects.filter(tutor_courses__in=(course,), semester=Semester.objects.get_active_sem())
     sis = StaffUserPosition.objects.filter(si_course__course=course, semester=Semester.objects.get_active_sem())
     return render(
         request,
         "courses/view_course.html",
-        {"course": course, "tutors": tutors, "sis": sis},
+        {"course": course, "cross_list": cross_list, "tutors": tutors, "sis": sis},
     )
 
 
@@ -65,6 +67,22 @@ def add_course(request: HttpRequest) -> HttpResponse:
     else:
         form = CourseForm()
         return render(request, "courses/add_course.html", {"form": form})
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def add_cross_listed(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        form = CrossListedForm(request.POST)
+        if form.is_valid():
+            c = CrossListed(**form.cleaned_data)
+            c.save()
+            return redirect("view_course", c.main_course.id)
+        else:
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("add_course")
+    else:
+        form = CrossListedForm()
+        return render(request, "courses/add_cross_listed.html", {"form": form})
 
 
 @restrict_to_groups("Office staff", "Supervisors")

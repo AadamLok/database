@@ -23,6 +23,7 @@ class Course(models.Model):
         validators=[validate_course_number],
         help_text="Course number, like the 198C in COMPSCI 198C.",
     )
+
     name = models.CharField(
         max_length=64,
         help_text='The human-legible name of the course, like "Programming with Data Structures."',
@@ -30,6 +31,40 @@ class Course(models.Model):
 
     class Meta:
         ordering = ('department','number')
+
+    def short_name(self):
+        if self.department == "STUDY-SKILL":
+            return "Study-Skill"
+        return f"{self.department} {self.number}"
+
+    def __str__(self):
+        if self.department == "STUDY-SKILL":
+            return "Study-Skill"
+        return f"{self.department} {self.number}: {self.name}"
+
+class CrossListed(models.Model):
+    main_course = models.ForeignKey(
+        to=Course,
+        on_delete=models.CASCADE,
+        blank=False,
+        null=False
+    )
+
+    department = models.CharField(
+        max_length=16,
+        help_text="Department string, like COMPSCI or MATH.",
+    )
+
+    number = models.CharField(
+        max_length=10,
+        validators=[validate_course_number],
+        help_text="Course number, like the 198C in COMPSCI 198C.",
+    )
+
+    name = models.CharField(
+        max_length=64,
+        help_text='The human-legible name of the course, like "Programming with Data Structures."',
+    )
 
     def short_name(self):
         if self.department == "STUDY-SKILL":
@@ -145,13 +180,13 @@ class FullCourse(models.Model):
         ordering = ('semester', 'course', 'faculty')
     
     def __str__(self):
-        if self.objects.filter(semester=self.semester, course=self.course, faculty=self.faculty).count() == 1:
+        if FullCourse.objects.filter(semester=self.semester, course=self.course, faculty=self.faculty).count() == 1:
             return f"{self.semester}, {self.course.short_name()}, {self.faculty}"
         else:
             class_info = ClassDetails.objects.filter(full_course__id=self.id).all()
             class_str = ""
             for c in class_info:
-                class_str += str(c)
+                class_str += str(c) + " "
             return f"{self.semester}, {self.course.short_name()}, {self.faculty}, [{class_str}]"
 
     def short_name(self):
