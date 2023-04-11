@@ -251,7 +251,6 @@ def course_event_feed(request: HttpRequest, course_id: int) -> JsonResponse:
         start__gte=start,
         start__lte=end,
     )
-    print(shifts)
 
     def to_json(shift: Shift) -> Dict[str, Any]:
         color = "black"
