@@ -1,15 +1,40 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 
+{% block extra_includes %}
+    <script>
+        function take_me_back() {
+            location.href = "{% url 'index' %}";
+        }
+
+        function go_for_it() {
+            form = document.getElementById("shift-form");
+            input_fields = form.getElementsByTagName('input');
+            for(let field in input_fields){
+                input_fields[field].disabled = false;
+            }
+            select_fields = form.getElementsByTagName('select');
+            for(let field in select_fields){
+                select_fields[field].disabled = false;
+            }
+            form.submit();
+        }
+    </script>
+{% endblock %}
+
 {% block content %}
-	<h2>Confirmation for Exam Review:</h2>
+	<h4>Confirmation for Exam Review:</h4>
 	<p>Looks like you are trying to add a new shift for exam review in place of replacing an existing shift. Are you sure that what you want to do?</p>
-	<p>This video might help you understand how to replace a shift for exam review: link</p>
+	<p>This video might help you understand how to replace a shift for exam review: <a href="https://umass-my.sharepoint.com/:v:/g/personal/lrosenbaum_umass_edu/EUq4wZsZVG1As3J1S_BPri0Bx2OPLajWXkmbRhgKirm1DQ?e=ggmyLN">link</a></p>
 	<p>Are you sure you want to add this exam review as new shift?</p>
-    <h2>Details of the Request</h2>
-    <form method="post" action="{% url 'new_shift_request' %}">
+    <button type="submit" class="btn btn-primary" onclick="take_me_back()">I didn't mean to do this, take me back</button>
+    <button type="submit" class="btn btn-danger" onclick="go_for_it()">I know what I am doing! Add new shift Request</button>
+    <br/>
+    <br/>
+    <h4>Details of the Request</h4>
+    <form method="post" action="{% url 'new_shift_request' %}" id="shift-form">
         {% csrf_token %}
+        <input name="confirmed" type="hidden">
         {{ form|crispy }}
-        <button type="submit" class="btn btn-primary">Request Shift</button>
     </form>
 {% endblock %}

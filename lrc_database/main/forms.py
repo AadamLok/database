@@ -213,12 +213,12 @@ class ExamReviewForm(forms.ModelForm):
             active_positions = StaffUserPosition.objects.filter(person=form_person, semester=Semester.objects.get_active_sem()).all()
             self.fields["new_position"] = forms.ModelChoiceField(required=True, queryset=active_positions, label="New Position")
             
-            self.fields["new_position"].widget.attrs['disabled'] = True
-            self.fields["reason"].widget.attrs['disabled'] = True
-            self.fields["new_start"].widget.attrs['disabled'] = True
-            self.fields["new_location"].widget.attrs['disabled'] = True
-            self.fields["new_kind"].widget.attrs['disabled'] = True
-            self.fields["new_duration"].widget.attrs['disabled'] = True
+        self.fields["new_position"].widget.attrs['disabled'] = True
+        self.fields["reason"].widget.attrs['disabled'] = True
+        self.fields["new_start"].widget.attrs['disabled'] = True
+        self.fields["new_location"].widget.attrs['disabled'] = True
+        self.fields["new_kind"].widget.attrs['disabled'] = True
+        self.fields["new_duration"].widget.attrs['disabled'] = True
 
 class NewDropRequestForm(forms.ModelForm):
     class Meta:

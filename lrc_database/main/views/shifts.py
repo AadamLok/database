@@ -334,12 +334,29 @@ def new_shift_request(request: HttpRequest) -> HttpResponse:
             {"form": form},
         )
     else:
+        if 'confirmed' in request.POST:
+            form = ExamReviewForm(request.POST)
+            form.is_valid()
+            data = form.cleaned_data
+            print(data)
+            change_request = ShiftChangeRequest.objects.create(
+                shift_to_update=None,
+                state="New",
+                new_position=data["new_position"],
+                reason=data["reason"],
+                new_start=data["new_start"],
+                new_duration=data["new_duration"],
+                new_location=data["new_location"],
+                new_kind=data["new_kind"]
+            )
+            change_request.save()
+            return redirect("view_single_request", change_request.id)
         form = NewChangeRequestForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
             if data["new_position"].position in ["SI", "GT"] and data["new_duration"] > timedelta(hours=1, minutes=15):
-                form = ExamReviewForm()
-                return render("shifts/exam_review_confirmation.html", {"form":form})
+                form = ExamReviewForm(request.POST, form_person = request.user)
+                return render(request, "shifts/exam_review_confirmation.html", {"form":form})
             change_request = ShiftChangeRequest.objects.create(
                 shift_to_update=None,
                 state="New",
