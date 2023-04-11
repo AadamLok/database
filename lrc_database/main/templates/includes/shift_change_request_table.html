@@ -29,7 +29,7 @@
     <tbody>
         {% for change_request in change_requests %}
             <tr class="clickable-row" data-href="{% url 'view_single_request' change_request.id %}" style="cursor: pointer;">
-                {% if  previlaged %}
+                {% if previlaged %}
                     <td>{{ change_request.new_position.person }}</td>
                 {% endif %}
                 {% if not previlaged %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load groups static %}
 
 {% block extra_includes %}
     <script>
@@ -43,7 +44,7 @@
     <br/><br/>
 
     <strong>
-        {% if user.id == shift.position.person.id %}
+        {% if user.id == shift.position.person.id or user|is_privileged %}
             Change requests (<a href="{% url 'new_shift_change_request' shift.id %}">update shift</a>, <a href="{% url 'new_drop_request' shift.id %}">drop</a>):
         {% else %}
             Change requests:

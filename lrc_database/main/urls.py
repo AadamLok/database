@@ -36,6 +36,7 @@ from .views.shifts import (
     new_shift,
     new_shift_change_request,
     new_shift_request,
+    new_shift_request_previleged,
     set_to_pending,
     view_drop_shift_requests,
     view_shift,
@@ -129,6 +130,7 @@ SCHEDULING_URLS: URLs = [
     path("scheduling/shift_change_requests/<str:kind>/<str:state>", view_shift_change_requests, name="view_shift_change_requests"),
     path("scheduling/drop_shift_requests/<str:kind>/<str:state>", view_drop_shift_requests, name="view_drop_shift_requests"),
     path("scheduling/request_shift", new_shift_request, name="new_shift_request"),
+    path("scheduling/request_shift/<int:user_id>", new_shift_request_previleged, name="new_shift_request_previleged"),
     # fmt: on
 ]
 

@@ -77,7 +77,7 @@
                     {% endif %}
                 </div>
             </div>
-            {% if user.id == target_user.id %}
+            {% if user.id == target_user.id or user|is_privileged %}
                 <br />
                 <div class="card">
                     <div class="card-header">
@@ -86,8 +86,12 @@
                     <div class="card-body">
                         <p class="card-text">
                             <ul>
-                                <li><a href="{% url 'new_shift_request' %}">Schedule new session</a></li>
-                                <li><a href="{% url 'view_shift_change_requests_by_user' user.id %}">View shift change requests</a></li>
+                                {% if user|is_privileged %}
+                                    <li><a href="{% url 'new_shift_request_previleged' target_user.id %}">Schedule new session</a></li>
+                                {% else %}
+                                    <li><a href="{% url 'new_shift_request' %}">Schedule new session</a></li>
+                                {% endif %}
+                                <li><a href="{% url 'view_shift_change_requests_by_user' target_user.id %}">View shift change requests</a></li>
                             </ul>
                         </p>
                     </div>

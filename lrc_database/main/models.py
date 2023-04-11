@@ -145,7 +145,14 @@ class FullCourse(models.Model):
         ordering = ('semester', 'course', 'faculty')
     
     def __str__(self):
-        return f"{self.semester}, {self.course.short_name()}, {self.faculty}"
+        if self.objects.filter(semester=self.semester, course=self.course, faculty=self.faculty).count() == 1:
+            return f"{self.semester}, {self.course.short_name()}, {self.faculty}"
+        else:
+            class_info = ClassDetails.objects.filter(full_course__id=self.id).all()
+            class_str = ""
+            for c in class_info:
+                class_str += str(c)
+            return f"{self.semester}, {self.course.short_name()}, {self.faculty}, [{class_str}]"
 
     def short_name(self):
         return f"{self.course.short_name()}, {self.faculty}"
@@ -185,6 +192,11 @@ class ClassDetails(models.Model):
     class_duration = models.DurationField(
         help_text="How long the class will last.",
     )
+
+    def __str__(self):
+        class_start = self.class_time.strftime("%I:%M %p").lower()
+        class_day = self.get_class_day_display()
+        return f"{class_day} ({self.location}, {class_start})"
 
 class LRCDatabaseUser(AbstractUser):
     first_name = models.CharField(_("first name"), max_length=100, blank=False)

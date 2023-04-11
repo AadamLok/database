@@ -20,7 +20,7 @@ from ..forms import (
     NewShiftRecurringForm,
     ExamReviewForm
 )
-from ..models import Shift, ShiftChangeRequest
+from ..models import Shift, ShiftChangeRequest, LRCDatabaseUser
 from ..templatetags.groups import is_privileged
 from . import restrict_to_groups, restrict_to_http_methods
 
@@ -57,8 +57,7 @@ def view_shift_doc(request: HttpRequest, shift_id: int) -> HttpResponse:
 @restrict_to_http_methods("GET", "POST")
 def new_shift_change_request(request: HttpRequest, shift_id: int) -> HttpResponse:
     shift = get_object_or_404(Shift, pk=shift_id)
-    if shift.position.person.id != request.user.id:
-        # TODO: let privileged users edit anyone's shifts
+    if shift.position.person.id != request.user.id and not request.user.is_privileged():
         raise PermissionDenied
     if request.method == "POST":
         form = NewChangeRequestForm(request.POST)
@@ -145,6 +144,7 @@ def view_shift_change_requests_by_user(request: HttpRequest, user_id: int) -> Ht
     requests = ShiftChangeRequest.objects.filter(
         (Q(new_position__person__id=user_id) | Q(shift_to_update__position__person__id=user_id)),
     )
+    print(user_id, requests)
     target_user = get_object_or_404(User, id=user_id)
     return render(
         request,
@@ -357,11 +357,44 @@ def new_shift_request(request: HttpRequest) -> HttpResponse:
             return redirect("new_shift_request")
 
 
+@restrict_to_http_methods("GET", "POST")
+def new_shift_request_previleged(request: HttpRequest, user_id: int) -> HttpResponse:
+    if request.method == "GET":
+        form = NewChangeRequestForm(form_person = LRCDatabaseUser.objects.get(id=user_id))
+        return render(
+            request,
+            "shifts/new_shift_request.html",
+            {"form": form},
+        )
+    else:
+        form = NewChangeRequestForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            if data["new_position"].position in ["SI", "GT"] and data["new_duration"] > timedelta(hours=1, minutes=15):
+                form = ExamReviewForm()
+                return render("shifts/exam_review_confirmation.html", {"form":form})
+            change_request = ShiftChangeRequest.objects.create(
+                shift_to_update=None,
+                state="New",
+                new_position=data["new_position"],
+                reason=data["reason"],
+                new_start=data["new_start"],
+                new_duration=data["new_duration"],
+                new_location=data["new_location"],
+                new_kind=data["new_kind"]
+            )
+            change_request.save()
+            return redirect("view_single_request", change_request.id)
+        else:
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("new_shift_request")
+
+
 # @restrict_to_groups("SIs", "Tutors")
 @restrict_to_http_methods("GET", "POST")
 def new_drop_request(request: HttpRequest, shift_id: int) -> HttpResponse:
     shift = get_object_or_404(Shift, id=shift_id)
-    if shift.position.person != request.user:
+    if shift.position.person != request.user and not request.user.is_privileged():
         raise PermissionDenied
 
     if request.method == "GET":
