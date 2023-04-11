@@ -8,7 +8,8 @@
                 <th scope="col">First name</th>
                 <th scope="col">Last name</th>
                 <th scope="col">Email</th>
-                <th class="text-center" scope="col">View or Edit</th>
+                <th class="text-center" scope="col">View Profile</th>
+                <th class="text-center" scope="col">Edit</th>
             </tr>
         </thead>
         <tbody>
@@ -17,6 +18,7 @@
                     <td>{{ user.first_name }}</td>
                     <td>{{ user.last_name }}</td>
                     <td><a href="mailto:{{ user.email }}">{{ user.email }}</a></td>
+                    <td class="text-center"><a href="{% url 'user_profile' user.id %}"><i class="bi bi-arrow-up-right-square"></i></a></td>
                     <td class="text-center"><a href="{% url 'view_or_edit_user' user.id %}"><i class="bi bi-pencil-square"></i></a></td>
                 </tr>
             {% empty %}
