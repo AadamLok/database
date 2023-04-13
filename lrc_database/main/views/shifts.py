@@ -355,7 +355,7 @@ def new_shift_request(request: HttpRequest) -> HttpResponse:
         if form.is_valid():
             data = form.cleaned_data
             if data["new_position"].position in ["SI", "GT"] and data["new_duration"] > timedelta(hours=1, minutes=15):
-                form = ExamReviewForm(request.POST, form_person = request.user)
+                form = ExamReviewForm(request.POST)
                 return render(request, "shifts/exam_review_confirmation.html", {"form":form})
             change_request = ShiftChangeRequest.objects.create(
                 shift_to_update=None,

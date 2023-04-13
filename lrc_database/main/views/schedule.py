@@ -34,7 +34,6 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
     shifts = Shift.objects.filter(start__gte=start, start__lte=end)
 
     weekdays = [(start + i * timedelta(days=1)).replace(tzinfo=pytz.timezone("America/New_York")) for i in range(7)]
-    print(weekdays)
 
     info = {}
 
