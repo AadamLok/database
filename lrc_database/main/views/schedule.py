@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from urllib import request
 
 import pytz
+from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -11,7 +12,6 @@ from django.core import serializers
 from ..models import Shift, Course, StaffUserPosition, CrossListed
 from . import restrict_to_groups, restrict_to_http_methods
 
-timezone = pytz.timezone("America/New_York")
 User = get_user_model()
 
 
@@ -25,15 +25,16 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
             checked = True
     user = get_object_or_404(User, id=request.user.id)
     privileged = user.is_privileged()
-    offset = int(offset) if privileged else -7
+    offset = int(offset) if privileged else 0
     
-    today = timezone.localize(datetime.combine(datetime.today(), datetime.min.time()))
+    today = timezone.now().replace(hour=0, minute=0, second=0)
     start = today + timedelta(days=offset)
     end = start + timedelta(days=7)
 
-    shifts = Shift.objects.filter(start__gte=start.isoformat(), start__lte=end)
+    shifts = Shift.objects.filter(start__gte=start, start__lte=end)
 
-    weekdays = [start + i * timedelta(days=1) for i in range(7)]
+    weekdays = [(start + i * timedelta(days=1)).replace(tzinfo=pytz.timezone("America/New_York")) for i in range(7)]
+    print(weekdays)
 
     info = {}
 
@@ -55,11 +56,10 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
     for shift in shifts:
         s_kind = shift.kind
         s_position = shift.position
-        if s_kind == "SI" and (kind == "SI" or kind == "All"):
+        if (s_kind == "SI" or s_kind == "GT") and (kind == "SI" or kind == "All"):
             s_course = s_position.si_course.course.short_name()
             info[s_course][1][(shift.start.weekday()-start_day)%7].append(shift)
-            course_id = s_position.si_course.course.id
-        elif kind == "Tutoring" or kind == "All":
+        elif s_kind == "Tutoring" and (kind == "Tutoring" or kind == "All"):
             for course in s_position.tutor_courses.all():
                 info[course.short_name()][1][(shift.start.weekday()-start_day)%7].append(shift)
     
