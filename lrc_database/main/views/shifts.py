@@ -26,7 +26,6 @@ from . import restrict_to_groups, restrict_to_http_methods
 
 User = get_user_model()
 
-
 @login_required
 @restrict_to_http_methods("GET")
 def view_shift(request: HttpRequest, shift_id: int) -> HttpResponse:
@@ -338,7 +337,6 @@ def new_shift_request(request: HttpRequest) -> HttpResponse:
             form = ExamReviewForm(request.POST)
             form.is_valid()
             data = form.cleaned_data
-            print(data)
             change_request = ShiftChangeRequest.objects.create(
                 shift_to_update=None,
                 state="New",

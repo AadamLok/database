@@ -77,6 +77,7 @@ register_converter(NegativeIntConverter, 'negint')
 
 MISC_URLS: URLs = [
     path("", index, name="index"),
+    path('explorer/', include('explorer.urls'))
 ]
 
 ACCOUNTS_URLS: URLs = [

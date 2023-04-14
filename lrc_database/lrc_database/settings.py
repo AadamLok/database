@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     "corsheaders",
+    "explorer",
     "main",
 ]
 
@@ -184,6 +185,12 @@ Relevant documentation:
 Also see the messages.html template.
 """
 
+
+# Exlorer for SQL queries
+EXPLORER_CONNECTIONS = {'default': 'default'}
+EXPLORER_DEFAULT_CONNECTION = 'default'
+
+EXPLORER_SQL_BLACKLIST = ()
 
 # Email
 
