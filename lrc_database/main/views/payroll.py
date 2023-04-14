@@ -47,7 +47,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
             shift_to_edit.late_datetime = timezone.now()
         shift_to_edit.save()
 
-        if shift_to_edit.kind == "SI" or shift_to_edit.kind == "GT":
+        if data["attended"] and (shift_to_edit.kind == "SI" or shift_to_edit.kind == "GT"):
             duration = timedelta(hours=2)
             if shift_to_edit.duration > timedelta(hours=1, minutes=15):
                 duration += (shift_to_edit.duration-timedelta(hours=1, minutes=15))*(timedelta(hours=1)/timedelta(minutes=45))
@@ -74,11 +74,12 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
         if not_signed_shifts.count() > 0:
             shifts_info = []
             for shift in not_signed_shifts:
+                start = timezone.localtime(shift.start)
                 shifts_info.append({
-                    'date': shift.start.day,
-                    'month': calendar.month_name[shift.start.month],
-                    'start': timezone.localtime(shift.start).time,
-                    'end': timezone.localtime(shift.start+shift.duration).time,
+                    'date': start.day,
+                    'month': calendar.month_name[start.month],
+                    'start': timezone.localtime(start).time,
+                    'end': timezone.localtime(start+shift.duration).time,
                     'duration': shift.duration,
                     'kind': shift.kind,
                     'position': f"{shift.location} - {shift.position.position}",
@@ -102,7 +103,7 @@ def get_user_payroll(user_id, semester):
     else:
         context["total_hours"] = 0
         context["total_pay"] = 0
-        start_week, end_week = get_week_from_date(shifts[0].start)
+        start_week, end_week = get_week_from_date(timezone.localtime(shifts[0].start))
         
         remaining_shifts = shifts.filter(start__gte=start_week)
 
@@ -113,7 +114,7 @@ def get_user_payroll(user_id, semester):
                 position = str(shift.position)
                 hours = round(shift.duration.seconds/3600,2)
                 pay = round(shift.duration.seconds/3600 * float(shift.position.hourly_rate),2)
-                position_wise_pay[position][(shift.start.weekday()+1)%7].append({
+                position_wise_pay[position][(timezone.localtime(shift.start).weekday()+1)%7].append({
                     "time": f"{hours:0.2f}",
                     "id": shift.id,
                     "color": color_coder(shift.kind),
@@ -243,7 +244,7 @@ def weekly_payroll(request: HttpRequest, offset: int) -> HttpResponse:
                         if position not in info[person]:
                             info[person][position] = [0,0,0,0,0,0,0,0,0]
                     info[person]["Total"] = [0,0,0,0,0,0,0,0,0]
-                index = (shift.start.weekday()+1)%7
+                index = (timezone.localtime(shift.start).weekday()+1)%7
                 hours = round(shift.duration.seconds/3600,2)
                 pay = round(shift.duration.seconds/3600 * float(shift.position.hourly_rate),2)
                 position = shift.position.str_pos()
