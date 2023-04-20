@@ -568,6 +568,11 @@ class ShiftChangeRequest(models.Model):
         help_text="The kind of shift this is: tutoring or SI.",
     )
 
+    created = models.DateTimeField(
+        auto_now_add=True,
+        blank=True
+    )
+
     class Meta:
         ordering = ('new_start',)
 
