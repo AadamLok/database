@@ -61,6 +61,12 @@ def new_shift_change_request(request: HttpRequest, shift_id: int) -> HttpRespons
     if request.method == "POST":
         form = NewChangeRequestForm(request.POST)
         if form.is_valid():
+            if shift.start-timezone.now() < timedelta(days=7):
+                messages.add_message(request, messages.ERROR, f"Can't update a shift within 7 days. Please contact LRC.")
+                return redirect("new_shift_change_request", shift_id)
+            if form.cleaned_data['new_start']-timezone.now() < timedelta(days=7):
+                messages.add_message(request, messages.ERROR, f"Can't change a shift to within 7 days. Please contact LRC.")
+                return redirect("new_shift_change_request", shift_id)    
             s = ShiftChangeRequest(
                 shift_to_update=shift,
                 state="New",
@@ -352,6 +358,9 @@ def new_shift_request(request: HttpRequest) -> HttpResponse:
         form = NewChangeRequestForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            if data['new_start']-timezone.now() < timedelta(days=7):
+                messages.add_message(request, messages.ERROR, f"Can't change a shift to within 7 days. Please contact LRC.")
+                return redirect("new_shift_request")
             if data["new_position"].position in ["SI", "GT"] and data["new_duration"] > timedelta(hours=1, minutes=15):
                 form = ExamReviewForm(request.POST)
                 return render(request, "shifts/exam_review_confirmation.html", {"form":form})
@@ -422,6 +431,9 @@ def new_drop_request(request: HttpRequest, shift_id: int) -> HttpResponse:
     else:
         form = NewDropRequestForm(request.POST)
         if form.is_valid():
+            if shift.start-timezone.now() < timedelta(days=7):
+                messages.add_message(request, messages.ERROR, f"Can't update a shift within 7 days. Please contact LRC.")
+                return redirect("new_drop_request", shift_id)
             change_request = ShiftChangeRequest(
                 shift_to_update=shift,
                 state="New",
@@ -437,4 +449,4 @@ def new_drop_request(request: HttpRequest, shift_id: int) -> HttpResponse:
             return redirect("view_single_request", change_request.id)
         else:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
-            return redirect("new_shift_request")
+            return redirect("new_drop_request", shift_id)

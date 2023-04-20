@@ -108,6 +108,7 @@ class ShiftAdmin(admin.ModelAdmin):
 class ShiftChangeRequestAdmin(admin.ModelAdmin):
     list_display = (
         "shift_to_update",
+        "new_start",
         "reason",
         "state",
         "is_drop_request"

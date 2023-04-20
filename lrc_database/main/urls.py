@@ -162,7 +162,9 @@ USERS_URLS: URLs = [
     path("users/delete_staff_position/<int:user_id>/<int:index>", delete_user_staff_position, name="delete_user_staff_position")
 ]
 
-SCHEDULE_URL: URLs = [path("schedule/<str:kind>/<str:offset>", view_schedule, name="view_schedule")]
+SCHEDULE_URL: URLs = [
+    path("schedule/<str:kind>/<str:offset>", view_schedule, name="view_schedule")
+]
 
 SEMESTER_URL: URLs = [
     path("semester/list_semester", list_semesters, name="list_semesters"),
