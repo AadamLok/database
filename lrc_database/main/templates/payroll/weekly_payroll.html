@@ -1,5 +1,27 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
+{% load static %}
+
+{% block extra_includes %}
+	<script>
+		function applyFixedHeader(element) {
+			var parentElement = element.parentElement;
+			window.addEventListener('scroll', () => {
+				var coordinates = parentElement.getBoundingClientRect();
+				if (coordinates.y < 0) {
+					element.style.transform = 'translate3d(0, ' + (-coordinates.y) + 'px, 0)';
+				} else {
+					element.style.transform = 'translate3d(0,0,0)';
+				}
+			});
+		}
+
+		document.addEventListener("DOMContentLoaded", function() {
+			var elements = document.querySelectorAll("#table-fixed");
+			elements.forEach(element => applyFixedHeader(element));
+		});
+	</script>
+{% endblock %}
 
 {% block content %}
 	<h2>Payroll Report By Week</h2>
@@ -29,7 +51,7 @@
 		<h5>Addition for week of {{week_name}}</h5>
 		<div class="table-responsive">
 			<table class="table">
-				<thead>
+				<thead id="table-fixed">
 					<tr>
 						<th scope="col" class="text-center">Name</th>
 						<th scope="col" class="text-center">Position</th>
@@ -96,7 +118,7 @@
 	<p>Following table shows all of payroll for the shifts that were signed by the individuals. It might not be indicative of the total pay one should get for the certain week, this can occour when somebody didn't sign payroll for cenrtain number of shifts.</p>
 	<div class="table-responsive">
 		<table class="table">
-			<thead>
+			<thead id="table-fixed">
 				<tr>
 					<th scope="col" class="text-center">Name</th>
 					<th scope="col" class="text-center">Position</th>
@@ -161,9 +183,9 @@
 	<p>Following table shows all of payroll for the shifts that are not signed yet by the individuals.</p>
 	<div class="table-responsive">
 		<table class="table">
-			<thead>
+			<thead id="table-fixed">
 				<tr>
-					<th scope="col" class="text-center">Name</th>
+					<th scope="col" class="text-center">Name</div></th>
 					<th scope="col" class="text-center">Position</th>
 					<th scope="col" class="text-center">Sunday</th>
 					<th scope="col" class="text-center">Monday</th>

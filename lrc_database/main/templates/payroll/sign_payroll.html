@@ -6,6 +6,8 @@
 <script src="{% static 'js/confetti.js' %}"></script> 
 <script type="text/javascript">
 	let state = 0;
+	let ids = [{% for shift in shifts%} {{shift.id}}, {% endfor %} 0];
+	ids.pop();
 	const audio = new Audio("{% static 'audio/celebration.mp3' %}");
 
 	function button_click() {
@@ -20,10 +22,51 @@
 			state -= 1;
 		}
 	}
+
+	function attended(id) {
+		let check = document.getElementById(id).checked;
+		let row = document.getElementById("tr-"+id);
+		let att = document.getElementById("att-"+id);
+		let catt = document.getElementById("catt-"+id);
+		let res = document.getElementById("show-res-"+id);
+		let cres = document.getElementById("res-"+id);
+		if(check) {
+			row.style.backgroundColor = "rgba(153,255,153,0.5)";
+			att.style.display = "block";
+			res.style.display = "none";
+			catt.checked = true;
+			cres.required = false;
+		} else {
+			row.style.backgroundColor = "rgba(255,114,111,0.5)";
+			att.style.display = "none";
+			res.style.display = "block";
+			catt.checked = false;
+			cres.required = true;
+		}
+	}
+
+	function first_approve() {
+		let att = false;
+		let res = false;
+		for (let i in ids) {
+			att = att || document.getElementById(ids[i]).checked;
+			res = res || (!document.getElementById(ids[i]).checked);
+		}
+		if (att) {
+			document.getElementById("show-att").style.display = "block";
+		} else {
+			document.getElementById("show-att").style.display = "none";
+		}
+		if (res) {
+			document.getElementById("show-res").style.display = "block";
+		} else {
+			document.getElementById("show-res").style.display = "none";
+		}
+	}
 </script>
 {% endblock %}
 
-{% block content %}
+{% block content %}	
 	<div class="event-schedule-area-two bg-color pad100">
 		<div class="container">
 			<div class="row">
@@ -45,60 +88,105 @@
 				</div>
 			</div>
 			{% if shifts != None %}
-				<div class="row">
-					<div class="col-lg-12">
-						<div class="tab-content" id="myTabContent">
-							<div class="tab-pane fade active show" id="home" role="tabpanel">
-								<div class="table-responsive">
-									<table class="table">
-										<thead>
-											<tr>
-												<th class="text-center" scope="col">Date</th>
-												<th scope="col">Session</th>
-												<th class="text-center" scope="col">Payroll Info</th>
-											</tr>
-										</thead>
-										<tbody>
-											{% for shift in shifts %}
-												<tr class="inner-box">
-													<th scope="row">
-														<div class="event-date">
-															<span>{{shift.date}}</span>
-															<p>{{shift.month}}</p>
-														</div>
-													</th>
-													<td>
-														<div class="event-wrap">
-															<h3><a href="#">{{shift.kind}}</a></h3>
-															<div class="meta">
-																<div>
-																	<a href="#" style="text-decoration: none">{{shift.position}}</a>
-																</div>
-																<div class="time">
-																	<span>{{shift.start}} - {{shift.end}} {{shift.duration}}</span>
+					<div class="row">
+						<div class="col-lg-12">
+							<div class="tab-content" id="myTabContent">
+								<div class="tab-pane fade active show" id="home" role="tabpanel">
+									<div class="table-responsive">
+										<table class="table">
+											<thead>
+												<tr>
+													<th class="text-center" scope="col">Attended?</th>
+													<th class="text-center" scope="col">Date</th>
+													<th class="text-center" scope="col">Session</th>
+												</tr>
+											</thead>
+											<tbody>
+												{% for shift in shifts %}
+													<tr class="inner-box" id="tr-{{shift.id}}" style="background-color:rgba(255,114,111,0.5);">
+														<td class="text-center">
+															<input name="shift-{{shift.id}}" style="scale:1.7;" class="form-check-input" type="checkbox" id="{{shift.id}}" onClick="attended(this.id)">
+														</td>
+														<th scope="row">
+															<div class="event-date">
+																<span>{{shift.date}}</span>
+																<p>{{shift.month}}</p>
+															</div>
+														</th>
+														<td>
+															<div class="event-wrap">
+																<h3><a href="#">{{shift.kind}}</a></h3>
+																<div class="meta">
+																	<div>
+																		<a href="#" style="text-decoration: none">{{shift.position}}</a>
+																	</div>
+																	<div class="time">
+																		<span>{{shift.start}} - {{shift.end}} {{shift.duration}}</span>
+																	</div>
 																</div>
 															</div>
-														</div>
-													</td>
-													<td>
-														<div class="primary-btn">
-															<form method="post" action="{% url 'sign_payroll' %}">
-																{% csrf_token %}
-																{{ shift.form|crispy }}
-																<button type="submit" class="btn btn-primary">Approve</button>
-															</form>
-														</div>
-													</td>
+														</td>
+													</tr>
+												{% endfor %}
+											</tbody>
+											<tfoot>
+												<tr>
+													<th class="text-center" colspan="3">
+														<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter" onClick="first_approve()">Approve</button>
+													</th>
 												</tr>
-											{% endfor %}
-										</tbody>
-									</table>
+											</tfoot>
+										</table>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
-				</div>
 			{% endif %}
+			<div class="modal fade bd-example-modal-lg" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+				<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+					<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="exampleModalLongTitle">Payroll Confirmation</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<form method="post" action="{% url 'sign_payroll' %}">
+						{% csrf_token %}
+						<div class="modal-body">
+							Looks like you are trying to apporve your payroll. Please make sure information given below is correct before clicking aprrove.
+							<br/><br/>
+							<div id="show-att" style="display:none;">
+								<b>Shifts you have marked as attended:</b>
+								<ul>
+									{% for shift in shifts %}
+										<input name="att-{{shift.id}}" id="catt-{{shift.id}}" style="display:none;" class="form-check-input" type="checkbox"/>
+										<li id="att-{{shift.id}}" style="display:none;">{{shift.name}} {{shift.start}}</li>
+									{% endfor %}
+								</ul>
+							</div>
+							<div id="show-res" style="display:none;">
+								<b>Shifts you have marked as not attended:</b>
+								<br/>
+								Please provide reson for not attedning the following shifts.<br/>
+									{% for shift in shifts %}
+										<div class="form-group mt-3" id="show-res-{{shift.id}}">
+											<label for="exampleInputEmail1">{{shift.name}} {{shift.start}}</label>
+											<input type="text" class="form-control" name="res-{{shift.id}}" id="res-{{shift.id}}" placeholder="Reason" required>
+										</div>
+									{% endfor %}
+								<br/>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-primary">Approve</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
 		</div>
 	</div>
 {% endblock %}

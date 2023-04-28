@@ -268,6 +268,9 @@ class LRCDatabaseUser(AbstractUser):
 
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name} [{self.email}]"
+    
+    def str_last_name_first(self) -> str:
+        return f"{self.last_name}, {self.first_name} [{self.email}]"
 
 class StaffUserPosition(models.Model):
     person = models.ForeignKey(
@@ -491,6 +494,10 @@ class Shift(models.Model):
 
     def __str__(self):
         return f"{self.kind}, {self.location}"
+    
+    
+    def str_long(self):
+        return f"{self.kind}, {self.location}, {self.start}"
 
 
 class ShiftChangeRequest(models.Model):

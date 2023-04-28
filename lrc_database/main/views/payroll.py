@@ -26,46 +26,51 @@ def get_week_from_date(date):
 @restrict_to_http_methods("GET", "POST")
 def sign_payroll(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
-        identifier = int([key for key in request.POST.keys() if 'form' in key][0][5:])
-        form = PayrollForm(identifier, request.POST)
+        attended_ids = []
+        for key in sorted(request.POST.keys()):
+            if key == "csrfmiddlewaretoken":
+                continue
+            attended, shift_id = key.split('-')
+            attended = attended == "att"
+            shift_id = int(shift_id)
 
-        if not form.is_valid():
-            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            if attended:
+                attended_ids.append(shift_id)
+            elif shift_id in attended_ids:
+                continue
+
+            shift_to_edit = Shift.objects.get(id=shift_id)
+            shift_to_edit.attended = attended
+            shift_to_edit.reason = "" if attended else request.POST[key]
+            shift_to_edit.signed = True
+            week_end = shift_to_edit.start.replace(hour=23, minute=59, second=59, tzinfo=pytz.timezone("America/New_York"))
+            while week_end.weekday() != 5:
+                week_end += timedelta(days=1)
+            late = timezone.now() > week_end
+            shift_to_edit.late = late
+            if late:
+                shift_to_edit.late_datetime = timezone.now()
+            shift_to_edit.save()
+
+            if attended and (shift_to_edit.kind == "SI" or shift_to_edit.kind == "GT"):
+                duration = timedelta(hours=2)
+                if shift_to_edit.duration > timedelta(hours=1, minutes=15):
+                    duration += (shift_to_edit.duration-timedelta(hours=1, minutes=15))*(timedelta(hours=1)/timedelta(minutes=45))
+                if duration > timedelta(hours=3):
+                    duration = timedelta(hours=3)
+                Shift.objects.create(
+                    position=shift_to_edit.position,
+                    start=shift_to_edit.start,
+                    duration=duration,
+                    location="None",
+                    kind="Preparation",
+                    attended=True,
+                    signed=True,
+                    late=shift_to_edit.late,
+                    late_datetime=shift_to_edit.late_datetime
+                )
+
             return redirect("sign_payroll")
-
-        data = form.cleaned_data
-        shift_to_edit = Shift.objects.get(id=identifier)
-        shift_to_edit.attended = data["attended"]
-        shift_to_edit.reason = data["reason"]
-        shift_to_edit.signed = True
-        week_end = shift_to_edit.start.replace(hour=23, minute=59, second=59, tzinfo=pytz.timezone("America/New_York"))
-        while week_end.weekday() != 5:
-            week_end += timedelta(days=1)
-        late = timezone.now() > week_end
-        shift_to_edit.late = late
-        if late:
-            shift_to_edit.late_datetime = timezone.now()
-        shift_to_edit.save()
-
-        if data["attended"] and (shift_to_edit.kind == "SI" or shift_to_edit.kind == "GT"):
-            duration = timedelta(hours=2)
-            if shift_to_edit.duration > timedelta(hours=1, minutes=15):
-                duration += (shift_to_edit.duration-timedelta(hours=1, minutes=15))*(timedelta(hours=1)/timedelta(minutes=45))
-            if duration > timedelta(hours=3):
-                duration = timedelta(hours=3)
-            Shift.objects.create(
-                position=shift_to_edit.position,
-                start=shift_to_edit.start,
-                duration=duration,
-                location="None",
-                kind="Preparation",
-                attended=True,
-                signed=True,
-                late=shift_to_edit.late,
-                late_datetime=shift_to_edit.late_datetime
-            )
-
-        return redirect("sign_payroll")
     else:
         context = {"shifts":None}
 
@@ -78,17 +83,17 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
                 shifts_info.append({
                     'date': start.day,
                     'month': calendar.month_name[start.month],
-                    'start': timezone.localtime(start).time,
-                    'end': timezone.localtime(start+shift.duration).time,
+                    'start': start.time,
+                    'end': (start+shift.duration).time,
                     'duration': shift.duration,
                     'kind': shift.kind,
                     'position': f"{shift.location} - {shift.position.position}",
-                    'form': PayrollForm(shift.id)
+                    'id': shift.id,
+                    'name': f"{str(shift)}, {start.month}/{start.day}"
                 })
             context["shifts"] = shifts_info
 
         return render(request, "payroll/sign_payroll.html", context)
-
 
 def get_user_payroll(user_id, semester):
     context = {"weeks":{}, "color_coder":get_color_coder_dict()}
@@ -236,7 +241,7 @@ def weekly_payroll(request: HttpRequest, offset: int) -> HttpResponse:
                     info = info_shifts[week_name]
                 else:
                     info = info_shifts
-                person = str(shift.position.person)
+                person = shift.position.person.str_last_name_first()
                 if person not in info:
                     info[person] = {}
                     for pshift in shift_type.filter(position__person=shift.position.person).all():
@@ -259,7 +264,6 @@ def weekly_payroll(request: HttpRequest, offset: int) -> HttpResponse:
 
                 info["Total_hours"] += hours
                 info["Total_pay"] += pay
-
-            context[shift_type_name] = info_shifts
+            context[shift_type_name] = dict(sorted(info_shifts.items()))
 
         return render(request, "payroll/weekly_payroll.html", context)
