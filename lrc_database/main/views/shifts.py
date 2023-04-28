@@ -149,7 +149,6 @@ def view_shift_change_requests_by_user(request: HttpRequest, user_id: int) -> Ht
     requests = ShiftChangeRequest.objects.filter(
         (Q(new_position__person__id=user_id) | Q(shift_to_update__position__person__id=user_id)),
     )
-    print(user_id, requests)
     target_user = get_object_or_404(User, id=user_id)
     return render(
         request,
