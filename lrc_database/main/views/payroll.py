@@ -70,7 +70,8 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
                     late_datetime=shift_to_edit.late_datetime
                 )
 
-            return redirect("sign_payroll")
+        return redirect("sign_payroll")
+    
     else:
         context = {"shifts":None}
 
