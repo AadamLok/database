@@ -51,9 +51,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
             if late:
                 shift_to_edit.late_datetime = timezone.now()
             shift_to_edit.save()
-            print(attended, shift_to_edit.kind)
             if attended and (shift_to_edit.kind == "SI" or shift_to_edit.kind == "Group Tutoring"):
-                print("In")
                 duration = timedelta(hours=2)
                 if shift_to_edit.duration > timedelta(hours=1, minutes=15):
                     duration += (shift_to_edit.duration-timedelta(hours=1, minutes=15))*(timedelta(hours=1)/timedelta(minutes=45))
