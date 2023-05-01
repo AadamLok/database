@@ -71,15 +71,15 @@
 						{% else %}
 							<td>
 								{% for s in day %}
-									<div class="margin-10px-top">
+									<div class="margin-10px-top" {% if s.exam_rev %}style="background-color: rgb(250,250,210);"{% endif %}>
 										{% if s.kind == "SI" %}
-											<div class="font-size16 text-break text-wrap" style="margin-bottom:10px">{% if s.position.si_course.faculty.0 == "*" %}All Sections{% else %}{{s.position.si_course.faculty}}{% endif %}</div>
+											<div class="font-size16 text-break text-wrap" style="margin-bottom:10px">{% if s.shift.position.si_course.faculty.0 == "*" %}All Sections{% else %}{{s.shift.position.si_course.faculty}}{% endif %}</div>
 										{% endif %}
-										<div class="{% if s.kind == 'SI' %}bg-lightred{% else %}bg-green{% endif %} padding-5px-tb 
+										<div class="{% if s.shift.kind == 'SI' %}bg-lightred{% else %}bg-green{% endif %} padding-5px-tb 
 											padding-15px-lr border-radius-5 margin-10px-bottom text-white font-size16 
-											xs-font-size13">{{s.location}}</div>
-										<div class="margin-10px-top font-size14">{{s.start| date:"h:i A" |lower}} - {{s.start|add_datetime:s.duration|date:"h:i A"|lower}}</div>
-										<div class="font-size13 text-break text-wrap">{% if privileged %}<a href="{% url 'user_profile' s.position.person.id %}">{% endif %}{{s.position.person}}{% if privileged %}</a>{% endif %}</div>
+											xs-font-size13">{{s.shift.location}}</div>
+										<div class="margin-10px-top font-size14">{{s.shift.start| date:"h:i A" |lower}} - {{s.shift.start|add_datetime:s.shift.duration|date:"h:i A"|lower}}</div>
+										<div class="font-size13 text-break text-wrap">{% if privileged %}<a href="{% url 'user_profile' s.shift.position.person.id %}">{% endif %}{{s.shift.position.person}}{% if privileged %}</a>{% endif %}</div>
 									</div>
 									{% if not forloop.last %}
 										<div class="mb-1 mt-1" style="height:2px;background-color:rgba(0,0,0,0.2);border-radius:1px;"></div>

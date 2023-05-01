@@ -57,10 +57,11 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
         s_position = shift.position
         if (s_kind == "SI" or s_kind == "GT") and (kind == "SI" or kind == "All"):
             s_course = s_position.si_course.course.short_name()
-            info[s_course][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append(shift)
+            exam_rev = shift.duration > timedelta(hours=1,minutes=15)
+            info[s_course][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append({"shift":shift,"exam_rev":exam_rev})
         elif s_kind == "Tutoring" and (kind == "Tutoring" or kind == "All"):
             for course in s_position.tutor_courses.all():
-                info[course.short_name()][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append(shift)
+                info[course.short_name()][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append({"shift":shift,"exam_rev":False})
     
     for main_course in cross_listed_dict:
         for course in cross_listed_dict[main_course]:
