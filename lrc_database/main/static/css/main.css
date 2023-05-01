@@ -372,3 +372,12 @@ body {
   z-index: 2;
   box-shadow: inset 0 -0.1em 0 black;
 }
+.red-link {
+  color: red;
+}
+.blue-link {
+  color: blue;
+}
+.green-link {
+  color: green;
+}

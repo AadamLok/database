@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.db.models import Q
 
 from ..forms import CreateUserForm, CreateUsersInBulkForm, EditProfileForm, StaffUserPositionForm, EditUserForm
-from ..models import LRCDatabaseUser, Semester, Shift, StaffUserPosition, Course
+from ..models import LRCDatabaseUser, Semester, Shift, StaffUserPosition, Course, ShiftChangeRequest
 from . import personal, restrict_to_groups, restrict_to_http_methods
 from ..color_coder import color_coder, get_color_coder_dict
 
@@ -63,8 +63,20 @@ def user_event_feed(request: HttpRequest, user_id: int) -> HttpResponse:
     user = get_object_or_404(User, id=user_id)
     active_positions = StaffUserPosition.objects.filter(person=user, semester=Semester.objects.get_active_sem())
     shifts = Shift.objects.filter(position__in=active_positions, start__gte=start, start__lte=end)
+    shift_change_req = ShiftChangeRequest.objects.filter(new_position__in=active_positions, state__in=["Pending","New"],new_start__gte=start, new_start__lte=end)
 
-    def to_json(shift: Shift) -> Dict[str, Any]:
+    shifts_in_req_ids = list(map(lambda x: x['shift_to_update'],shift_change_req.values('shift_to_update')))
+    class_name = {}
+    for shift in shifts:
+        color = "blue-link"
+        if shift.id in shifts_in_req_ids:
+            if ShiftChangeRequest.objects.filter(shift_to_update__id=shift.id).order_by('-created').first().state   == "New":
+                color = "red-link"
+            else:
+                color = "green-link"
+        class_name[shift.id] = color
+
+    def to_json_shift(shift: Shift) -> Dict[str, Any]:
         return {
             "id": str(shift.id),
             "start": shift.start.isoformat(),
@@ -73,9 +85,27 @@ def user_event_feed(request: HttpRequest, user_id: int) -> HttpResponse:
             "allDay": False,
             "url": reverse("view_shift", args=(shift.id,)),
             "color": color_coder(shift.kind),
+            "className": class_name[shift.id]
+        }
+    
+    
+    def to_json_shift_req(req: ShiftChangeRequest) -> Dict[str, Any]:
+        duration = req.new_duration
+        if duration is None:
+            duration = Shift.objects.get(id=req.shift_to_update.id).duration
+        return {
+            "id": str(req.id),
+            "start": req.new_start.isoformat(),
+            "end": (req.new_start + duration).isoformat(),
+            "title": f"{req.state} Request - {req.new_kind}",
+            "allDay": False,
+            "url": reverse("view_single_request", args=(req.id,)),
+            "color": color_coder(req.new_kind),
+            "textColor": "#f00",
+            "className": "red-link" if req.state == "New" else "green-link"
         }
 
-    json_response = list(map(to_json, shifts))
+    json_response = list(map(to_json_shift, shifts)) + list(map(to_json_shift_req, shift_change_req))
     return JsonResponse(json_response, safe=False)
 
 

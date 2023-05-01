@@ -90,7 +90,7 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
 @restrict_to_http_methods("GET")
 def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
     offset = 0
-    today = timezone.localize(datetime.combine(datetime.today(), datetime.min.time()))
+    today = timezone.now()
     start = today + timedelta(days=offset)
     end = start + timedelta(days=7)
 
@@ -133,14 +133,13 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
             "person": str(shift.position.person),
         }
         
-        if s_kind == "SI" and (kind == "SI" or kind == "All"):
+        if (s_kind == "SI" or s_kind == "Group Tutoring") and (kind == "SI" or kind == "All"):
             s_course = s_position.si_course.course.short_name()
             info[s_course][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append(shift_dict)
         elif kind == "Tutoring" or kind == "All":
             for course in s_position.tutor_courses.all():
                 info[course.short_name()][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append(shift_dict)
 
-    
     for main_course in cross_listed_dict:
         for course in cross_listed_dict[main_course]:
             info[course.short_name()][1] = info[main_course][1]
