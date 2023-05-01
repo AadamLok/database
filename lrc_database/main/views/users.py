@@ -15,7 +15,7 @@ from django.db.models import Q
 from ..forms import CreateUserForm, CreateUsersInBulkForm, EditProfileForm, StaffUserPositionForm, EditUserForm
 from ..models import LRCDatabaseUser, Semester, Shift, StaffUserPosition, Course
 from . import personal, restrict_to_groups, restrict_to_http_methods
-from ..color_coder import color_coder
+from ..color_coder import color_coder, get_color_coder_dict
 
 User = get_user_model()
 
@@ -44,7 +44,7 @@ def user_profile(request: HttpRequest, user_id: int) -> HttpResponse:
     return render(
         request,
         "users/user_profile.html",
-        {"target_user": target_user, "target_users_shifts": target_users_shifts},
+        {"target_user": target_user, "target_users_shifts": target_users_shifts, "color_coder": get_color_coder_dict()},
     )
 
 

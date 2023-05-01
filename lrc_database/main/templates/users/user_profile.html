@@ -23,6 +23,13 @@
         <div id="cal-div" class="col-md-8">
             <div class="card mb-3">
                 <div id="cal-header" class="card-header">Calendar</div>
+                <div class="p2">
+                    <p class="justify-content-center text-wrap text-center">
+                    {% for type, color in color_coder.items %}
+                        <span class="dot" style="background-color: {{color}};"></span>{{type}}  &emsp;
+                    {% endfor %}
+                    </p>
+                </div>
                 <div class="card-body">
                     <div id="calendar"></div>
                 </div>
