@@ -57,9 +57,18 @@
                             </ul>
                         </p>
                     {% endif %}
+                    {% if target_user|is_gt %}
+                        <p class="card-text">
+                            <strong>Group Tutor Courses:</strong>
+                            <ul>
+                                {% for pos in target_user|get_gt_courses %}
+                                    <li><a href="{% url 'view_course' pos.course_id %}">{{ pos.course_name }}</a></li>
+                                {% endfor %}
+                            </ul>
+                    {% endif %}
                     {% if target_user|is_tutor %}
                         <p class="card-text">
-                            <strong>Tutored courses:</strong>
+                            <strong>Tutored Courses:</strong>
                             <ul>
                                 {% for pos in target_user|get_tutor_courses %}
                                     <li><a href="{% url 'view_course' pos.course_id %}">{{ pos.course_name }}</a></li>

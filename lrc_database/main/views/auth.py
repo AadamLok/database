@@ -15,9 +15,9 @@ def login_user(request: HttpRequest) -> HttpResponse:
 			return redirect("login")
 		else:
 			data = form.cleaned_data
-			if data["username"] not in ("alokhandwala+lrcadmin@umass.edu", "lrosenbaum+lrcadmin@umass.edu", "mtalwar+lrcadmin@umass.edu", "alokhandwala@umass.edu", "mtalwar@umass.edu", "lrosenbaum@umass.edu"):
-				messages.add_message(request, messages.ERROR, f"Database in down. We are working on it.")
-				return redirect("login")
+			# if data["username"] not in ("alokhandwala+lrcadmin@umass.edu", "lrosenbaum+lrcadmin@umass.edu", "mtalwar+lrcadmin@umass.edu", "alokhandwala@umass.edu", "mtalwar@umass.edu", "lrosenbaum@umass.edu"):
+			# 	messages.add_message(request, messages.ERROR, f"Database in down. We are working on it.")
+			# 	return redirect("login")
 			try:
 				user = LRCDatabaseUser.objects.get(username=data['username'])
 				if not user.has_usable_password():

@@ -20,6 +20,11 @@ def is_si(user: LRCDatabaseUser) -> bool:
 def is_tutor(user: LRCDatabaseUser) -> bool:
     return user.is_tutor()
 
+
+@register.filter
+def is_gt(user: LRCDatabaseUser) -> bool:
+    return user.is_gt()
+
 @register.filter
 def is_pm(user: LRCDatabaseUser) -> bool:
     return user.is_pm()

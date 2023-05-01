@@ -9,6 +9,12 @@ def get_si_courses(user: LRCDatabaseUser):
     pos_list = [{'course_name':str(pos.si_course.course),'course_id':pos.si_course.course.id} for pos in active_position]
     return pos_list
 
+@register.filter(name='get_gt_courses')
+def get_gt_courses(user: LRCDatabaseUser):
+    active_position = StaffUserPosition.objects.filter(person=user, semester=Semester.objects.get_active_sem(), position="GT").all()
+    pos_list = [{'course_name':str(pos.si_course.course),'course_id':pos.si_course.course.id} for pos in active_position]
+    return pos_list
+
 @register.filter(name='get_tutor_courses')
 def get_tutor_courses(user: LRCDatabaseUser):
 	active_position = StaffUserPosition.objects.filter(person=user, semester=Semester.objects.get_active_sem(), position="Tutor").all()
@@ -34,6 +40,8 @@ def positions(user: LRCDatabaseUser):
 	for pos in active_position:
 		if pos.position == "SI":
 			positions.append(f"SI - {pos.si_course.short_name()}")
+		elif pos.position == "GT":
+			positions.append(f"GT - {pos.si_course.short_name()}")
 		elif pos.position == "Tutor":
 			for tcourse in pos.tutor_courses.all():
 				positions.append(f"Tutor - {tcourse.short_name()}")

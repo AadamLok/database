@@ -95,6 +95,8 @@
 					<td>
 						{% if position.position == "SI" %}
 							{{ position.si_course.short_name }}
+						{% elif position.position == "GT" %}
+							{{ position.si_course.short_name }}
 						{% elif position.position == "Tutor" %}
 							{{ position.str_tutor_courses_list }}
 						{% elif position.position == "PM" %}
