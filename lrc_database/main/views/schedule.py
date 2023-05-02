@@ -125,8 +125,8 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
         if s_kind == "SI":
             faculty = shift.position.si_course.faculty
             faculty = "All Sections" if faculty[0] == "*" else faculty
-        start_time = shift.start.strftime("%I:%M %p").lower()
-        end_time = (shift.start+shift.duration).strftime("%I:%M %p").lower()
+        start_time = timezone.localtime(shift.start).strftime("%I:%M %p").lower()
+        end_time = (timezone.localtime(shift.start)+shift.duration).strftime("%I:%M %p").lower()
         shift_dict = {
             "faculty": faculty,
             "location": shift.location,
