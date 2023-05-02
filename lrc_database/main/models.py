@@ -268,6 +268,9 @@ class LRCDatabaseUser(AbstractUser):
 
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name} [{self.email}]"
+
+    def name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
     
     def str_last_name_first(self) -> str:
         return f"{self.last_name}, {self.first_name} [{self.email}]"

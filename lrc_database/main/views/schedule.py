@@ -9,7 +9,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.core import serializers
 
-from ..models import Shift, Course, StaffUserPosition, CrossListed
+from ..models import Shift, Course, StaffUserPosition, CrossListed, Semester, FullCourse
 from . import restrict_to_groups, restrict_to_http_methods
 
 User = get_user_model()
@@ -97,6 +97,7 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
     shifts = Shift.objects.filter(start__gte=start.isoformat(), start__lte=end)
 
     weekdays = [start + i * timedelta(days=1) for i in range(7)]
+    weekdays = [[day.weekday(), day.strftime("%m/%d")] for day in weekdays]
 
     info = {}
 
@@ -130,7 +131,8 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
             "faculty": faculty,
             "location": shift.location,
             "time": f"{start_time} - {end_time}",
-            "person": str(shift.position.person),
+            "person": shift.position.person.name(),
+            "exam_rev": shift.duration > timedelta(hours=1, minutes=15)
         }
         
         if (s_kind == "SI" or s_kind == "Group Tutoring") and (kind == "SI" or kind == "All"):
@@ -140,9 +142,18 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
             for course in s_position.tutor_courses.all():
                 info[course.short_name()][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append(shift_dict)
 
+    si_courses = StaffUserPosition.objects.filter(semester=Semester.objects.get_active_sem(), position__in=["SI","GT"]).values_list("si_course")
+    si_courses = list(FullCourse.objects.filter(id__in=si_courses).values_list("course", flat=True))
     for main_course in cross_listed_dict:
         for course in cross_listed_dict[main_course]:
             info[course.short_name()][1] = info[main_course][1]
+    
+    keys = list(info.keys())
+    for course in keys:
+        if info[course][0] not in si_courses:
+            del info[course]
+
+    info = dict(sorted(info.items()))
 
     context = {
         "kind": kind, 
