@@ -122,7 +122,7 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
         s_position = shift.position
         
         faculty = None
-        if s_kind == "SI":
+        if s_kind == "SI" or s_kind == "GT":
             faculty = shift.position.si_course.faculty
             faculty = "All Sections" if faculty[0] == "*" else faculty
         start_time = timezone.localtime(shift.start).strftime("%I:%M %p").lower()
