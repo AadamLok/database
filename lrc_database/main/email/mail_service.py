@@ -1,8 +1,9 @@
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage, send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
 def send_email():
+    return
     html_msg = render_to_string(
         'email/test.html', {
             "name": "Aadam",
@@ -12,10 +13,12 @@ def send_email():
             "location": "ILC S211",
 		}
     )
-    send_mail(
-        'Testing',
-        strip_tags(html_msg),
+    msg = EmailMessage(
+        'Final Test',
+        html_msg,
         '"LRC Database" <umass.learning.resource.center@gmail.com>',
-        ['alokhandwala@umass.edu'],
-        html_message=html_msg
+        ['alokhandwala@umass.edu','aadamlokhandwala786@gmail.com'],
+        reply_to=['lrcsi@umass.edu']
 	)
+    msg.content_subtype = "html"
+    msg.send()
