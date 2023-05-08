@@ -69,6 +69,7 @@ from .views.semester import (
 from .views.payroll import sign_payroll, view_payroll, user_payroll, weekly_payroll
 from .views.pm import pm_schedule, pm_add_meeting
 from .views.auth import login_user, reset_password
+from .views.testing import test_something
 
 URLs = List[Union[URLPattern, URLResolver]]
 
@@ -187,6 +188,10 @@ PM_URL: URLs = [
     path("pm/add-meeting/", pm_add_meeting, name="pm_add_meeting"),
 ]
 
+TESTING_URL: URLs = [
+    path("test", test_something, name="test_something"),
+]
+
 urlpatterns: URLs = (
     MISC_URLS + 
     ACCOUNTS_URLS + 
@@ -199,5 +204,6 @@ urlpatterns: URLs = (
     SCHEDULE_URL + 
     SEMESTER_URL +
     PAYROLL_URL +
-    PM_URL
+    PM_URL +
+    TESTING_URL
 )
