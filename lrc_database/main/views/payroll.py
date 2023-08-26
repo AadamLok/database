@@ -92,6 +92,9 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
                     'name': f"{str(shift)}, {start.month}/{start.day}"
                 })
             context["shifts"] = shifts_info
+            
+        context['OURSMentor'] = request.user.is_ours_mentor()
+        context['clocked_in'] = True
 
         return render(request, "payroll/sign_payroll.html", context)
 

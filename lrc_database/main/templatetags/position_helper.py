@@ -48,4 +48,6 @@ def positions(user: LRCDatabaseUser):
 		elif pos.position == "PM":
 			for peer in pos.peers.all():
 				positions.append(f"PM - {peer}")
+		elif pos.position == "OursM":
+			positions.append(f"OURS Mentor")
 	return positions

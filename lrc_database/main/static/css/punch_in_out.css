@@ -1,0 +1,19 @@
+h1 {
+	text-align: center;
+}
+
+button {
+	margin: 5px;
+}
+
+#punch-out, #bye {
+	display: none;
+}
+
+.btn-default {
+	color: #bcbcbc;
+}
+
+.fa-undo, .fa-redo {
+	margin-right: 10px;
+}

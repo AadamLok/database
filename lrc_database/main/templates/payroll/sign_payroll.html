@@ -3,6 +3,7 @@
 {% load static %}
 
 {% block extra_includes %}
+<link rel="stylesheet" href="{% static 'css/punch_in_out.css' %}" />
 <script src="{% static 'js/confetti.js' %}"></script> 
 <script type="text/javascript">
 	let state = 0;
@@ -64,10 +65,47 @@
 		}
 	}
 </script>
+
 {% endblock %}
 
 {% block content %}	
-	<div class="event-schedule-area-two bg-color pad100">
+	{% if OURSMentor %}
+		<div class="container">
+			<h3>OURS Mentor Punch In/Punch Out:</h3>
+		
+			<div class="row col-12">
+				<div class="col-3"></div>
+			
+				<div id="buttons" class="col-6">
+					<button id="punch" class="btn btn-success col-12">
+					<div id="now">
+						<span id="date">03/12/2001</span><br><span id="time">XX:YYam</span>
+					</div>
+					<div id="punch-in">
+						<i class="fas fa-angle-right"></i>
+						<i class="fas fa-clock"></i>
+						<div>Punch In</div>
+					</div>
+					<div id="punch-out">
+						<i class="fas fa-clock"></i>
+						<i class="fas fa-angle-right"></i>
+						<div>Punch Out</div>
+					</div>
+					</button>
+					<button id="undo" class="btn btn-default col-12"><i class="fas fa-undo"></i>Undo Last Punch</button>  
+				</div>
+
+				<div class="col-3"></div>
+			
+			</div>
+		
+		</div>
+
+		<br/>
+	{% endif %}
+
+	<div class="container event-schedule-area-two bg-color pad100">
+		<h3>Your Payroll:</h3>
 		<div class="container">
 			<div class="row">
 				<div class="col-lg-12">
@@ -80,8 +118,7 @@
 						{% else %}
 							<p>
 								To sign payroll just click on checkbox next to it indicating you did that shift. If you weren't able to
-								complete that shift please indicate the reason and don't check the checkbox. After doing so hit the submit 
-								button.
+								complete that shift please don't click on the checkbox and then just click on approve button.
 							</p>
 						{% endif %}
 					</div>
@@ -189,4 +226,70 @@
 		</div>
 		</div>
 	</div>
+	<script type="text/javascript">
+		var canUndo = false,
+		punchBtn = $("#punch"),
+		undoBtn = $("#undo"),
+		punchInIcon = $("#punch-in"),
+		punchOutIcon = $("#punch-out"),
+		clockedIn = false;
+
+		{% if clocked_in %}
+			changeClock();
+		{% endif %}
+	
+		punchBtn.click(changeClock);
+		undoBtn.click(undo);
+		
+
+		function timeShow(){
+			var now = new Date();  
+			$("#time").text(now.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }));
+			$("#date").text(now.toLocaleString('en-US', { day: 'numeric', month: 'numeric', year: 'numeric' }))
+		}
+
+		setInterval(() => {timeShow();}, 1000); 
+	
+		function undo(){
+			canUndo = false;
+			clockedIn = false;
+			punchOut();
+			undoSet();
+		}
+	
+		function changeClock(){
+			if(clockedIn){
+				punchOut();
+			} else {
+				punchIn();
+			}
+			clockedIn = !clockedIn;
+			canUndo = clockedIn;
+			undoSet();
+		}
+	
+		function punchOut(){
+			punchBtn.addClass("btn-success");
+			punchBtn.removeClass("btn-danger");
+			punchInIcon.css("display","block");
+			punchOutIcon.css("display","none");
+		}
+	
+		function punchIn(){
+			punchBtn.removeClass("btn-success");
+			punchBtn.addClass("btn-danger");
+			punchInIcon.css("display","none");
+			punchOutIcon.css("display","block");
+		}
+	
+		function undoSet(){
+			if(canUndo){
+				undoBtn.removeClass("btn-default");
+				undoBtn.addClass("btn-warning");
+			} else {
+				undoBtn.removeClass("btn-warning");
+				undoBtn.addClass("btn-default");
+			}
+		}
+	</script>
 {% endblock %}
