@@ -75,7 +75,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
         context = {"shifts":None}
 
         now = timezone.now()
-        not_signed_shifts = Shift.objects.filter(position__person=request.user, signed = False, start__lte = now).all()
+        not_signed_shifts = Shift.objects.filter(position__semester=Semester.objects.get_active_sem(), position__person=request.user, signed = False, start__lte = now).all()
         if not_signed_shifts.count() > 0:
             shifts_info = []
             for shift in not_signed_shifts:
@@ -244,19 +244,33 @@ def weekly_payroll(request: HttpRequest, offset: int) -> HttpResponse:
                 person = shift.position.person.str_last_name_first()
                 if person not in info:
                     info[person] = {}
-                    for pshift in shift_type.filter(position__person=shift.position.person).all():
+                    old_pay_rate = -1
+                    pay_rate = -1
+                    for pshift in shift_type.filter(position__person=shift.position.person).order_by("position__hourly_rate").all():
                         position = pshift.position.str_pos()
+                        pay_rate = round(pshift.position.hourly_rate,2)
+                        if old_pay_rate == -1:
+                            old_pay_rate = pay_rate
+                        if pay_rate != old_pay_rate:
+                            info[person][f"Total@{pay_rate}"] = [0,0,0,0,0,0,0,0,0]
                         if position not in info[person]:
                             info[person][position] = [0,0,0,0,0,0,0,0,0]
+                    info[person][f"Total@{pay_rate}"] = [0,0,0,0,0,0,0,0,0]
                     info[person]["Total"] = [0,0,0,0,0,0,0,0,0]
                 index = (timezone.localtime(shift.start).weekday()+1)%7
                 hours = round(shift.duration.seconds/3600,2)
+                pay_rate = round(shift.position.hourly_rate, 2)
                 pay = round(shift.duration.seconds/3600 * float(shift.position.hourly_rate),2)
                 position = shift.position.str_pos()
                 
                 info[person][position][index] += hours
                 info[person][position][7] += hours
                 info[person][position][8] += pay
+
+                pay_key = f"Total@{pay_rate}"
+                info[person][pay_key][index] += hours
+                info[person][pay_key][7] += hours
+                info[person][pay_key][8] += pay
 
                 info[person]["Total"][index] += hours
                 info[person]["Total"][7] += hours

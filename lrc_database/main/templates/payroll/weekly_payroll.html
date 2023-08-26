@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
+{% load startswith %}
 {% load static %}
 
 {% block extra_includes %}
@@ -69,9 +70,9 @@
 				<tbody>
 					{% for name, info in week_info.items %}
 						{% for position, col_info in info.items %}
-							{% if position == "Total" %}
+							{% if position|startswith:'Total' %}
 								<tr {% if forloop.parentloop.counter0|divisibleby:2 %}class="table-secondary"{% endif %}>
-									<td><b>Total</b></td>
+									<td><b>{{position}}</b></td>
 									<td class="text-end align-middle"><b>{{col_info.0|stringformat:"0.2f"}}</b></td>
 									<td class="text-end align-middle"><b>{{col_info.1|stringformat:"0.2f"}}</b></td>
 									<td class="text-end align-middle"><b>{{col_info.2|stringformat:"0.2f"}}</b></td>
@@ -136,9 +137,9 @@
 			<tbody>
 				{% for name, info in cur_shifts.items %}
 					{% for position, col_info in info.items %}
-						{% if position == "Total" %}
+						{% if position|startswith:'Total' %}
 							<tr {% if forloop.parentloop.counter0|divisibleby:2 %}class="table-secondary"{% endif %}>
-								<td><b>Total</b></td>
+								<td><b>{{position}}</b></td>
 								<td class="text-end align-middle"><b>{{col_info.0|stringformat:"0.2f"}}</b></td>
 								<td class="text-end align-middle"><b>{{col_info.1|stringformat:"0.2f"}}</b></td>
 								<td class="text-end align-middle"><b>{{col_info.2|stringformat:"0.2f"}}</b></td>
@@ -201,9 +202,9 @@
 			<tbody>
 				{% for name, info in not_signed.items %}
 					{% for position, col_info in info.items %}
-						{% if position == "Total" %}
+						{% if position|startswith:'Total' %}
 							<tr {% if forloop.parentloop.counter0|divisibleby:2 %}class="table-secondary"{% endif %}>
-								<td><b>Total</b></td>
+								<td><b>{{position}}</b></td>
 								<td class="text-end align-middle"><b>{{col_info.0|stringformat:"0.2f"}}</b></td>
 								<td class="text-end align-middle"><b>{{col_info.1|stringformat:"0.2f"}}</b></td>
 								<td class="text-end align-middle"><b>{{col_info.2|stringformat:"0.2f"}}</b></td>
