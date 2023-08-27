@@ -587,6 +587,22 @@ class ShiftChangeRequest(models.Model):
     class Meta:
         ordering = ('new_start',)
 
+class PunchedIn(models.Model):
+    position = models.ForeignKey(
+        to=StaffUserPosition,
+        on_delete=models.CASCADE,
+        help_text="Which user and their possition is this shift for?"
+    )
+
+    start = models.DateTimeField(help_text="The time that the shift starts.")
+
+    class Meta:
+        ordering = ('start',)
+
+    def __str__(self):
+        return f"{self.position.person}, {self.start}"
+
+
 class Hardware(models.Model):
     class Meta:
         verbose_name_plural = "hardware"

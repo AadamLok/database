@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import pytz
 import calendar
+import json
 
 from django.utils import timezone
 from django.contrib import messages
@@ -11,7 +12,7 @@ from django.shortcuts import get_list_or_404, get_object_or_404, redirect, rende
 from ..templatetags.groups import is_privileged
 from . import restrict_to_groups, restrict_to_http_methods
 
-from ..models import Shift, Semester, StaffUserPosition
+from ..models import Shift, Semester, StaffUserPosition, PunchedIn
 from ..forms import PayrollForm, SemesterSelectForm, UserSelectForm
 from ..color_coder import color_coder, get_color_coder_dict
 
@@ -26,6 +27,48 @@ def get_week_from_date(date):
 @restrict_to_http_methods("GET", "POST")
 def sign_payroll(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
+        data = json.loads(request.body)
+        if 'punch_in_out' in data.keys():
+            if data['type'] == 'in':
+                PunchedIn.objects.create(
+                    position=StaffUserPosition.objects.get(
+                        position='OursM',
+                        semester=Semester.objects.get_active_sem(),
+                        person=request.user
+                    ),
+                    start=timezone.now()
+                )
+            elif data['type'] == 'undo':
+                PunchedIn.objects.get(
+                    position=StaffUserPosition.objects.get(
+                        position='OursM',
+                        semester=Semester.objects.get_active_sem(),
+                        person=request.user
+                    )
+                ).delete()
+            else:
+                punched_in = PunchedIn.objects.get(
+                    position=StaffUserPosition.objects.get(
+                        position='OursM',
+                        semester=Semester.objects.get_active_sem(),
+                        person=request.user
+                    )
+                )
+                Shift.objects.create(
+                    position = StaffUserPosition.objects.get(
+                        position='OursM',
+                        semester=Semester.objects.get_active_sem(),
+                        person=request.user
+                    ),
+                    start = punched_in.start,
+                    duration =  timezone.now() - punched_in.start,
+                    location = "Library",
+                    kind = "OURS Mentor",
+                    attended = True,
+                    signed = True,
+                )
+                punched_in.delete()
+            return redirect("sign_payroll")
         attended_ids = []
         for key in sorted(request.POST.keys()):
             if key == "csrfmiddlewaretoken":
@@ -92,9 +135,16 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
                     'name': f"{str(shift)}, {start.month}/{start.day}"
                 })
             context["shifts"] = shifts_info
-            
+
         context['OURSMentor'] = request.user.is_ours_mentor()
-        context['clocked_in'] = True
+        if context['OURSMentor']:
+            context['clocked_in'] = PunchedIn.objects.filter(
+                position=StaffUserPosition.objects.get(
+                    position='OursM',
+                    semester=Semester.objects.get_active_sem(),
+                    person=request.user
+                )
+            ).exists()
 
         return render(request, "payroll/sign_payroll.html", context)
 

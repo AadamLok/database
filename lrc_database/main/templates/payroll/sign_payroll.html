@@ -227,6 +227,24 @@
 		</div>
 	</div>
 	<script type="text/javascript">
+		// The following function is copy from 
+		// https://docs.djangoproject.com/en/dev/ref/csrf/#ajax
+		function getCookie(name) {
+			var cookieValue = null;
+			if (document.cookie && document.cookie !== '') {
+				var cookies = document.cookie.split(';');
+				for (var i = 0; i < cookies.length; i++) {
+					var cookie = cookies[i].trim();
+					// Does this cookie string begin with the name we want?
+					if (cookie.substring(0, name.length + 1) === (name + '=')) {
+						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+						break;
+					}
+				}
+			}
+			return cookieValue;
+		}
+
 		var canUndo = false,
 		punchBtn = $("#punch"),
 		undoBtn = $("#undo"),
@@ -235,7 +253,10 @@
 		clockedIn = false;
 
 		{% if clocked_in %}
-			changeClock();
+			punchIn();
+			clockedIn = true;
+			canUndo = true;
+			undoSet();
 		{% endif %}
 	
 		punchBtn.click(changeClock);
@@ -250,18 +271,66 @@
 
 		setInterval(() => {timeShow();}, 1000); 
 	
-		function undo(){
+		async function undo(){
 			canUndo = false;
 			clockedIn = false;
+			try {
+				let now = new Date();
+				let data = {
+					'punch_in_out': true,
+					'type': 'undo', //in, out, undo  
+				};   
+				let csrftoken = getCookie('csrftoken');  
+				const response = await fetch(document.URL, {
+					method: 'POST',
+					body: JSON.stringify(data),
+					headers: { "X-CSRFToken": csrftoken },
+				});
+				console.log('Completed!', response);
+			} catch(err) {
+				console.error(`Error: ${err}`);
+			}
 			punchOut();
 			undoSet();
 		}
 	
-		function changeClock(){
+		async function changeClock(){
 			if(clockedIn){
 				punchOut();
+				try {
+					let now = new Date();
+					let data = {
+						'punch_in_out': true,
+						'type': 'out', //in, out, undo  
+					};   
+					let csrftoken = getCookie('csrftoken');  
+					const response = await fetch(document.URL, {
+						method: 'POST',
+						body: JSON.stringify(data),
+						headers: { "X-CSRFToken": csrftoken },
+					});
+					console.log('Completed!', response);
+				} catch(err) {
+					console.error(`Error: ${err}`);
+				}
 			} else {
 				punchIn();
+				try {
+					let now = new Date();
+					let data = {
+						'punch_in_out': true,
+						'type': 'in', //in, out, undo  
+					};   
+					let csrftoken = getCookie('csrftoken');  
+					const response = await fetch(document.URL, {
+						method: 'POST',
+						body: JSON.stringify(data),
+						headers: { "X-CSRFToken": csrftoken },
+					});
+					console.log('Completed!', response);
+				} catch(err) {
+					console.error(`Error: ${err}`);
+				}
 			}
 			clockedIn = !clockedIn;
 			canUndo = clockedIn;
