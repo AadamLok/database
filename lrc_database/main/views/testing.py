@@ -6,6 +6,8 @@ from django.urls import reverse
 from . import restrict_to_groups, restrict_to_http_methods
 from ..email.mail_service import send_email 
 
+from ..models import Shift, LRCDatabaseUser, StaffUserPosition, Semester
+
 
 @login_required
 @restrict_to_http_methods("GET", "POST")
@@ -37,3 +39,22 @@ def test_something(request):
 			},
 		}
     )
+
+@login_required
+@restrict_to_http_methods("GET", "POST")
+@restrict_to_groups("Office staff", "Supervisors")
+def redo_class_shifts(request):
+	Shift.objects.filter(
+            kind="Class",
+            position__semester=Semester.objects.get_active_sem(),
+	).delete()
+        
+	si_leaders = StaffUserPosition.objects.filter(
+            position="SI",
+            semester=Semester.objects.get_active_sem()
+	)
+        
+	for si in si_leaders:
+		Shift.objects.add_class_shift(si, si.si_course)
+	
+	return "Successful"

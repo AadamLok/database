@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.db.models import Q
 
 from ..forms import DaySwitchForm, HolidaysForm, SemesterForm, ReadOnlySemesterForm
-from ..models import Semester, Holidays, DaySwitch
+from ..models import Semester, Holidays, DaySwitch, Shift
 from . import personal, restrict_to_groups, restrict_to_http_methods
 
 @login_required
