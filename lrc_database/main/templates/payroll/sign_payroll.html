@@ -76,23 +76,58 @@
 			<div class="row col-12">
 				<div class="col-3"></div>
 			
-				<div id="buttons" class="col-6">
-					<button id="punch" class="btn btn-success col-12">
-					<div id="now">
-						<span id="date">03/12/2001</span><br><span id="time">XX:YYam</span>
+				<div id="buttons-ours" class="col-6">
+					<button id="punch-ours" class="btn btn-success col-12">
+					<div id="now-ours">
+						<span id="date-ours">03/12/2001</span><br><span id="time-ours">XX:YYam</span>
 					</div>
-					<div id="punch-in">
+					<div id="punch-in-ours">
 						<i class="fas fa-angle-right"></i>
 						<i class="fas fa-clock"></i>
 						<div>Punch In</div>
 					</div>
-					<div id="punch-out">
+					<div id="punch-out-ours">
 						<i class="fas fa-clock"></i>
 						<i class="fas fa-angle-right"></i>
 						<div>Punch Out</div>
 					</div>
 					</button>
-					<button id="undo" class="btn btn-default col-12"><i class="fas fa-undo"></i>Undo Last Punch</button>  
+					<button id="undo-ours" class="btn btn-default col-12"><i class="fas fa-undo"></i>Undo Last Punch</button>  
+				</div>
+
+				<div class="col-3"></div>
+			
+			</div>
+		
+		</div>
+
+		<br/>
+	{% endif %}
+
+	{% if OA %}
+		<div class="container">
+			<h3>OURS Mentor Punch In/Punch Out:</h3>
+		
+			<div class="row col-12">
+				<div class="col-3"></div>
+			
+				<div id="buttons-oa" class="col-6">
+					<button id="punch-oa" class="btn btn-success col-12">
+					<div id="now-oa">
+						<span id="date-oa">03/12/2001</span><br><span id="time-oa">XX:YYam</span>
+					</div>
+					<div id="punch-in-oa">
+						<i class="fas fa-angle-right"></i>
+						<i class="fas fa-clock"></i>
+						<div>Punch In</div>
+					</div>
+					<div id="punch-out-oa">
+						<i class="fas fa-clock"></i>
+						<i class="fas fa-angle-right"></i>
+						<div>Punch Out</div>
+					</div>
+					</button>
+					<button id="undo-oa" class="btn btn-default col-12"><i class="fas fa-undo"></i>Undo Last Punch</button>  
 				</div>
 
 				<div class="col-3"></div>
@@ -226,139 +261,207 @@
 		</div>
 		</div>
 	</div>
-	<script type="text/javascript">
-		// The following function is copy from 
-		// https://docs.djangoproject.com/en/dev/ref/csrf/#ajax
-		function getCookie(name) {
-			var cookieValue = null;
-			if (document.cookie && document.cookie !== '') {
-				var cookies = document.cookie.split(';');
-				for (var i = 0; i < cookies.length; i++) {
-					var cookie = cookies[i].trim();
-					// Does this cookie string begin with the name we want?
-					if (cookie.substring(0, name.length + 1) === (name + '=')) {
-						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-						break;
+	{% if  OA or OURSMentor %}
+		<script type="text/javascript">
+			// The following function is copy from 
+			// https://docs.djangoproject.com/en/dev/ref/csrf/#ajax
+			function getCookie(name) {
+				var cookieValue = null;
+				if (document.cookie && document.cookie !== '') {
+					var cookies = document.cookie.split(';');
+					for (var i = 0; i < cookies.length; i++) {
+						var cookie = cookies[i].trim();
+						// Does this cookie string begin with the name we want?
+						if (cookie.substring(0, name.length + 1) === (name + '=')) {
+							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+							break;
+						}
+					}
+				}
+				return cookieValue;
+			}
+
+			var canUndoOurs = false;
+			var clockedInOurs = false;
+			var canUndoOA = false;
+			var clockedInOA = false;
+
+			{% if OURSMentor %}
+				var punchBtnOurs = $("#punch-ours");
+				var undoBtnOurs = $("#undo-ours");
+				var punchInIconOurs = $("#punch-in-ours");
+				var punchOutIconOurs = $("#punch-out-ours");
+				punchBtnOurs.click(() => changeClock("OURS"));
+				undoBtnOurs.click(() => undo("OURS"));
+				{% if OURS_clocked_in %}
+					punchIn("OURS");
+					clockedInOurs = true;
+					canUndoOurs = true;
+					undoSet("OURS");
+				{% else %}
+					punchOut("OURS");
+				{% endif %}
+			{% endif %}
+
+			{% if OA %}
+				var punchBtnOA = $("#punch-oa");
+				var undoBtnOA = $("#undo-oa");
+				var punchInIconOA = $("#punch-in-oa");
+				var punchOutIconOA = $("#punch-out-oa");
+				punchBtnOA.click(() => changeClock("OA"));
+				undoBtnOA.click(() => undo("OA"));
+				{% if OA_clocked_in %}
+					punchIn("OA");
+					clockedInOA = true;
+					canUndoOA = true;
+					undoSet("OA");
+				{% else %}
+					punchOut("OA");
+				{% endif %}
+			{% endif %}
+
+			function timeShow(){
+				var now = new Date();
+				{% if OURSMentor %}  
+					$("#time-ours").text(now.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }));
+					$("#date-ours").text(now.toLocaleString('en-US', { day: 'numeric', month: 'numeric', year: 'numeric' }))
+				{% endif %}
+				{% if OA %}  
+					$("#time-oa").text(now.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }));
+					$("#date-oa").text(now.toLocaleString('en-US', { day: 'numeric', month: 'numeric', year: 'numeric' }))
+				{% endif %}
+			}
+
+			setInterval(() => {timeShow();}, 1000); 
+		
+			async function undo(shift){
+				if (shift == "OURS") {
+					{% if OURSMentor %}
+						canUndoOurs = false;
+						clockedInOurs = false;
+					{% endif %}
+				} else if (shift == "OA") {
+					{% if OA %}
+						canUndoOA = false;
+						clockedInOA = false;
+					{% endif%}
+				}
+				try {
+					let now = new Date();
+					let data = {
+						'punch_in_out': true,
+						'type': 'undo', //in, out, undo  
+						'shift': shift == "OURS" ? "OursM" : "OA",
+					};   
+					let csrftoken = getCookie('csrftoken');  
+					const response = await fetch(document.URL, {
+						method: 'POST',
+						body: JSON.stringify(data),
+						headers: { "X-CSRFToken": csrftoken },
+					});
+				} catch(err) {
+					console.error(`Error: ${err}`);
+				}
+				punchOut(shift);
+				undoSet(shift);
+			}
+		
+			async function changeClock(shift){
+				if((shift == "OURS" && clockedInOurs) || (shift == "OA" && clockedInOA)){
+					punchOut(shift);
+					try {
+						let now = new Date();
+						let data = {
+							'punch_in_out': true,
+							'type': 'out', //in, out, undo  
+							'shift': shift == "OURS" ? "OursM" : "OA",
+						};   
+						let csrftoken = getCookie('csrftoken');  
+						const response = await fetch(document.URL, {
+							method: 'POST',
+							body: JSON.stringify(data),
+							headers: { "X-CSRFToken": csrftoken },
+						});
+					} catch(err) {
+						console.error(`Error: ${err}`);
+					}
+				} else {
+					punchIn(shift);
+					try {
+						let now = new Date();
+						let data = {
+							'punch_in_out': true,
+							'type': 'in', //in, out, undo  
+							'shift': shift == "OURS" ? "OursM" : "OA",
+						};   
+						let csrftoken = getCookie('csrftoken');  
+						const response = await fetch(document.URL, {
+							method: 'POST',
+							body: JSON.stringify(data),
+							headers: { "X-CSRFToken": csrftoken },
+						});
+					} catch(err) {
+						console.error(`Error: ${err}`);
+					}
+				}
+				if (shift == "OURS") {
+					clockedInOurs = !clockedInOurs;
+					canUndoOurs = clockedInOurs;
+					undoSet("OURS");
+				} else if (shift == "OA") {
+					clockedInOA = !clockedInOA;
+					canUndoOA = clockedInOA;
+					undoSet("OA");
+				}
+			}
+		
+			function punchOut(shift){
+				if (shift == "OURS") {
+					punchBtnOurs.addClass("btn-success");
+					punchBtnOurs.removeClass("btn-danger");
+					punchInIconOurs.css("display","block");
+					punchOutIconOurs.css("display","none");
+				} else if (shift == "OA") {
+					punchBtnOA.addClass("btn-success");
+					punchBtnOA.removeClass("btn-danger");
+					punchInIconOA.css("display","block");
+					punchOutIconOA.css("display","none");
+				}
+			}
+		
+			function punchIn(shift){
+				if (shift == "OURS") {
+					punchBtnOurs.removeClass("btn-success");
+					punchBtnOurs.addClass("btn-danger");
+					punchInIconOurs.css("display","none");
+					punchOutIconOurs.css("display","block");
+				} else if (shift == "OA") {
+					punchBtnOA.removeClass("btn-success");
+					punchBtnOA.addClass("btn-danger");
+					punchInIconOA.css("display","none");
+					punchOutIconOA.css("display","block");
+				}
+			}
+		
+			function undoSet(shift){
+				if (shift == "OURS") {
+					if(canUndoOurs){
+						undoBtnOurs.removeClass("btn-default");
+						undoBtnOurs.addClass("btn-warning");
+					} else {
+						undoBtnOurs.removeClass("btn-warning");
+						undoBtnOurs.addClass("btn-default");
+					}
+				} else if (shift == "OA") {
+					if(canUndoOA){
+						undoBtnOA.removeClass("btn-default");
+						undoBtnOA.addClass("btn-warning");
+					} else {
+						undoBtnOA.removeClass("btn-warning");
+						undoBtnOA.addClass("btn-default");
 					}
 				}
 			}
-			return cookieValue;
-		}
-
-		var canUndo = false,
-		punchBtn = $("#punch"),
-		undoBtn = $("#undo"),
-		punchInIcon = $("#punch-in"),
-		punchOutIcon = $("#punch-out"),
-		clockedIn = false;
-
-		{% if clocked_in %}
-			punchIn();
-			clockedIn = true;
-			canUndo = true;
-			undoSet();
-		{% endif %}
-	
-		punchBtn.click(changeClock);
-		undoBtn.click(undo);
-		
-
-		function timeShow(){
-			var now = new Date();  
-			$("#time").text(now.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }));
-			$("#date").text(now.toLocaleString('en-US', { day: 'numeric', month: 'numeric', year: 'numeric' }))
-		}
-
-		setInterval(() => {timeShow();}, 1000); 
-	
-		async function undo(){
-			canUndo = false;
-			clockedIn = false;
-			try {
-				let now = new Date();
-				let data = {
-					'punch_in_out': true,
-					'type': 'undo', //in, out, undo  
-				};   
-				let csrftoken = getCookie('csrftoken');  
-				const response = await fetch(document.URL, {
-					method: 'POST',
-					body: JSON.stringify(data),
-					headers: { "X-CSRFToken": csrftoken },
-				});
-				console.log('Completed!', response);
-			} catch(err) {
-				console.error(`Error: ${err}`);
-			}
-			punchOut();
-			undoSet();
-		}
-	
-		async function changeClock(){
-			if(clockedIn){
-				punchOut();
-				try {
-					let now = new Date();
-					let data = {
-						'punch_in_out': true,
-						'type': 'out', //in, out, undo  
-					};   
-					let csrftoken = getCookie('csrftoken');  
-					const response = await fetch(document.URL, {
-						method: 'POST',
-						body: JSON.stringify(data),
-						headers: { "X-CSRFToken": csrftoken },
-					});
-					console.log('Completed!', response);
-				} catch(err) {
-					console.error(`Error: ${err}`);
-				}
-			} else {
-				punchIn();
-				try {
-					let now = new Date();
-					let data = {
-						'punch_in_out': true,
-						'type': 'in', //in, out, undo  
-					};   
-					let csrftoken = getCookie('csrftoken');  
-					const response = await fetch(document.URL, {
-						method: 'POST',
-						body: JSON.stringify(data),
-						headers: { "X-CSRFToken": csrftoken },
-					});
-					console.log('Completed!', response);
-				} catch(err) {
-					console.error(`Error: ${err}`);
-				}
-			}
-			clockedIn = !clockedIn;
-			canUndo = clockedIn;
-			undoSet();
-		}
-	
-		function punchOut(){
-			punchBtn.addClass("btn-success");
-			punchBtn.removeClass("btn-danger");
-			punchInIcon.css("display","block");
-			punchOutIcon.css("display","none");
-		}
-	
-		function punchIn(){
-			punchBtn.removeClass("btn-success");
-			punchBtn.addClass("btn-danger");
-			punchInIcon.css("display","none");
-			punchOutIcon.css("display","block");
-		}
-	
-		function undoSet(){
-			if(canUndo){
-				undoBtn.removeClass("btn-default");
-				undoBtn.addClass("btn-warning");
-			} else {
-				undoBtn.removeClass("btn-warning");
-				undoBtn.addClass("btn-default");
-			}
-		}
-	</script>
+		</script>
+	{% endif %}
 {% endblock %}

@@ -2,11 +2,13 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.http import HttpResponse
 
 from . import restrict_to_groups, restrict_to_http_methods
 from ..email.mail_service import send_email 
 
 from ..models import Shift, LRCDatabaseUser, StaffUserPosition, Semester
+from ..forms import UnknownForm
 
 
 @login_required
@@ -57,4 +59,11 @@ def redo_class_shifts(request):
 	for si in si_leaders:
 		Shift.objects.add_class_shift(si, si.si_course)
 	
-	return "Successful"
+	return HttpResponse("Successfull!!")
+
+@login_required
+@restrict_to_http_methods("GET", "POST")
+@restrict_to_groups("Office staff", "Supervisors")
+def test_form(request):
+	form = UnknownForm()
+	return render(request, "shifts/add_bulk_shift.html", {"form": form})

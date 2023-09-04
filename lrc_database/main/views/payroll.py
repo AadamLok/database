@@ -32,7 +32,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
             if data['type'] == 'in':
                 PunchedIn.objects.create(
                     position=StaffUserPosition.objects.get(
-                        position='OursM',
+                        position=data['shift'],
                         semester=Semester.objects.get_active_sem(),
                         person=request.user
                     ),
@@ -41,7 +41,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
             elif data['type'] == 'undo':
                 PunchedIn.objects.get(
                     position=StaffUserPosition.objects.get(
-                        position='OursM',
+                        position=data['shift'],
                         semester=Semester.objects.get_active_sem(),
                         person=request.user
                     )
@@ -49,23 +49,21 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
             else:
                 punched_in = PunchedIn.objects.get(
                     position=StaffUserPosition.objects.get(
-                        position='OursM',
+                        position=data['shift'],
                         semester=Semester.objects.get_active_sem(),
                         person=request.user
                     )
                 )
                 Shift.objects.create(
                     position = StaffUserPosition.objects.get(
-                        position='OursM',
+                        position=data['shift'],
                         semester=Semester.objects.get_active_sem(),
                         person=request.user
                     ),
                     start = punched_in.start,
                     duration =  timezone.now() - punched_in.start,
                     location = "Library",
-                    kind = "OURS Mentor",
-                    attended = True,
-                    signed = True,
+                    kind = "OURS Mentor" if data['shift'] == "OursM" else "OA Hours",
                 )
                 punched_in.delete()
             return redirect("sign_payroll")
@@ -138,9 +136,19 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
 
         context['OURSMentor'] = request.user.is_ours_mentor()
         if context['OURSMentor']:
-            context['clocked_in'] = PunchedIn.objects.filter(
+            context['OURS_clocked_in'] = PunchedIn.objects.filter(
                 position=StaffUserPosition.objects.get(
                     position='OursM',
+                    semester=Semester.objects.get_active_sem(),
+                    person=request.user
+                )
+            ).exists()
+        
+        context['OA'] = request.user.is_oa()
+        if context['OA']:
+            context['OA_clocked_in'] = PunchedIn.objects.filter(
+                position=StaffUserPosition.objects.get(
+                    position='OA',
                     semester=Semester.objects.get_active_sem(),
                     person=request.user
                 )

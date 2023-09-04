@@ -262,6 +262,10 @@ class LRCDatabaseUser(AbstractUser):
         num_om_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="OursM").count()
         return num_om_position > 0
     
+    def is_oa(self) -> bool:
+        num_oa_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="OA").count()
+        return num_oa_position > 0
+    
     def is_pm(self) -> bool:
         num_pm_position = StaffUserPosition.objects.filter(person=self, semester=Semester.objects.get_active_sem(), position="PM").count()
         return num_pm_position > 0
@@ -291,7 +295,7 @@ class StaffUserPosition(models.Model):
 
     position = models.CharField(
         max_length=5,
-        choices=[("SI","SI"),("Tutor", "Tutor"),("PM", "PM"),("GT", "Group-Tutor"),("OursM", "OURS-Mentor"),("Tech","Tech"),("Other","Other")]
+        choices=[("SI","SI"),("Tutor", "Tutor"),("PM", "PM"),("GT", "Group-Tutor"),("OursM", "OURS-Mentor"),("OA", "Office Assistant"),("Tech","Tech"),("Other","Other")]
     )
 
     hourly_rate = models.DecimalField(
@@ -436,9 +440,10 @@ class Shift(models.Model):
     )
 
     kind = models.CharField(
-        max_length=14,
+        max_length=20,
         choices=(("SI", "SI"), 
-                 ("Tutoring", "Tutoring"),
+                 ("Tutor Drop In", "Tutor Drop In"),
+                 ("Tutor Appointment", "Tutor Appointment"),
                  ("Group Tutoring", "Group Tutoring"), 
                  ("Training", "Training"), 
                  ("Observation", "Observation"), 
@@ -446,6 +451,7 @@ class Shift(models.Model):
                  ("Preparation","Preparation"),
                  ("Meeting","Meeting"),
                  ("OURS Mentor", "OURS Mentor"),
+                 ("OA Hours", "OA Hours"),
                  ("Other","Other")),
         help_text="The kind of shift this is: tutoring, SI, Training, Class, or Observation.",
     )

@@ -314,3 +314,48 @@ class PayrollForm(forms.ModelForm):
     def __init__(self, identifier, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields[f'form-{identifier}'] = forms.BooleanField(widget=forms.HiddenInput, initial=True)
+
+class UnknownForm(forms.Form):
+    staff = StaffUserPosition.objects.filter(semester=Semester.objects.get_active_sem())
+
+    si = forms.ModelMultipleChoiceField(
+        queryset=staff.filter(position="SI"), 
+        widget=forms.CheckboxSelectMultiple,
+        label="SI Leaders",
+    )
+
+    gt = forms.ModelMultipleChoiceField(
+        queryset=staff.filter(position="GT"), 
+        widget=forms.CheckboxSelectMultiple,
+        label="Group Tutors",
+    )
+
+    tutor = forms.ModelMultipleChoiceField(
+        queryset=staff.filter(position="Tutor"), 
+        widget=forms.CheckboxSelectMultiple,
+        label="Tutors",
+    )
+
+    oursm = forms.ModelMultipleChoiceField(
+        queryset=staff.filter(position="OursM"), 
+        widget=forms.CheckboxSelectMultiple,
+        label="OURS Mentor",
+    )
+
+    oa = forms.ModelMultipleChoiceField(
+        queryset=staff.filter(position="OA"), 
+        widget=forms.CheckboxSelectMultiple,
+        label="Office Assistant",
+    )
+
+    tech = forms.ModelMultipleChoiceField(
+        queryset=staff.filter(position="Tech"), 
+        widget=forms.CheckboxSelectMultiple,
+        label="Tech",
+    )
+
+    other = forms.ModelMultipleChoiceField(
+        queryset=staff.filter(position="Other"), 
+        widget=forms.CheckboxSelectMultiple,
+        label="Others",
+    )

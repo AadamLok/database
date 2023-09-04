@@ -75,7 +75,7 @@ def new_shift_change_request(request: HttpRequest, shift_id: int) -> HttpRespons
                 **form.cleaned_data,
             )
             s.save()
-            send_email_shift_req(s.id)
+            # send_email_shift_req(s.id)
             return redirect("view_shift", shift_id)
         else:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
@@ -356,7 +356,7 @@ def new_shift_request(request: HttpRequest) -> HttpResponse:
                 new_kind=data["new_kind"]
             )
             change_request.save()
-            send_email_shift_req(change_request.id)
+            # send_email_shift_req(change_request.id)
             return redirect("view_single_request", change_request.id)
         form = NewChangeRequestForm(request.POST)
         if form.is_valid():
@@ -378,7 +378,7 @@ def new_shift_request(request: HttpRequest) -> HttpResponse:
                 new_kind=data["new_kind"]
             )
             change_request.save()
-            send_email_shift_req(change_request.id)
+            # send_email_shift_req(change_request.id)
             return redirect("view_single_request", change_request.id)
         else:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
@@ -412,7 +412,7 @@ def new_shift_request_previleged(request: HttpRequest, user_id: int) -> HttpResp
                 new_kind=data["new_kind"]
             )
             change_request.save()
-            send_email_shift_req(change_request.id)
+            # send_email_shift_req(change_request.id)
             return redirect("view_single_request", change_request.id)
         else:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
@@ -451,7 +451,7 @@ def new_drop_request(request: HttpRequest, shift_id: int) -> HttpResponse:
                 **form.cleaned_data,
             )
             change_request.save()
-            send_email_shift_req(change_request.id)
+            # send_email_shift_req(change_request.id)
             return redirect("view_single_request", change_request.id)
         else:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
