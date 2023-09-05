@@ -57,6 +57,15 @@
                             </li>
                             <li>
                                 <a class="dropdown-item" href="#">
+                                    <div>Office Assistant<span class="badge bg-secondary pull-right">{{ total_om }}</span></div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-submenu">
+                                    <li><a class="dropdown-item" href="{% url 'view_shift_change_requests' 'OursM' 'New' %}"><div>Change <span class="badge bg-secondary pull-right">{{ om_change_count }}</span></div></a></li>
+                                    <li><a class="dropdown-item" href="{% url 'view_drop_shift_requests' 'OursM' 'New' %}"><div>Drop <span class="badge bg-secondary pull-right">{{ om_drop_count }}</span></div></a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
                                     <div>Other<span class="badge bg-secondary pull-right">{{ total_other }}</span></div>
                                 </a>
                                 <ul class="dropdown-menu dropdown-submenu">
@@ -80,7 +89,7 @@
                             <li><a class="dropdown-item" href="{% url 'list_users' 'GT' %}">Group Tutors</a></li>
                             <li><a class="dropdown-item" href="{% url 'list_users' 'SST' %}">Study Skill Tutors</a></li>
                             <li><a class="dropdown-item" href="{% url 'list_users' 'OursM' %}">OURS Mentor</a></li>
-                            <li><a class="dropdown-item" href="{% url 'list_users' 'Office staff' %}">Office Staff</a></li>
+                            <li><a class="dropdown-item" href="{% url 'list_users' 'OA' %}">Office Assistant</a></li>
                             <li><a class="dropdown-item" href="{% url 'list_users' 'Supervisors' %}">Supervisors</a></li>
                             <li><hr class="dropdown-divider" /></li>
                             <li><h6 class="dropdown-header">Manage users</h6></li>
