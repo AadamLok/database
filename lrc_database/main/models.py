@@ -278,6 +278,9 @@ class LRCDatabaseUser(AbstractUser):
     
     def str_last_name_first(self) -> str:
         return f"{self.last_name}, {self.first_name} [{self.email}]"
+    
+    class Meta:
+        ordering = ('last_name','first_name')
 
 class StaffUserPosition(models.Model):
     person = models.ForeignKey(

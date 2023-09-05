@@ -208,7 +208,7 @@ def create_users_in_bulk(request: HttpRequest) -> HttpResponse:
 @restrict_to_http_methods("GET")
 def list_users(request: HttpRequest, group: Optional[str] = None) -> HttpResponse:
     if group is not None:
-        if group in ["SI", "Tutor", "GT", "SST", "OursM"]:
+        if group in ["SI", "Tutor", "GT", "SST", "OursM", "OA"]:
             users = User.objects.filter(groups__name="Staff").all()
             active_sem = Semester.objects.get_active_sem()
             if len(users) > 0:
