@@ -27,8 +27,14 @@ def get_week_from_date(date):
 @restrict_to_http_methods("GET", "POST")
 def sign_payroll(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
-        data = json.loads(request.body)
-        if 'punch_in_out' in data.keys():
+        data = None
+        
+        try:
+            data = json.loads(request.body)
+        except:
+            data = None
+
+        if data is not None:
             if data['type'] == 'in':
                 PunchedIn.objects.create(
                     position=StaffUserPosition.objects.get(
