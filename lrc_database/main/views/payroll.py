@@ -316,12 +316,12 @@ def weekly_payroll(request: HttpRequest, offset: int) -> HttpResponse:
                     for pshift in shift_type.filter(position__person=shift.position.person).order_by("position__hourly_rate").all():
                         position = pshift.position.str_pos()
                         pay_rate = round(pshift.position.hourly_rate,2)
-                        if old_pay_rate == -1:
-                            old_pay_rate = pay_rate
-                        if pay_rate != old_pay_rate:
-                            info[person][f"Total@{pay_rate}"] = [0,0,0,0,0,0,0,0,0]
                         if position not in info[person]:
                             info[person][position] = [0,0,0,0,0,0,0,0,0]
+                        if pay_rate != old_pay_rate:
+                            info[person][f"Total@{pay_rate}"] = [0,0,0,0,0,0,0,0,0]
+                        if old_pay_rate == -1:
+                            old_pay_rate = pay_rate
                     info[person][f"Total@{pay_rate}"] = [0,0,0,0,0,0,0,0,0]
                     info[person]["Total"] = [0,0,0,0,0,0,0,0,0]
                 index = (timezone.localtime(shift.start).weekday()+1)%7
