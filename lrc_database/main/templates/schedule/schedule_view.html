@@ -75,7 +75,7 @@
 										{% if s.kind == "SI" %}
 											<div class="font-size16 text-break text-wrap" style="margin-bottom:10px">{% if s.shift.position.si_course.faculty.0 == "*" %}All Sections{% else %}{{s.shift.position.si_course.faculty}}{% endif %}</div>
 										{% endif %}
-										<div class="{% if s.shift.kind == 'SI' %}bg-lightred{% else %}bg-green{% endif %} padding-5px-tb 
+										<div class="{% if s.shift.kind == 'SI' or s.shift.kind == 'Group Tutoring' %}bg-lightred{% elif s.shift.kind == 'Tutor Drop In' %}bg-green{% elif s.shift.kind == 'Tutor Appointment'%}bg-sky{% endif %} padding-5px-tb 
 											padding-15px-lr border-radius-5 margin-10px-bottom text-white font-size16 
 											xs-font-size13">{{s.shift.location}}</div>
 										<div class="margin-10px-top font-size14">{{s.shift.start| date:"h:i A" |lower}} - {{s.shift.start|add_datetime:s.shift.duration|date:"h:i A"|lower}}</div>
