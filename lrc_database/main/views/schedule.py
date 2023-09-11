@@ -141,17 +141,24 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
         elif s_kind == "Tutor Drop In" and (kind == "Tutoring" or kind == "All"):
             for course in s_position.tutor_courses.all():
                 info[course.short_name()][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append(shift_dict)
-
-    si_courses = StaffUserPosition.objects.filter(semester=Semester.objects.get_active_sem(), position__in=["SI","GT"]).values_list("si_course")
-    si_courses = list(FullCourse.objects.filter(id__in=si_courses).values_list("course", flat=True))
+    
     for main_course in cross_listed_dict:
         for course in cross_listed_dict[main_course]:
             info[course.short_name()][1] = info[main_course][1]
     
     keys = list(info.keys())
-    for course in keys:
-        if info[course][0] not in si_courses:
-            del info[course]
+    if kind == "SI":
+        si_courses = StaffUserPosition.objects.filter(semester=Semester.objects.get_active_sem(), position__in=["SI","GT"]).values_list("si_course")
+        si_courses = list(FullCourse.objects.filter(id__in=si_courses).values_list("course", flat=True))
+        for course in keys:
+            if info[course][0] not in si_courses:
+                del info[course]
+    elif kind == "Tutoring":
+        tutor_courses = StaffUserPosition.objects.filter(semester=Semester.objects.get_active_sem(), position__in=["Tutor"]).values_list("tutor_courses")
+        tutor_courses = list(Course.objects.filter(id__in=tutor_courses).values_list(flat=True))
+        for course in keys:
+            if info[course][0] not in tutor_courses:
+                del info[course]
 
     info = dict(sorted(info.items()))
 
