@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.core import serializers
+from django.db.models import Q
 
 from ..models import Shift, Course, StaffUserPosition, CrossListed, Semester, FullCourse
 from . import restrict_to_groups, restrict_to_http_methods
@@ -89,6 +90,8 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
 
 @restrict_to_http_methods("GET")
 def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
+    if kind=="SI":
+        return api_schedule_si()
     offset = 0
     today = timezone.now()
     start = today + timedelta(days=offset)
@@ -165,6 +168,67 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
     context = {
         "kind": kind, 
         "offset": offset, 
+        "weekdays": weekdays, 
+        "info": info
+    }
+
+    return JsonResponse(context)
+
+def api_schedule_si():
+    today = timezone.now()
+    start = today
+    end = start + timedelta(days=7)
+
+    shifts = Shift.objects.filter(Q(start__gte=start.isoformat()) & Q(start__lte=end) & (Q(kind="SI") | Q(kind="Group Tutoring")))
+
+    weekdays = [start + i * timedelta(days=1) for i in range(7)]
+    weekdays = [[day.weekday(), day.strftime("%m/%d")] for day in weekdays]
+
+    info = {}
+
+    si_courses = StaffUserPosition.objects.filter(semester=Semester.objects.get_active_sem(), position__in=["SI","GT"]).values_list("si_course")
+    courses = FullCourse.objects.filter(id__in=si_courses)
+    for course in courses:
+        info[course.course.short_name()] = [course.course.id, [[], [], [], [], [], [], []]]
+    
+    cross_listed = CrossListed.objects.all()
+
+    cross_listed_dict = {}
+
+    for course in cross_listed:
+        if course.main_course.short_name() not in info:
+            continue
+        info[course.short_name()] = [course.main_course.id, [[], [], [], [], [], [], []]]
+        if course.main_course.short_name() not in cross_listed_dict:
+            cross_listed_dict[course.main_course.short_name()] = []
+        cross_listed_dict[course.main_course.short_name()].append(course)
+
+    start_day = start.weekday()
+
+    for shift in shifts:
+        s_position = shift.position
+        faculty = s_position.si_course.faculty
+        faculty = "All Sections" if faculty[0] == "*" else faculty
+        start_time = timezone.localtime(shift.start).strftime("%I:%M %p").lower()
+        end_time = (timezone.localtime(shift.start)+shift.duration).strftime("%I:%M %p").lower()
+        shift_dict = {
+            "faculty": faculty,
+            "location": shift.location,
+            "time": f"{start_time} - {end_time}",
+            "person": s_position.person.name(),
+            "exam_rev": shift.duration > timedelta(hours=1, minutes=15)
+        }
+        
+        s_course = s_position.si_course.course.short_name()
+        info[s_course][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append(shift_dict)
+    
+    for main_course in cross_listed_dict:
+        for course in cross_listed_dict[main_course]:
+            info[course.short_name()][1] = info[main_course][1]
+
+    info = dict(sorted(info.items()))
+
+    context = {
         "weekdays": weekdays, 
         "info": info
     }
