@@ -132,7 +132,7 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
             "location": shift.location,
             "time": f"{start_time} - {end_time}",
             "person": shift.position.person.name(),
-            "exam_rev": shift.duration > timedelta(hours=1, minutes=15)
+            "exam_rev": False if s_kind not in ["SI", "Group Tutoring"] else shift.duration > timedelta(hours=1, minutes=15)
         }
         
         if (s_kind == "SI" or s_kind == "Group Tutoring") and (kind == "SI" or kind == "All"):
