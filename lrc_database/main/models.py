@@ -569,10 +569,11 @@ class ShiftChangeRequest(models.Model):
     )
 
     new_kind = models.CharField(
-        max_length=14,
+        max_length=20,
         choices=(
             ("SI", "SI"), 
-            ("Tutoring", "Tutoring"),
+            ("Tutor Drop In", "Tutor Drop In"),
+            ("Tutor Appointment", "Tutor Appointment"),
             ("Group Tutoring", "Group Tutoring"), 
             ("Training", "Training"), 
             ("Observation", "Observation"), 
@@ -580,7 +581,8 @@ class ShiftChangeRequest(models.Model):
             ("Preparation","Preparation"),
             ("Meeting","Meeting"),
             ("OURS Mentor", "OURS Mentor"),
-            ("Other","Other"),
+            ("OA Hours", "OA Hours"),
+            ("Other","Other")
         ),
         blank=True,
         null=True,

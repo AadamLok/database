@@ -138,7 +138,7 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
         if (s_kind == "SI" or s_kind == "Group Tutoring") and (kind == "SI" or kind == "All"):
             s_course = s_position.si_course.course.short_name()
             info[s_course][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append(shift_dict)
-        elif kind == "Tutoring" or kind == "All":
+        elif s_kind == "Tutor Drop In" and (kind == "Tutoring" or kind == "All"):
             for course in s_position.tutor_courses.all():
                 info[course.short_name()][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append(shift_dict)
 
