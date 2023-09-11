@@ -59,7 +59,7 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
             s_course = s_position.si_course.course.short_name()
             exam_rev = shift.duration > timedelta(hours=1,minutes=15)
             info[s_course][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append({"shift":shift,"exam_rev":exam_rev})
-        elif s_kind == "Tutoring" and (kind == "Tutoring" or kind == "All"):
+        elif s_kind.startswith('Tutor') and (kind == "Tutoring" or kind == "All"):
             for course in s_position.tutor_courses.all():
                 info[course.short_name()][1][(timezone.localtime(shift.start).weekday()-start_day)%7].append({"shift":shift,"exam_rev":False})
     
