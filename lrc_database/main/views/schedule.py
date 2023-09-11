@@ -214,20 +214,10 @@ def api_schedule_tutor() -> JsonResponse:
                             end_time = shift[1]
                         continue
                     else:
-                        new_day.append(
-                            {
-                                "start_time": start_time.strftime("%I:%M %p").lower(),
-                                "end_time": end_time.strftime("%I:%M %p").lower(),
-                            }
-                        )
+                        new_day.append(f'{start_time.strftime("%I:%M %p").lower()} - {end_time.strftime("%I:%M %p").lower()}')
                         start_time = shift[0]
                         end_time = shift[1]
-                new_day.append(
-                    {
-                        "start_time": start_time.strftime("%I:%M %p").lower(),
-                        "end_time": end_time.strftime("%I:%M %p").lower(),
-                    }
-                )
+                new_day.append(f'{start_time.strftime("%I:%M %p").lower()} - {end_time.strftime("%I:%M %p").lower()}')
                 info[course][1][i] = new_day
 
     for main_course in cross_listed_dict:
