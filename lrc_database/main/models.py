@@ -406,7 +406,7 @@ class ShiftManager(models.Manager):
 
             shift_details["duration"] = lecture.class_duration
             shift_details["location"] = lecture.location
-            shift_details["late_datetime"] = timezone.now()
+            shift_details["late_datetime"] = timezone.localtime()
 
             while class_date <= sem.end_date:
                 if holidays.filter(date=class_date).exists() or dates_of_switch.filter(date_of_switch=class_date).exists():

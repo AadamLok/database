@@ -28,7 +28,7 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
     privileged = user.is_privileged()
     offset = int(offset) if privileged else 0
     
-    today = timezone.now().replace(hour=0, minute=0, second=0)
+    today = timezone.localtime().replace(hour=0, minute=0, second=0)
     start = today + timedelta(days=offset)
     end = start + timedelta(days=7)
 
@@ -98,7 +98,7 @@ def api_schedule(request: HttpRequest, kind: str) -> JsonResponse:
         return HttpResponseNotFound("Page you are looking for was not found.")
 
 def api_schedule_si():
-    today = timezone.now()
+    today = timezone.localtime()
     start = today.replace(hour=0, minute=0, second=0)
     end = start + timedelta(days=7)
 
@@ -159,7 +159,7 @@ def api_schedule_si():
     return JsonResponse(context)
 
 def api_schedule_tutor() -> JsonResponse:
-    today = timezone.now()
+    today = timezone.localtime()
     start = today.replace(hour=0, minute=0, second=0)
     end = start + timedelta(days=7)
 

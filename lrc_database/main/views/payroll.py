@@ -42,7 +42,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
                         semester=Semester.objects.get_active_sem(),
                         person=request.user
                     ),
-                    start=timezone.now()
+                    start=timezone.localtime()
                 )
             elif data['type'] == 'undo':
                 PunchedIn.objects.get(
@@ -67,7 +67,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
                         person=request.user
                     ),
                     start = punched_in.start,
-                    duration =  timezone.now() - punched_in.start,
+                    duration =  timezone.localtime() - punched_in.start,
                     location = "Library",
                     kind = "OURS Mentor" if data['shift'] == "OursM" else "OA Hours",
                 )
@@ -93,10 +93,10 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
             week_end = shift_to_edit.start.replace(hour=23, minute=59, second=59, tzinfo=pytz.timezone("America/New_York"))
             while week_end.weekday() != 5:
                 week_end += timedelta(days=1)
-            late = timezone.now() > week_end
+            late = timezone.localtime() > week_end
             shift_to_edit.late = late
             if late:
-                shift_to_edit.late_datetime = timezone.now()
+                shift_to_edit.late_datetime = timezone.localtimer()
             shift_to_edit.save()
             if attended and (shift_to_edit.kind == "SI" or shift_to_edit.kind == "Group Tutoring"):
                 duration = timedelta(hours=2)
@@ -121,7 +121,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
     else:
         context = {"shifts":None}
 
-        now = timezone.now()
+        now = timezone.localtime()
         not_signed_shifts = Shift.objects.filter(position__semester=Semester.objects.get_active_sem(), position__person=request.user, signed = False, start__lte = now).all()
         if not_signed_shifts.count() > 0:
             shifts_info = []
@@ -262,7 +262,7 @@ def weekly_payroll(request: HttpRequest, offset: int) -> HttpResponse:
         pass
     else:
         context = {"offset":offset}
-        week_start, week_end = get_week_from_date(timezone.now() - timedelta(days=(7*offset)))
+        week_start, week_end = get_week_from_date(timezone.localtime() - timedelta(days=(7*offset)))
         context["cur_week"] = f"{week_start.month}/{week_start.day} - {week_end.month}/{week_end.day}"
 
         late_shifts = Shift.objects.filter(
