@@ -96,7 +96,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
             late = timezone.localtime() > week_end
             shift_to_edit.late = late
             if late:
-                shift_to_edit.late_datetime = timezone.localtimer()
+                shift_to_edit.late_datetime = timezone.localtime()
             shift_to_edit.save()
             if attended and (shift_to_edit.kind == "SI" or shift_to_edit.kind == "Group Tutoring"):
                 duration = timedelta(hours=2)
