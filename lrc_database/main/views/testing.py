@@ -14,7 +14,7 @@ from ..forms import UnknownForm
 
 def get_week_date(date):
     start_week = date
-    while start_week.weekday() != 5:
+    while start_week.weekday() != 6:
         start_week -= timedelta(days=1)
     if isinstance(start_week, datetime):
         start_week = start_week.date()
@@ -97,7 +97,7 @@ def add_everything_to_new_payroll(request):
 			week_start=get_week_date(shift.start)
 		)
         
-        payroll_to_edit.pay_details[str(shift.position.hourly_rate)][(shift.start.weekday() - 5) % 7] += round(shift.duration.seconds / 3600, 2)
+        payroll_to_edit.pay_details[str(shift.position.hourly_rate)][(shift.start.weekday() - 6) % 7] += round(shift.duration.seconds / 3600, 2)
         if payroll_to_edit.week_start < date(2023, 9, 9):
             payroll_to_edit.approved = True
         payroll_to_edit.save()

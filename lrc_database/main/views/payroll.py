@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_list_or_404, get_object_or_404, redirect, render
+from django.db.models import Count, Q
 
 from ..templatetags.groups import is_privileged
 from . import restrict_to_groups, restrict_to_http_methods
@@ -25,7 +26,7 @@ def get_week_from_date(date):
 
 def get_week_date(date):
     start_week = date
-    while start_week.weekday() != 5:
+    while start_week.weekday() != 6:
         start_week -= timedelta(days=1)
     if isinstance(start_week, datetime):
         start_week = start_week.date()
@@ -104,7 +105,7 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
             
             PayrollCheck.objects.add_person_if_not_exists(request.user, get_week_date(shift_to_edit.start))
             payroll_check = PayrollCheck.objects.get(person=request.user, week_start=get_week_date(shift_to_edit.start))
-            shift_day_index = (shift_to_edit.start.weekday() - 5) % 7
+            shift_day_index = (shift_to_edit.start.weekday() - 6) % 7
             make_not_approved = False
             if payroll_check.approved:
                 make_not_approved = True
@@ -400,7 +401,11 @@ def user_new_weekly_payroll(request, user_id, date):
         display_payroll.save()
     
     info = {}
+    total_pay = {}
+    total_additional = {}
     for key in display_payroll.pay_details.keys():
+        total_pay[key] = sum(display_payroll.pay_details[key])
+        total_additional[key] = sum(display_payroll.additional_pay_details[key])
         final = [0,0,0,0,0,0,0]
         for i in range(7):
             reg = display_payroll.pay_details[key][i]
@@ -411,11 +416,15 @@ def user_new_weekly_payroll(request, user_id, date):
                 final[i] += f'<b> + {extra:0.2f} = {total:0.2f}</b>'
         info[key] = final
     
+    for key in total_pay:
+        info[key].append(f'{total_pay[key]:0.2f}')
+        if total_additional[key] != 0:
+            info[key][-1] += f'<b> + {total_additional[key]:0.2f} = {total[key]+total_additional[key]:0.2f}</b>'
     
     return render(
         request,
         "payroll/user_new_weekly_payroll.html",
-        {"payroll": display_payroll, "date": date, "info":info},
+        {"payroll": display_payroll, "date": date, "info":info, "total":total},
     )
 
 @login_required
@@ -435,6 +444,12 @@ def new_weekly_payroll(request, date):
         
         week_start_date = get_week_date(date)
         display_payroll = PayrollCheck.objects.filter(week_start=week_start_date).all()
+        
+        not_approved = PayrollCheck.objects.filter(approved=False).order_by().all().distinct()
+        
+        for week in not_approved.values_list('week_start', flat=True):
+            left = not_approved.filter(week_start=week).count() 
+            messages.add_message(request, messages.INFO, f"Payroll for {week}, has {left} people left to approve")
         
         return render(
             request,

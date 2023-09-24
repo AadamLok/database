@@ -34,6 +34,7 @@
 
 {% block content %}
 	<h2>New Weekly Payroll View</h2>
+	
 	<form method="post" action="{% url 'new_weekly_payroll' date %}">
         {% csrf_token %}
         {{ form|crispy }}
@@ -49,13 +50,14 @@
 					<th scope="col" class="text-center">Entered?</th>
 					<th scope="col" class="text-center">Name</th>
 					<th scope="col" class="text-center">Pay Rate</th>
-					<th scope="col" class="text-center">Saturday</th>
 					<th scope="col" class="text-center">Sunday</th>
 					<th scope="col" class="text-center">Monday</th>
 					<th scope="col" class="text-center">Tuesday</th>
 					<th scope="col" class="text-center">Wednesday</th>
 					<th scope="col" class="text-center">Thurday</th>
 					<th scope="col" class="text-center">Friday</th>
+					<th scope="col" class="text-center">Saturday</th>
+					<th scope="col" class="text-center">Total</th>
 				</tr>
 			</thead>
 			<tbody>
