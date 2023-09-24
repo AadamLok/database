@@ -175,6 +175,7 @@
                         <ul class="dropdown-menu" aria-labelledby="navbar-account-dropdown">
                             {% if user|is_privileged %}
                             <li><h6 class="dropdown-header">Manage Payroll</h6></li>
+                            <li><a class="dropdown-item" href="{% url 'new_weekly_payroll' 0 %}">New Weekly View</a></li>
                             <li><a class="dropdown-item" href="{% url 'weekly_payroll' 0 %}">Weekly View</a></li>
                             <li><a class="dropdown-item" href="{% url 'user_payroll' 0 %}">User View</a></li>
                             <li><hr class="dropdown-divider" /></li>

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 class DateConverter:
     regex = '\d{4}-\d{1,2}-\d{1,2}'
@@ -8,6 +8,8 @@ class DateConverter:
         return datetime.strptime(value, self.format).date()
 
     def to_url(self, value):
+        if not isinstance(value, date):
+            value = date.today()
         return value.strftime(self.format)
 
 class NegativeIntConverter:

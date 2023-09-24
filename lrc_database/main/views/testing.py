@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -98,6 +98,8 @@ def add_everything_to_new_payroll(request):
 		)
         
         payroll_to_edit.pay_details[str(shift.position.hourly_rate)][(shift.start.weekday() - 5) % 7] += round(shift.duration.seconds / 3600, 2)
+        if payroll_to_edit.week_start < date(2023, 9, 9):
+            payroll_to_edit.approved = True
         payroll_to_edit.save()
     
     return HttpResponse("Successfull!!")    
