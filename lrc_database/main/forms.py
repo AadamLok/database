@@ -315,6 +315,15 @@ class PayrollForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields[f'form-{identifier}'] = forms.BooleanField(widget=forms.HiddenInput, initial=True)
 
+class DateSelectForm(forms.Form):
+    date = forms.DateField(
+        help_text="Format: DD/MM/YYYY", 
+        widget = forms.widgets.DateInput(attrs={'type': 'date'}))
+    
+    def __init__(self, *args, **kwargs):
+        super(DateSelectForm, self).__init__(*args, **kwargs)
+        self.fields['date'].widget.attrs = {"onchange":"this.form.submit()"}
+    
 class UnknownForm(forms.Form):
     staff = StaffUserPosition.objects.filter(semester=Semester.objects.get_active_sem())
 

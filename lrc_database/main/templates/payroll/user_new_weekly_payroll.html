@@ -1,0 +1,12 @@
+{% for pay, days in info.items %}
+	<tr id="id{{payroll.id}}" style="border-width:4px; background-color:{% if payroll.approved %}rgb(144,238,144){% else %}rgb(241,128,126){% endif %};">
+		{% if forloop.counter0 == 0 %}
+			<td rowspan="{{payroll.pay_details|length}}" class="text-center align-middle"><input type="checkbox" name="approved" hx-post="{% url 'user_new_weekly_payroll' payroll.person.id date %}" hx-trigger="change" hx-target="#id{{payroll.id}}" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' {% if payroll.approved%}checked{% endif %} hx-swap="outerHTML" onclick="deleteIDs('id{{payroll.id}}')"></td>
+			<td rowspan="{{payroll.pay_details|length}}" class="align-middle">{{payroll.person.str_payroll}}</td>
+		{% endif %}
+		<td class="text-center align-middle">{{pay}}</td>
+		{% for day in days %}
+			<td class="text-center align-middle">{{day|safe}}</td>
+		{% endfor %}
+	</tr>
+{% endfor %}

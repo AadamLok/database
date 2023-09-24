@@ -20,13 +20,19 @@ from ..forms import (
     NewShiftRecurringForm,
     ExamReviewForm
 )
-from ..models import Shift, ShiftChangeRequest, LRCDatabaseUser
+from ..models import Shift, ShiftChangeRequest, LRCDatabaseUser, PayrollCheck
 from ..templatetags.groups import is_privileged
 from . import restrict_to_groups, restrict_to_http_methods
 
 from ..email.mail_service import send_email_shift_req
 
 User = get_user_model()
+
+def get_week_date(date):
+    start_week = date
+    while start_week.weekday() != 5:
+        start_week -= timedelta(days=1)
+    return start_week.date()
 
 @login_required
 @restrict_to_http_methods("GET")
@@ -198,12 +204,25 @@ def make_pending(request: HttpRequest, request_id: int) -> HttpResponse:
 def approve_pending_request(request: HttpRequest, request_id: int) -> HttpResponse:
     request_cur = get_object_or_404(ShiftChangeRequest, id=request_id)
     shift = request_cur.shift_to_update or Shift()
+    
+    payroll_change = None
+    shift_day_index = None
+    if shift.signed:
+        shift_day_index = (request_cur.shift_to_update.start.weekday() - 5) % 7
+        payroll_change = PayrollCheck.objects.get(person=request_cur.shift_to_update.position.person, week_start=get_week_date(request_cur.shift_to_update.start.date())) 
 
     if request_cur.is_drop_request:
         request_cur.shift_to_update.deleted = True
         request_cur.shift_to_update.save()
         request_cur.state = "Approved"
         request_cur.save()
+        if payroll_change is not None:
+            if payroll_change.approved:
+                payroll_change.approved = False
+                payroll_change.additional_pay_details[str(request_cur.shift_to_update.position.hourly_rate)][shift_day_index] -= request_cur.shift_to_update.duration.seconds/3600
+            else:
+                payroll_change.pay_details[str(request_cur.shift_to_update.position.hourly_rate)][shift_day_index] -= request_cur.shift_to_update.duration.seconds/3600
+            payroll_change.save()
         messages.add_message(request, messages.INFO, "Shift dropped.")
         return redirect("index")
 
@@ -224,10 +243,22 @@ def approve_pending_request(request: HttpRequest, request_id: int) -> HttpRespon
         )
 
         if form.is_valid():
-            form.save()
-            request_cur.state = "Approved"
-            request_cur.save()
-            return redirect("index")
+            try:
+                if payroll_change is not None:
+                    if payroll_change.approved:
+                        payroll_change.approved = False
+                        payroll_change.additional_pay_details[str(request_cur.shift_to_update.position.hourly_rate)][shift_day_index] -= request_cur.shift_to_update.duration.seconds/3600
+                    else:
+                        payroll_change.pay_details[str(request_cur.shift_to_update.position.hourly_rate)][shift_day_index] -= request_cur.shift_to_update.duration.seconds/3600
+                    payroll_change.save()
+            except:
+                messages.add_message(request, messages.ERROR, f"Error: Some part of the new payroll system went all crazy. Please take a screenshot of this page and share it with Aadam[alokhandwala@umass.edu].")
+                return redirect("approve_request", request_id)
+            else:
+                form.save()
+                request_cur.state = "Approved"
+                request_cur.save()
+                return redirect("index")
         else:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
             return redirect("approve_request", request_id)

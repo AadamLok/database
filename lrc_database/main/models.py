@@ -241,7 +241,7 @@ class LRCDatabaseUser(AbstractUser):
     REQUIRED_FIELDS = [first_name, last_name, email]
 
     class Meta:
-        ordering = ('first_name','last_name','email')
+        ordering = ('last_name','first_name','email')
 
     def is_privileged(self) -> bool:
         return self.groups.filter(name__in=("Office staff", "Supervisors")).exists()
@@ -279,8 +279,66 @@ class LRCDatabaseUser(AbstractUser):
     def str_last_name_first(self) -> str:
         return f"{self.last_name}, {self.first_name} [{self.email}]"
     
+    def str_payroll(self) -> str:
+        return f"{self.last_name}, {self.first_name}"
+    
     class Meta:
         ordering = ('last_name','first_name')
+
+class PayrollManager(models.Manager):
+    def add_all_staff(self, week_start):
+        for staff in StaffUserPosition.objects.filter(semester=Semester.objects.get_active_sem()).all():
+            if not self.filter(person=staff.person, week_start=week_start).exists():
+                self.create(person=staff.person, week_start=week_start)
+            user_payroll = self.get(person=staff.person, week_start=week_start)
+            staff_payrate = str(staff.hourly_rate)
+            if staff_payrate not in user_payroll.pay_details:
+                user_payroll.pay_details[staff_payrate] = [0,0,0,0,0,0,0]
+                user_payroll.additional_pay_details[staff_payrate] = [0,0,0,0,0,0,0]
+                user_payroll.save()
+    
+    def add_person_if_not_exists(self, person, week_start):
+        if not self.filter(person=person, week_start=week_start).exists():
+            self.create(person=person, week_start=week_start)
+            user_payroll = self.get(person=person, week_start=week_start)
+            for staff in StaffUserPosition.objects.filter(person=person,semester=Semester.objects.get_active_sem()).all():
+                staff_payrate = str(staff.hourly_rate)
+                if staff_payrate not in user_payroll.pay_details:
+                    user_payroll.pay_details[staff_payrate] = [0,0,0,0,0,0,0]
+                    user_payroll.additional_pay_details[staff_payrate] = [0,0,0,0,0,0,0]
+                    user_payroll.save()
+        
+class PayrollCheck(models.Model):
+    person = models.ForeignKey(
+        to=LRCDatabaseUser,
+        on_delete=models.CASCADE,
+        help_text="The person whome you want to assign a payroll check.",
+        related_name="payroll_check_for_user"
+    )
+    
+    week_start = models.DateField(
+        help_text="The start date of the week for which you are assigning this payroll check."
+    )
+    
+    approved = models.BooleanField(
+        default=False,
+        help_text="Is this payroll entered on HR website yet?"
+    )
+    
+    pay_details = models.JSONField(
+        default=dict
+    )
+    
+    additional_pay_details = models.JSONField(
+        default=dict
+    )
+    
+    objects = PayrollManager()
+    
+    class Meta:
+        unique_together = ('person','week_start')
+        ordering = ('week_start','person')
+    
 
 class StaffUserPosition(models.Model):
     person = models.ForeignKey(
@@ -501,7 +559,6 @@ class Shift(models.Model):
     )
 
     objects = ShiftManager()
-
     class Meta:
         ordering = ('start',)
 

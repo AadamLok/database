@@ -66,10 +66,22 @@ from .views.semester import (
     delete_day_switch, 
     change_active_semester
 )
-from .views.payroll import sign_payroll, view_payroll, user_payroll, weekly_payroll
+from .views.payroll import (
+    sign_payroll, 
+    view_payroll, 
+    user_payroll, 
+    weekly_payroll,
+    new_weekly_payroll,
+    user_new_weekly_payroll
+)
 from .views.pm import pm_schedule, pm_add_meeting
 from .views.auth import login_user, reset_password
-from .views.testing import test_something, redo_class_shifts, test_form
+from .views.testing import (
+    test_something, 
+    redo_class_shifts, 
+    test_form, 
+    add_everything_to_new_payroll
+)
 
 URLs = List[Union[URLPattern, URLResolver]]
 
@@ -181,6 +193,8 @@ PAYROLL_URL: URLs = [
     path("payroll/view", view_payroll, name="view_payroll"),
     path("payroll/user/<int:id>", user_payroll, name="user_payroll"),
     path("payroll/weekly/<negint:offset>", weekly_payroll, name="weekly_payroll"),
+    path("payroll/new/weekly/<date:date>", new_weekly_payroll, name="new_weekly_payroll"),
+    path("payroll/new/user/<int:user_id>/<date:date>", user_new_weekly_payroll, name="user_new_weekly_payroll"),
 ]
 
 PM_URL: URLs = [
@@ -192,6 +206,7 @@ TESTING_URL: URLs = [
     path("test", test_something, name="test_something"),
     path("test/redo-class-shifts", redo_class_shifts, name="redo_class_shifts"),
     path("test/form", test_form, name="test_form"),
+    path("test/add-everything-to-new-payroll", add_everything_to_new_payroll, name="add_everything_to_new_payroll"),
 ]
 
 urlpatterns: URLs = (

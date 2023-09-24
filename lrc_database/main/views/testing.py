@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
@@ -7,9 +9,16 @@ from django.http import HttpResponse
 from . import restrict_to_groups, restrict_to_http_methods
 from ..email.mail_service import send_email 
 
-from ..models import Shift, LRCDatabaseUser, StaffUserPosition, Semester
+from ..models import Shift, LRCDatabaseUser, StaffUserPosition, Semester, PayrollCheck
 from ..forms import UnknownForm
 
+def get_week_date(date):
+    start_week = date
+    while start_week.weekday() != 5:
+        start_week -= timedelta(days=1)
+    if isinstance(start_week, datetime):
+        start_week = start_week.date()
+    return start_week
 
 @login_required
 @restrict_to_http_methods("GET", "POST")
@@ -67,3 +76,28 @@ def redo_class_shifts(request):
 def test_form(request):
 	form = UnknownForm()
 	return render(request, "shifts/add_bulk_shift.html", {"form": form})
+
+@login_required
+@restrict_to_http_methods("GET", "POST")
+@restrict_to_groups("Office staff", "Supervisors")
+def add_everything_to_new_payroll(request):
+    all_shifts = Shift.objects.filter(
+		position__semester=Semester.objects.get_active_sem(),
+		attended=True,
+		signed=True,
+	).all().order_by("start")
+    
+    PayrollCheck.objects.all().delete()
+    
+    for shift in all_shifts:
+        PayrollCheck.objects.add_person_if_not_exists(shift.position.person, get_week_date(shift.start))
+        
+        payroll_to_edit = PayrollCheck.objects.get(
+			person=shift.position.person,
+			week_start=get_week_date(shift.start)
+		)
+        
+        payroll_to_edit.pay_details[str(shift.position.hourly_rate)][(shift.start.weekday() - 5) % 7] += round(shift.duration.seconds / 3600, 2)
+        payroll_to_edit.save()
+    
+    return HttpResponse("Successfull!!")    

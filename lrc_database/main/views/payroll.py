@@ -12,8 +12,8 @@ from django.shortcuts import get_list_or_404, get_object_or_404, redirect, rende
 from ..templatetags.groups import is_privileged
 from . import restrict_to_groups, restrict_to_http_methods
 
-from ..models import Shift, Semester, StaffUserPosition, PunchedIn
-from ..forms import PayrollForm, SemesterSelectForm, UserSelectForm
+from ..models import Shift, Semester, StaffUserPosition, PunchedIn, PayrollCheck
+from ..forms import PayrollForm, SemesterSelectForm, UserSelectForm, DateSelectForm
 from ..color_coder import color_coder, get_color_coder_dict
 
 def get_week_from_date(date):
@@ -22,6 +22,14 @@ def get_week_from_date(date):
         start_week -= timedelta(days=1)
     end_week = (start_week + timedelta(days=6)).replace(hour=23, minute=59, second=59)
     return start_week, end_week
+
+def get_week_date(date):
+    start_week = date
+    while start_week.weekday() != 5:
+        start_week -= timedelta(days=1)
+    if isinstance(start_week, datetime):
+        start_week = start_week.date()
+    return start_week
 
 @login_required
 @restrict_to_http_methods("GET", "POST")
@@ -93,6 +101,17 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
             week_end = shift_to_edit.start.replace(hour=23, minute=59, second=59, tzinfo=pytz.timezone("America/New_York"))
             while week_end.weekday() != 5:
                 week_end += timedelta(days=1)
+            
+            PayrollCheck.objects.add_person_if_not_exists(request.user, get_week_date(shift_to_edit.start))
+            payroll_check = PayrollCheck.objects.get(person=request.user, week_start=get_week_date(shift_to_edit.start))
+            shift_day_index = (shift_to_edit.start.weekday() - 5) % 7
+            make_not_approved = False
+            if payroll_check.approved:
+                make_not_approved = True
+                payroll_check.additional_pay_details[str(shift_to_edit.position.hourly_rate)][shift_day_index] += round(shift_to_edit.duration.seconds/3600, 2)
+            else:
+                payroll_check.pay_details[str(shift_to_edit.position.hourly_rate)][shift_day_index] += round(shift_to_edit.duration.seconds/3600, 2)
+            
             late = timezone.localtime() > week_end
             shift_to_edit.late = late
             if late:
@@ -115,6 +134,15 @@ def sign_payroll(request: HttpRequest) -> HttpResponse:
                     late=shift_to_edit.late,
                     late_datetime=shift_to_edit.late_datetime
                 )
+                if payroll_check.approved:
+                    make_not_approved = True
+                    payroll_check.additional_pay_details[str(shift_to_edit.position.hourly_rate)][shift_day_index] += round(duration.seconds/3600, 2)
+                else:
+                    payroll_check.pay_details[str(shift_to_edit.position.hourly_rate)][shift_day_index] += round(duration.seconds/3600, 2)
+            
+            if  make_not_approved:
+                payroll_check.approved = False
+            payroll_check.save()
 
         return redirect("sign_payroll")
     
@@ -348,3 +376,68 @@ def weekly_payroll(request: HttpRequest, offset: int) -> HttpResponse:
             context[shift_type_name] = dict(sorted(info_shifts.items()))
 
         return render(request, "payroll/weekly_payroll.html", context)
+
+@login_required
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def user_new_weekly_payroll(request, user_id, date):
+    display_payroll = PayrollCheck.objects.get(person__id=user_id, week_start=get_week_date(date))
+    
+    if request.method == "POST":
+        approved = False
+        try:
+            approved = request.POST['approved'] == "on"
+            new_pay_details = {}
+            new_additional_pay = {}
+            for pay in display_payroll.pay_details:
+                new_pay_details[pay] = [sum(x) for x in zip(display_payroll.pay_details[pay], display_payroll.additional_pay_details[pay])]
+                new_additional_pay[pay] = [0,0,0,0,0,0,0]
+            display_payroll.pay_details = new_pay_details
+            display_payroll.additional_pay_details = new_additional_pay
+        except:
+            approved = False
+        display_payroll.approved = approved
+        display_payroll.save()
+    
+    info = {}
+    for key in display_payroll.pay_details.keys():
+        final = [0,0,0,0,0,0,0]
+        for i in range(7):
+            reg = display_payroll.pay_details[key][i]
+            extra = display_payroll.additional_pay_details[key][i]
+            total = reg + extra
+            final[i] = f'{reg:0.2f}'
+            if extra != 0:
+                final[i] += f'<b> + {extra:0.2f} = {total:0.2f}</b>'
+        info[key] = final
+    
+    
+    return render(
+        request,
+        "payroll/user_new_weekly_payroll.html",
+        {"payroll": display_payroll, "date": date, "info":info},
+    )
+
+@login_required
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def new_weekly_payroll(request, date):
+    if request.method == "POST":
+        form = DateSelectForm(request.POST)
+        if not form.is_valid():
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("new_weekly_payroll", date)
+        return redirect("new_weekly_payroll", form.cleaned_data["date"])
+    else:
+        form = DateSelectForm(initial={
+            "date": date,
+        })
+        
+        week_start_date = get_week_date(date)
+        display_payroll = PayrollCheck.objects.filter(week_start=week_start_date).all()
+        
+        return render(
+            request,
+            "payroll/new_weekly_payroll.html",
+            {"form": form, "display_payroll": display_payroll, "date": week_start_date},
+        )

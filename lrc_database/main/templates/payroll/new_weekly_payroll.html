@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block extra_includes %}
+<script src="https://unpkg.com/htmx.org@1.7.0"></script>
+<script>
+	function applyFixedHeader(element) {
+		var parentElement = element.parentElement;
+		window.addEventListener('scroll', () => {
+			var coordinates = parentElement.getBoundingClientRect();
+			if (coordinates.y < 0) {
+				element.style.transform = 'translate3d(0, ' + (-coordinates.y) + 'px, 0)';
+			} else {
+				element.style.transform = 'translate3d(0,0,0)';
+			}
+		});
+	}
+
+	function deleteIDs(id) {
+		console.log("In Here!!");
+		var elms = document.querySelectorAll("[id='" + id + "']");
+		for(var i = 1; i < elms.length; i++) {
+			elms[i].remove();
+			console.log("removed " + i);
+		}
+	}
+
+	document.addEventListener("DOMContentLoaded", function() {
+		var elements = document.querySelectorAll("#table-fixed");
+		elements.forEach(element => applyFixedHeader(element));
+	});
+</script>
+{% endblock %}
+
+{% block content %}
+	<h2>New Weekly Payroll View</h2>
+	<form method="post" action="{% url 'new_weekly_payroll' date %}">
+        {% csrf_token %}
+        {{ form|crispy }}
+    </form>
+	<h3>Showing Payroll for Week of {{date}}</h3>
+	<p>Guide to understanding new payroll view....</p>
+	<br/>
+
+	<div class="table-responsive">
+		<table class="table">
+			<thead id="table-fixed">
+				<tr>
+					<th scope="col" class="text-center">Entered?</th>
+					<th scope="col" class="text-center">Name</th>
+					<th scope="col" class="text-center">Pay Rate</th>
+					<th scope="col" class="text-center">Saturday</th>
+					<th scope="col" class="text-center">Sunday</th>
+					<th scope="col" class="text-center">Monday</th>
+					<th scope="col" class="text-center">Tuesday</th>
+					<th scope="col" class="text-center">Wednesday</th>
+					<th scope="col" class="text-center">Thurday</th>
+					<th scope="col" class="text-center">Friday</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for payroll in display_payroll%}
+					<tr hx-get="{% url 'user_new_weekly_payroll' payroll.person.id date %}" hx-trigger="load" hx-swap="outerHTML">
+						
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+{% endblock %}
