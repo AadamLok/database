@@ -13,7 +13,7 @@ from .models import (
     Shift,
     ShiftChangeRequest,
     Hardware,
-    Loan
+    Loan,
 )
 
 

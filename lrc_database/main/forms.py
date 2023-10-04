@@ -3,6 +3,7 @@ from django.contrib.auth.models import Group
 
 from .custom_field import TypedModelListField, ListTextWidget, CustomDurationField
 from django.core.validators import FileExtensionValidator
+from django.contrib.admin.widgets import FilteredSelectMultiple
 
 from .custom_validators import validate_file_extension
 
@@ -160,6 +161,21 @@ class StaffUserPositionForm(forms.ModelForm):
         self.fields["peers"].widget.attrs['disabled'] = True
     
     staff_position = forms.BooleanField(widget=forms.HiddenInput, initial=True)
+    
+class UpdateStaffUserPositionForm(forms.ModelForm):
+    class Meta:
+        model = StaffUserPosition
+        fields = ("tutor_courses",)
+    
+    class Media:
+        css = {
+            'all': ('/static/admin/css/widgets.css',),
+        }
+        js = ('/admin/jsi18n',)
+
+    def __init__(self, *args, **kwargs):
+        super(UpdateStaffUserPositionForm, self).__init__(*args, **kwargs)
+        self.fields["tutor_courses"] = forms.ModelMultipleChoiceField(label="(", required=True, queryset=Course.objects.all(), widget=FilteredSelectMultiple("Tutor Courses", is_stacked=False))
 
 class CreateUsersInBulkForm(forms.Form):
     user_data = forms.CharField(widget=forms.Textarea)

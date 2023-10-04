@@ -12,7 +12,7 @@ from django.shortcuts import get_list_or_404, get_object_or_404, redirect, rende
 from django.urls import reverse
 from django.db.models import Q
 
-from ..forms import CreateUserForm, CreateUsersInBulkForm, EditProfileForm, StaffUserPositionForm, EditUserForm
+from ..forms import CreateUserForm, CreateUsersInBulkForm, EditProfileForm, StaffUserPositionForm, EditUserForm, UpdateStaffUserPositionForm
 from ..models import LRCDatabaseUser, Semester, Shift, StaffUserPosition, Course, ShiftChangeRequest
 from . import personal, restrict_to_groups, restrict_to_http_methods
 from ..color_coder import color_coder, get_color_coder_dict
@@ -234,6 +234,27 @@ def delete_user_staff_position(request: HttpRequest, user_id: int, index: int) -
     StaffUserPosition.objects.filter(person=user).all()[index].delete()
     messages.add_message(request, messages.SUCCESS, f"Successfully deleted staff position.")
     return redirect("view_or_edit_user", user_id)
+
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def update_user_staff_position(request: HttpRequest, user_id: int, index: int) -> HttpResponse:
+    user = get_object_or_404(User, pk=user_id)
+    position = StaffUserPosition.objects.filter(person=user).all()[index]
+    if request.method == "POST":
+        form = UpdateStaffUserPositionForm(request.POST)
+        if not form.is_valid():
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("update_user_staff_position", user_id, index)
+        
+        position.tutor_courses.set(form.cleaned_data["tutor_courses"])
+        position.save()
+        
+        messages.add_message(request, messages.SUCCESS, f"Successfully updated staff position.")
+        return redirect("view_or_edit_user", user_id)
+    form = UpdateStaffUserPositionForm(instance=position)
+    return render(request, "users/update_user_staff_position.html", {"form": form, "user_id": user_id, "index": index})
+    
 
 @restrict_to_groups("Office staff", "Supervisors")
 @restrict_to_http_methods("GET", "POST")

@@ -55,7 +55,8 @@ from .views.users import (
     user_event_feed, 
     user_profile, 
     view_or_edit_user, 
-    delete_user_staff_position
+    delete_user_staff_position,
+    update_user_staff_position
 )
 from .views.schedule import view_schedule
 from .views.semester import (
@@ -173,7 +174,8 @@ USERS_URLS: URLs = [
     path("users/create/bulk", create_users_in_bulk, name="create_users_in_bulk"),
     path("users/groups/<str:group>", list_users, name="list_users"),
     path("users/view_or_edit/<int:user_id>", view_or_edit_user, name="view_or_edit_user"),
-    path("users/delete_staff_position/<int:user_id>/<int:index>", delete_user_staff_position, name="delete_user_staff_position")
+    path("users/delete_staff_position/<int:user_id>/<int:index>", delete_user_staff_position, name="delete_user_staff_position"),
+    path("users/update_staff_position/<int:user_id>/<int:index>", update_user_staff_position, name="update_user_staff_position"),
 ]
 
 SCHEDULE_URL: URLs = [
