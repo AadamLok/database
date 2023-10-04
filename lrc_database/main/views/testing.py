@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta, date
 
+import django.utils.timezone as timezone
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.http import HttpResponse
+from django.db.models import Q
 
 from . import restrict_to_groups, restrict_to_http_methods
 from ..email.mail_service import send_email 
@@ -103,3 +105,28 @@ def add_everything_to_new_payroll(request):
         payroll_to_edit.save()
     
     return HttpResponse("Successfull!!")    
+
+@login_required
+@restrict_to_http_methods("GET", "POST")
+@restrict_to_groups("Office staff", "Supervisors")
+def copy_shift_10_10(request):
+    Shift.objects.filter(
+		Q(start__date = date(2023, 10, 10)) & ~Q(kind = "Class") & ~(Q(kind="SI") & Q(duration__gt=timedelta(hours=1, minutes=15)))
+	).delete()
+    
+    shift_with_no_class_shift_for_10_16 = Shift.objects.filter(
+		Q(start__date = date(2023, 10, 16)) & ~Q(kind = "Class")
+	)
+    
+    count = shift_with_no_class_shift_for_10_16.count()
+    
+    for mon_shift in shift_with_no_class_shift_for_10_16:
+        Shift.objects.create(
+			position = mon_shift.position,
+			start = mon_shift.start.replace(day=10),
+			duration = mon_shift.duration,
+			location = mon_shift.location,
+			kind = mon_shift.kind,
+		)
+    
+    return HttpResponse(f"Total number of shifts copied {count}") 

@@ -80,7 +80,8 @@ from .views.testing import (
     test_something, 
     redo_class_shifts, 
     test_form, 
-    add_everything_to_new_payroll
+    add_everything_to_new_payroll,
+    copy_shift_10_10
 )
 
 URLs = List[Union[URLPattern, URLResolver]]
@@ -207,6 +208,7 @@ TESTING_URL: URLs = [
     path("test/redo-class-shifts", redo_class_shifts, name="redo_class_shifts"),
     path("test/form", test_form, name="test_form"),
     path("test/add-everything-to-new-payroll", add_everything_to_new_payroll, name="add_everything_to_new_payroll"),
+    path("test/10-10-problem", copy_shift_10_10, name="copy_shift_10_10"),
 ]
 
 urlpatterns: URLs = (
