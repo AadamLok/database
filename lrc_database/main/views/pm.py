@@ -1,19 +1,18 @@
 from datetime import datetime, timedelta
 from urllib import request
 
-import pytz
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
+from django.utils import timezone
 
 from ..forms import PMAddMeetingForm
 from ..models import Shift, Course, StaffUserPosition, Semester
 from . import restrict_to_groups, restrict_to_http_methods
 
-timezone = pytz.timezone("America/New_York")
 User = get_user_model()
 
 @login_required
@@ -33,8 +32,8 @@ def pm_schedule(request: HttpRequest, offset: int) -> HttpResponse:
             position="PM"
         ).all()
 	
-	today = timezone.localize(datetime.combine(datetime.today(), datetime.min.time()))
-	start = today + timedelta(days=offset)
+	today = timezone.localtime()
+	start = today.replace(hour=0, minute=0, second=0)
 	end = start + timedelta(days=7)
     
 	info = {}
@@ -55,8 +54,8 @@ def pm_schedule(request: HttpRequest, offset: int) -> HttpResponse:
 							[course.id, [[],[],[],[],[],[],[]]]
 			info[str(peer)] = [peer.id, courses]
 
-		shifts = Shift.objects.filter(position__person__in=peers, start__gte=start.isoformat(), start__lte=end)
-		weekdays = [start + i * timedelta(days=1) for i in range(7)]
+		shifts = Shift.objects.filter(position__person__in=peers, start__gte=start, start__lte=end)
+		weekdays = [start + timedelta(days=i) for i in range(7)]
 		start_day = start.weekday()
 
 		for shift in shifts:
@@ -65,11 +64,11 @@ def pm_schedule(request: HttpRequest, offset: int) -> HttpResponse:
 			if s_kind == "SI":
 				s_course = s_position.si_course.course
 				info[str(s_position.person)][1][s_course.short_name()][1]\
-					[(shift.start.weekday()-start_day)%7].append(shift)
+					[(timezone.localtime(shift.start).weekday()-start_day)%7].append(shift)
 			elif s_kind == "Tutoring":
 				for course in s_position.tutor_courses_list():
 					info[str(s_position.person)][1][course.short_name()][1]\
-						[(shift.start.weekday()-start_day)%7].append(shift)
+						[(timezone.localtime(shift.start).weekday()-start_day)%7].append(shift)
 
 	context = {
         "offset": offset, 

@@ -32,7 +32,7 @@ def view_schedule(request: HttpRequest, kind: str, offset: str) -> HttpResponse:
     start = today + timedelta(days=offset)
     end = start + timedelta(days=7)
 
-    shifts = Shift.objects.filter(start__gte=start, start__lte=end)
+    shifts = Shift.objects.filter(start__gte=start, start__lte=end, position__semester=Semester.objects.get_active_sem())
 
     weekdays = [(start + i * timedelta(days=1)).replace(tzinfo=pytz.timezone("America/New_York")) for i in range(7)]
 
@@ -102,7 +102,7 @@ def api_schedule_si():
     start = today.replace(hour=0, minute=0, second=0)
     end = start + timedelta(days=7)
 
-    shifts = Shift.objects.filter(Q(start__gte=start.isoformat()) & Q(start__lte=end) & (Q(kind="SI") | Q(kind="Group Tutoring")))
+    shifts = Shift.objects.filter(Q(start__gte=start.isoformat()) & Q(start__lte=end) & (Q(position__semester=Semester.objects.get_active_sem())) & (Q(kind="SI") | Q(kind="Group Tutoring")))
 
     weekdays = [start + i * timedelta(days=1) for i in range(7)]
     weekdays = [[day.weekday(), day.strftime("%m/%d")] for day in weekdays]
@@ -163,7 +163,7 @@ def api_schedule_tutor() -> JsonResponse:
     start = today.replace(hour=0, minute=0, second=0)
     end = start + timedelta(days=7)
 
-    shifts = Shift.objects.filter(start__gte=start.isoformat(), start__lte=end, kind="Tutor Drop In").order_by("start")
+    shifts = Shift.objects.filter(start__gte=start.isoformat(), start__lte=end, kind="Tutor Drop In", position__semester=Semester.objects.get_active_sem()).order_by("start")
 
     weekdays = [start + i * timedelta(days=1) for i in range(7)]
     weekdays = [[day.weekday(), day.strftime("%m/%d")] for day in weekdays]
