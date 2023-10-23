@@ -4,6 +4,7 @@ from django.contrib.auth.models import Group
 from .custom_field import TypedModelListField, ListTextWidget, CustomDurationField
 from django.core.validators import FileExtensionValidator
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.utils.safestring import mark_safe
 
 from .custom_validators import validate_file_extension
 
@@ -219,6 +220,7 @@ class NewChangeRequestForm(forms.ModelForm):
         if form_person is not None:
             active_positions = StaffUserPosition.objects.filter(person=form_person, semester=Semester.objects.get_active_sem()).all()
             self.fields["new_position"] = forms.ModelChoiceField(required=True, queryset=active_positions, label="New Position")
+            self.fields["reason"] = forms.CharField(required=True, label=mark_safe("Reason <i>(If you are requesting an exam review, please include the exam date here.)</i>"))
 
 
 class ExamReviewForm(forms.ModelForm):

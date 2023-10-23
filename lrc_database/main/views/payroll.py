@@ -419,7 +419,7 @@ def user_new_weekly_payroll(request, user_id, date):
     for key in total_pay:
         info[key].append(f'{total_pay[key]:0.2f}')
         if total_additional[key] != 0:
-            info[key][-1] += f'<b> + {total_additional[key]:0.2f} = {total[key]+total_additional[key]:0.2f}</b>'
+            info[key][-1] += f'<b> + {total_additional[key]:0.2f} = {total_pay[key]+total_additional[key]:0.2f}</b>'
     
     return render(
         request,
@@ -449,7 +449,10 @@ def new_weekly_payroll(request, date):
         
         for week in not_approved.values_list('week_start', flat=True):
             left = not_approved.filter(week_start=week).count() 
-            messages.add_message(request, messages.INFO, f"Payroll for {week}, has {left} people left to approve")
+            name = ""
+            for p in not_approved.filter(week_start=week):
+                name += f"{p.person}, "
+            messages.add_message(request, messages.INFO, f"Payroll for {week}, has {left} people left to approve: {name}")
         
         return render(
             request,
