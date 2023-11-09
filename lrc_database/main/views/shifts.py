@@ -18,7 +18,8 @@ from ..forms import (
     NewShiftForm,
     SetToPendingForm,
     NewShiftRecurringForm,
-    ExamReviewForm
+    ExamReviewForm,
+    RecordMeetingForm
 )
 from ..models import Shift, ShiftChangeRequest, LRCDatabaseUser, PayrollCheck
 from ..templatetags.groups import is_privileged
@@ -318,6 +319,30 @@ def new_shift(request: HttpRequest) -> HttpResponse:
         else:
             messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
             return redirect("new_shift")
+
+
+@restrict_to_groups("Office staff", "Supervisors")
+@restrict_to_http_methods("GET", "POST")
+def record_meeting(request: HttpRequest) -> HttpResponse:
+    if request.method == "GET":
+        form = RecordMeetingForm()
+        return render(request, "shifts/record_meeting.html", {"form": form})
+    else:
+        form = RecordMeetingForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            Shift.objects.create(
+				position=data["position"],
+				start=data["start"],
+				duration=data["duration"],
+				location=data["location"],
+				kind="Meeting"
+			)
+            messages.add_message(request, messages.SUCCESS, f"Meeting successfully added!")
+            return redirect("record_meeting")
+        else:
+            messages.add_message(request, messages.ERROR, f"Form errors: {form.errors}")
+            return redirect("record_meeting")
 
 
 @restrict_to_groups("Office staff", "Supervisors")

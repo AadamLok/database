@@ -272,6 +272,23 @@ class NewShiftForm(forms.ModelForm):
             dataset=dataset, 
             name='position')
 
+
+class RecordMeetingForm(forms.ModelForm):
+    position = TypedModelListField(queryset=StaffUserPosition.objects.filter(semester=Semester.objects.get_active_sem()).all())
+    duration = CustomDurationField(required=True, help_text="How long the shift will last.\
+                                    Format: HH:MM. E.g. if you want shift to be 1 hour 15 mins long, enter 01:15")
+    class Meta:
+        model = Shift
+        fields = ("position", "duration", "start", "location")
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        dataset = StaffUserPosition.objects.filter(semester=Semester.objects.get_active_sem()).all()
+        self.fields['position'].queryset = dataset
+        self.fields['position'].widget = ListTextWidget(
+            dataset=dataset, 
+            name='position')
+
 class NewShiftRecurringForm(forms.ModelForm):
     duration = CustomDurationField(required=True, help_text="How long the shift will last.\
                                     Format: HH:MM. E.g. if you want shift to be 1 hour 15 mins long, enter 01:15")
